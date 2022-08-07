@@ -1,0 +1,23 @@
+TODO:
+- File tree
+- Selected folder display
+    - name
+    - new name
+    - file type
+    - date modified
+- Fields
+    - RegEx (1)
+    - Name (2)
+    - Replace (3)
+    - Case (4)
+    - Remove (5)
+    - Add (6)
+    - Auto Date (7)
+    - Append Folder Name (9)
+    - Numbering (10)
+    - Extension (11)
+- Buttons
+    - Preview
+    - Reset
+    - Rename
+- Warning popup with toggle to not show again.
