@@ -9,6 +9,5 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 chrono = "0.4.20"
 eframe = "0.18.0"
-eyre = "0.6.8"
 regex = "1.6.0"
 tracing = "0.1.36"

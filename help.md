@@ -72,13 +72,13 @@ The `Date` that the file was created, modified, or the current date can be added
 
 You also have the option to specify your own custom date formats using [chrono::format::strftime](https://docs.rs/chrono/0.4.20/chrono/format/strftime/index.html) specifiers.
 
-## Append Folder Name (9)
+## Append Folder Name (8)
 
 Add the name of the containing folder or hierarchy of folders. These can be added in prefix or suffix `Mode`, with a `Sep`arator specified and the maximum number of `Levels` selected.
 
 On Windows, if the hierarchy reaches the drive root (i.e. C:\\) the ":\\" characters will be automatically removed.
 
-## Numbering (10)
+## Numbering (9)
 
 Add sequential numbers.
 - `Mode` - Choose between prefix, suffix, both, or insert at a location (0 indexed).
@@ -89,7 +89,7 @@ Add sequential numbers.
 - `Break` - Reset the auto-number when the nth character changes. e.g. enter 4 to cause the number to reset when the 4th character of the NEW name changes.
 - `Base` - You can choose to append the auto-number in any numeric base, from base 2 to base 36. e.g. a value of 26 in base 16 would be appended as 1A. Or even use letters, e.g. A-Z or a-z or Roman numerals (upper or lower).
 
-## Extension (11)
+## Extension (10)
 
 Change case of the file name extension.
 - `Keep` - Leave the original capitalization intact.

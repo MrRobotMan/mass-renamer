@@ -1,117 +1,114 @@
 #![allow(dead_code)] // Must disable later when project is complete.
 
 pub mod renamer {
-    use super::{name, regex};
-    use eyre::{eyre, Result};
-    use std::path::{Path, PathBuf};
+    use regex::Regex;
+    use std::{
+        error::Error,
+        path::{Path, PathBuf},
+    };
 
+    /// Tool to rename a single file.
+    /// Takes the `&path` and various options (processed in order) to return a `PathBuf`
+    /// used to rename the file.
+    /// Options are
+    ///    -  1 RegEx
+    ///    -  2 Name
+    ///    -  3 Replace
+    ///    -  4 Case
+    ///    -  5 Remove
+    ///    -  6 Add
+    ///    -  7 Auto Date
+    ///    -  8 Append Folder Name
+    ///    -  9 Numbering
+    ///    - 10 Extension
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::path::{Path, PathBuf};
+    /// # use bulk_rename::file::renamer::{NameOptions, rename_file};
+    /// let file = Path::new("/path/to/file.txt");
+    /// let name = NameOptions::Fixed("new_name");
+    /// let modes = (None, Some(name), None, None, None, None, None, None, None, None);
+    /// let new_name = rename_file(file, modes);
+    /// assert_eq!(new_name.unwrap(), PathBuf::from("/path/to/new_name.txt"));
+    /// ```
     pub fn rename_file(
         file: &Path,
-        modes: (Option<regex::Options>, Option<name::Options>),
-    ) -> Result<PathBuf> {
+        modes: (
+            Option<RegexOptions>,
+            Option<NameOptions>,
+            Option<ReplaceOptions>,
+            Option<String>,
+            Option<String>,
+            Option<String>,
+            Option<String>,
+            Option<String>,
+            Option<String>,
+            Option<String>,
+        ),
+    ) -> Result<PathBuf, Box<dyn Error>> {
         let mut parent = if let Some(name) = file.parent() {
             name.to_owned()
         } else {
             PathBuf::from("")
         };
-        let mut new_name = {
+        let (mut new_name, ext) = {
             if let Some(opt) = modes.0 {
-                regex::match_and_replace(opt.exp, opt.rep, &file, opt.extension)?
+                match_and_replace(opt.exp, opt.rep, &file, opt.extension)?
             } else {
-                if let Some(s) = file.to_str() {
-                    String::from(s)
+                if let Some(s) = file.file_name() {
+                    if let Some(e) = file.extension() {
+                        (
+                            s.to_str().unwrap().to_string(),
+                            Some(e.to_str().unwrap().to_string()),
+                        )
+                    } else {
+                        (s.to_str().unwrap().to_string(), None)
+                    }
                 } else {
-                    return Err(eyre!("Failed to extract file."));
+                    return Err("Failed to extract file.".into());
                 }
             }
         };
         if let Some(opt) = modes.1 {
-            new_name = name::name(&new_name, opt);
+            new_name = name(&new_name, opt);
         };
+        if let Some(opt) = modes.2 {
+            new_name = replace(opt.replace, opt.with, &new_name, opt.case)
+        }
         parent.push(new_name);
-        Ok(parent)
-    }
-
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-        use std::path::{Path, PathBuf};
-        #[test]
-        fn test_regex() {
-            let file = Path::new("Testfile123.txt");
-            let expected = PathBuf::from("TestfileABC.txt");
-            let opt = regex::Options {
-                exp: "123",
-                rep: "ABC",
-                extension: true,
-            };
-            let modes = (Some(opt), None);
-            let result = rename_file(file, modes);
-            assert_eq!(result.unwrap(), expected)
+        if let Some(e) = ext {
+            Ok(parent.with_extension(e))
+        } else {
+            Ok(parent)
         }
     }
-}
 
-pub mod name {
-    pub enum Options<'a> {
+    /// Options for uses the name feature.
+    pub enum NameOptions<'a> {
         Keep,
         Remove,
         Fixed(&'a str),
         Reverse,
     }
 
-    /// Using the `Options` enum and the name function, return a modified string.
+    /// Using the `NameOptions` enum and the name function, return a modified string.
     /// - `Keep` - Do not change the original file name (default).
     /// - `Remove` - Completely erase the file from the selected items. This allows it to be rebuilt using components higher than (2).
     /// - `Fixed` - Specify a new file in the box for all selected items. Only really useful if you're also using the Numbering section.
     /// - `Reverse` - Reverse the name, e.g. 12345.txt becomes 54321.txt.
-    pub fn name(file: &str, mode: Options) -> String {
+    fn name(file: &str, mode: NameOptions) -> String {
         match mode {
-            Options::Keep => file.to_owned(),
-            Options::Remove => "".to_owned(),
-            Options::Fixed(x) => String::from(x),
-            Options::Reverse => file.chars().rev().collect::<String>(),
+            NameOptions::Keep => file.to_owned(),
+            NameOptions::Remove => "".to_owned(),
+            NameOptions::Fixed(x) => String::from(x),
+            NameOptions::Reverse => file.chars().rev().collect::<String>(),
         }
     }
 
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        fn keep_name() {
-            let file = String::from("file");
-            let result = name(&file, Options::Keep);
-            assert_eq!(result, String::from("file"));
-        }
-        #[test]
-        fn remove_name() {
-            let file = String::from("file");
-            let result = name(&file, Options::Remove);
-            assert_eq!(result, String::from(""));
-        }
-        #[test]
-        fn fixed_name() {
-            let file = String::from("file");
-            let new_name = "renamed_file";
-            let result = name(&file, Options::Fixed(new_name));
-            assert_eq!(result, String::from(new_name));
-        }
-        #[test]
-        fn reverse_name() {
-            let file = String::from("file");
-            let reversed = String::from("elif");
-            let result = name(&file, Options::Reverse);
-            assert_eq!(result, reversed);
-        }
-    }
-}
-
-pub mod regex {
-    use eyre::{eyre, Result};
-    use regex::Regex;
-    use std::path::Path;
-    pub struct Options<'a> {
+    /// Options for the regex feature
+    pub struct RegexOptions<'a> {
         pub exp: &'a str,
         pub rep: &'a str,
         pub extension: bool,
@@ -119,7 +116,12 @@ pub mod regex {
 
     /// Use a regular expression `Match` to find the offending text and `Replace` it with new.
     /// Check the `Include Ext.` box to include the file extension in the `Match`.
-    pub fn match_and_replace(exp: &str, rep: &str, file: &Path, extension: bool) -> Result<String> {
+    fn match_and_replace(
+        exp: &str,
+        rep: &str,
+        file: &Path,
+        extension: bool,
+    ) -> Result<(String, Option<String>), Box<dyn Error>> {
         let exp = Regex::new(exp)?;
         let base = if extension {
             file.file_name()
@@ -129,92 +131,42 @@ pub mod regex {
         let ext = file.extension();
         if let Some(s) = base {
             if let Some(s) = s.to_str() {
-                let mut res = exp.replace_all(s, rep).to_string();
+                let res = exp.replace_all(s, rep).to_string();
                 if !extension {
                     if let Some(e) = ext {
-                        res.push_str(".");
                         if let Some(e) = e.to_str() {
-                            res.push_str(e);
+                            return Ok((res, Some(String::from(e))));
                         } else {
-                            return Err(eyre!("Extension could not be converted to str."));
+                            return Err("Extension could not be converted to str.".into());
                         };
                     } else {
-                        return Err(eyre!("Extension does not exist."));
+                        return Err("Extension does not exist.".into());
                     }
                 }
-                Ok(res)
+                if let Some(new_name) = res.rsplit_once(".") {
+                    return Ok((new_name.0.to_string(), Some(new_name.1.to_string())));
+                } else {
+                    Ok((res, None))
+                }
             } else {
-                Err(eyre!(
-                    "Could not convert file to str in regex match, likely invalid unicode."
-                ))
+                Err("Could not convert file to str in regex match, likely invalid unicode.".into())
             }
         } else {
-            Err(eyre!("Bad file in regex match."))
+            Err("Bad file in regex match.".into())
         }
     }
 
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-        use eyre;
-        use std::path::Path;
-        #[test]
-        fn regex_test_with_extension() {
-            let exp = "0123.txt";
-            let rep = "ABCD.csv";
-            let file = Path::new("file0123.txt");
-            let result = match_and_replace(exp, rep, file, true).unwrap();
-            assert_eq!(result, String::from("fileABCD.csv"));
-        }
-        #[test]
-        fn regex_test_no_extension() {
-            let exp = "0123";
-            let rep = "ABCD";
-            let file = Path::new("file0123.txt");
-            let result = match_and_replace(exp, rep, file, false).unwrap();
-            assert_eq!(result, String::from("fileABCD.txt"));
-        }
-        #[test]
-        fn regex_test_no_extension_no_match() {
-            let exp = "0123";
-            let rep = "ABCD";
-            let file = Path::new("file123.txt");
-            let result = match_and_replace(exp, rep, file, false).unwrap();
-            assert_eq!(result, String::from("file123.txt"));
-        }
-        #[test]
-        fn bad_file_with_extension() {
-            let exp = "";
-            let rep = "";
-            let file = Path::new("");
-            let result = match_and_replace(exp, rep, file, true).unwrap_err();
-            let expected = eyre::Report::msg("Bad file in regex match.").to_string();
-            assert_eq!(result.to_string(), expected)
-        }
-        #[test]
-        fn bad_file_no_extension() {
-            let exp = "";
-            let rep = "";
-            let file = Path::new("");
-            let result = match_and_replace(exp, rep, file, false).unwrap_err();
-            let expected = eyre::Report::msg("Bad file in regex match.").to_string();
-            assert_eq!(result.to_string(), expected)
-        }
-    }
-}
-
-pub mod rename {
     /// Options for basic renaming rules.
     /// replace: text to be replaced
     /// with: new text
     /// file: name of file to rename
     /// case: true for case sensitive, false for case-insensitive
-    pub struct Options<'a> {
+    pub struct ReplaceOptions<'a> {
         pub replace: &'a str,
         pub with: &'a str,
-        pub file: &'a str,
         pub case: bool,
     }
+
     /// `Replace` the text in this field with the text in the `With` field.
     /// `Replace` can be case-sensitive using `Match Case` checkbox.
     /// Note that the `With` text is always replaced with the text as written, including any specific text case.
@@ -237,10 +189,166 @@ pub mod rename {
             }
         }
     }
+    #[cfg(test)]
+    mod file_tests {
+        use super::*;
+        use std::path::{Path, PathBuf};
+        /// let modes = (
+        ///        None,
+        ///        None,
+        ///        None,
+        ///        None,
+        ///        None,
+        ///        None,
+        ///        None,
+        ///        None,
+        ///        None,
+        ///        None,
+        ///    )
+        #[test]
+        fn test_regex() {
+            let file = Path::new("Testfile123.txt");
+            let expected = PathBuf::from("TestfileABC.txt");
+            let opt = RegexOptions {
+                exp: "123",
+                rep: "ABC",
+                extension: true,
+            };
+            let modes = (
+                Some(opt),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            );
+            let result = rename_file(file, modes);
+            assert_eq!(result.unwrap(), expected)
+        }
+        #[test]
+        fn test_name() {
+            let file = Path::new("/path/to/file.txt");
+            let name = NameOptions::Fixed("new_name");
+            let modes = (
+                None,
+                Some(name),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            );
+            let new_name = rename_file(file, modes);
+            assert_eq!(new_name.unwrap(), PathBuf::from("/path/to/new_name.txt"))
+        }
+        #[test]
+        fn test_replace() {
+            let file = Path::new("/path/to/fileabc.txt");
+            let opt = ReplaceOptions {
+                replace: "ABC",
+                with: "",
+                case: false,
+            };
+            let modes = (
+                None,
+                None,
+                Some(opt),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            );
+            let new_name = rename_file(file, modes);
+            assert_eq!(new_name.unwrap(), PathBuf::from("/path/to/file.txt"))
+        }
+    }
 
     #[cfg(test)]
     mod tests {
         use super::*;
+        use std::path::Path;
+        #[test]
+        fn regex_test_with_extension() {
+            let exp = "0123.txt";
+            let rep = "ABCD.csv";
+            let file = Path::new("file0123.txt");
+            let result = match_and_replace(exp, rep, file, true).unwrap();
+            assert_eq!(
+                result,
+                (String::from("fileABCD"), Some(String::from("csv")))
+            );
+        }
+        #[test]
+        fn regex_test_no_extension() {
+            let exp = "0123";
+            let rep = "ABCD";
+            let file = Path::new("file0123.txt");
+            let result = match_and_replace(exp, rep, file, false).unwrap();
+            assert_eq!(
+                result,
+                (String::from("fileABCD"), Some(String::from("txt")))
+            );
+        }
+        #[test]
+        fn regex_test_no_extension_no_match() {
+            let exp = "0123";
+            let rep = "ABCD";
+            let file = Path::new("file123.txt");
+            let result = match_and_replace(exp, rep, file, false).unwrap();
+            assert_eq!(result, (String::from("file123"), Some(String::from("txt"))));
+        }
+        #[test]
+        fn bad_file_with_extension() {
+            let exp = "";
+            let rep = "";
+            let file = Path::new("");
+            let result = match_and_replace(exp, rep, file, true).unwrap_err();
+            assert_eq!(result.to_string(), "Bad file in regex match.")
+        }
+        #[test]
+        fn bad_file_no_extension() {
+            let exp = "";
+            let rep = "";
+            let file = Path::new("");
+            let result = match_and_replace(exp, rep, file, false).unwrap_err();
+            assert_eq!(result.to_string(), "Bad file in regex match.")
+        }
+        #[test]
+        fn keep_name() {
+            let file = String::from("file");
+            let result = name(&file, NameOptions::Keep);
+            assert_eq!(result, String::from("file"));
+        }
+        #[test]
+        fn remove_name() {
+            let file = String::from("file");
+            let result = name(&file, NameOptions::Remove);
+            assert_eq!(result, String::from(""));
+        }
+        #[test]
+        fn fixed_name() {
+            let file = String::from("file");
+            let new_name = "renamed_file";
+            let result = name(&file, NameOptions::Fixed(new_name));
+            assert_eq!(result, String::from(new_name));
+        }
+        #[test]
+        fn reverse_name() {
+            let file = String::from("file");
+            let reversed = String::from("elif");
+            let result = name(&file, NameOptions::Reverse);
+            assert_eq!(result, reversed);
+        }
 
         #[test]
         fn no_matching_text_case_sensitive() {
