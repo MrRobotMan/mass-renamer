@@ -34,7 +34,6 @@ Case drop-down:
 - `Title` - Change All Selected Files To Title Case.
 - `Sentence` - Change all selected files to sentence case.
 - `Snake` - Change_all_selected_files_to_snake_case_while_keeping_all_other_case_information_the_same.
-- `Roman` - Convert Roman Numerals to upper of lower case. For example, if you had a file called "Beethoven's niNTH syMPHONY part iii", you might want to use Title Case to format the filename, but this would impact the "iii". Use this control to handle the Roman Numeral element. This can be buggy.
 
 Exceptions: You can also enter a list of "exceptions", separated by semicolons. So for example if you entered PDF;doc then any occurrence of pdf (or PDF, Pdf, etc) would be converted to upper-case, and every occurrence of DOC (or DoC) would become doc.
 
