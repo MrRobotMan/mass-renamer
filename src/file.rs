@@ -79,13 +79,13 @@ pub mod renamer {
             }
         };
         if let Some(opt) = modes.1 {
-            new_name = opt.process(&new_name);
+            opt.process(&mut new_name);
         }
         if let Some(opt) = modes.2 {
-            new_name = opt.process(&new_name);
+            opt.process(&mut new_name);
         };
         if let Some(opt) = modes.3 {
-            new_name = opt.process(&new_name)
+            opt.process(&mut new_name)
         }
 
         parent.push(new_name);

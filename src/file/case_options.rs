@@ -26,8 +26,8 @@ pub enum Case {
 }
 
 impl CaseOptions<'_> {
-    pub fn process(&self, file: &str) -> String {
-        let mut new_case = match self.case {
+    pub fn process(&self, file: &mut String) {
+        *file = match self.case {
             Case::Keep => file.to_string(),
             Case::Lower => file.to_lowercase(),
             Case::Upper => file.to_uppercase(),
@@ -43,14 +43,12 @@ impl CaseOptions<'_> {
                     Case::Title => exception.to_title_case(),
                     Case::Sentence => exception.to_sentence_case(),
                 };
-                new_case = new_case.replace(&mod_exception, &exception);
+                *file = file.replace(&mod_exception, &exception);
             }
         }
         if self.snake {
-            new_case.replace(" ", "_")
-        } else {
-            new_case
-        }
+            *file = file.replace(" ", "_")
+        };
     }
 }
 
@@ -59,134 +57,134 @@ mod case_tests {
     use super::*;
     #[test]
     fn test_keep_case() {
-        let file = String::from("test file");
+        let mut file = String::from("test file");
         let opt = CaseOptions {
             case: Case::Keep,
             snake: false,
             exceptions: None,
         };
-        let result = opt.process(&file);
-        assert_eq!(result, String::from("test file"));
+        opt.process(&mut file);
+        assert_eq!(file, String::from("test file"));
     }
 
     #[test]
     fn test_keep_case_snake() {
-        let file = String::from("test file");
+        let mut file = String::from("test file");
         let opt = CaseOptions {
             case: Case::Keep,
             snake: true,
             exceptions: None,
         };
-        let result = opt.process(&file);
-        assert_eq!(result, String::from("test_file"));
+        opt.process(&mut file);
+        assert_eq!(file, String::from("test_file"));
     }
 
     #[test]
     fn test_lower_case() {
-        let file = String::from("TEST FILE");
+        let mut file = String::from("TEST FILE");
         let opt = CaseOptions {
             case: Case::Lower,
             snake: false,
             exceptions: None,
         };
-        let result = opt.process(&file);
-        assert_eq!(result, String::from("test file"));
+        opt.process(&mut file);
+        assert_eq!(file, String::from("test file"));
     }
 
     #[test]
     fn test_lower_case_snake() {
-        let file = String::from("TEST FILE");
+        let mut file = String::from("TEST FILE");
         let opt = CaseOptions {
             case: Case::Lower,
             snake: true,
             exceptions: None,
         };
-        let result = opt.process(&file);
-        assert_eq!(result, String::from("test_file"));
+        opt.process(&mut file);
+        assert_eq!(file, String::from("test_file"));
     }
 
     #[test]
     fn test_upper_case() {
-        let file = String::from("test file");
+        let mut file = String::from("test file");
         let opt = CaseOptions {
             case: Case::Upper,
             snake: false,
             exceptions: None,
         };
-        let result = opt.process(&file);
-        assert_eq!(result, String::from("TEST FILE"));
+        opt.process(&mut file);
+        assert_eq!(file, String::from("TEST FILE"));
     }
 
     #[test]
     fn test_upper_case_snake() {
-        let file = String::from("test file");
+        let mut file = String::from("test file");
         let opt = CaseOptions {
             case: Case::Upper,
             snake: true,
             exceptions: None,
         };
-        let result = opt.process(&file);
-        assert_eq!(result, String::from("TEST_FILE"));
+        opt.process(&mut file);
+        assert_eq!(file, String::from("TEST_FILE"));
     }
 
     #[test]
     fn test_title_case() {
-        let file = String::from("test file");
+        let mut file = String::from("test file");
         let opt = CaseOptions {
             case: Case::Title,
             snake: false,
             exceptions: None,
         };
-        let result = opt.process(&file);
-        assert_eq!(result, String::from("Test File"));
+        opt.process(&mut file);
+        assert_eq!(file, String::from("Test File"));
     }
 
     #[test]
     fn test_title_case_snake() {
-        let file = String::from("test file");
+        let mut file = String::from("test file");
         let opt = CaseOptions {
             case: Case::Title,
             snake: true,
             exceptions: None,
         };
-        let result = opt.process(&file);
-        assert_eq!(result, String::from("Test_File"));
+        opt.process(&mut file);
+        assert_eq!(file, String::from("Test_File"));
     }
 
     #[test]
     fn test_sentence_case() {
-        let file = String::from("test file");
+        let mut file = String::from("test file");
         let opt = CaseOptions {
             case: Case::Sentence,
             snake: false,
             exceptions: None,
         };
-        let result = opt.process(&file);
-        assert_eq!(result, String::from("Test file"));
+        opt.process(&mut file);
+        assert_eq!(file, String::from("Test file"));
     }
 
     #[test]
     fn test_sentence_case_snake() {
-        let file = String::from("test file");
+        let mut file = String::from("test file");
         let opt = CaseOptions {
             case: Case::Sentence,
             snake: true,
             exceptions: None,
         };
-        let result = opt.process(&file);
-        assert_eq!(result, String::from("Test_file"));
+        opt.process(&mut file);
+        assert_eq!(file, String::from("Test_file"));
     }
 
     #[test]
     fn test_exceptions_with_upper() {
-        let files = (String::from("test file.doc"), String::from("test file.pdf"));
+        let mut files = (String::from("test file.doc"), String::from("test file.pdf"));
         let opt = CaseOptions {
             case: Case::Upper,
             snake: false,
             exceptions: Some(&"doc;PDF"),
         };
-        let result = (opt.process(&files.0), opt.process(&files.1));
+        (opt.process(&mut files.0), opt.process(&mut files.1));
         let expected = (String::from("TEST FILE.doc"), String::from("TEST FILE.PDF"));
-        assert_eq!(result, expected);
+        assert_eq!(files, expected);
     }
 }
