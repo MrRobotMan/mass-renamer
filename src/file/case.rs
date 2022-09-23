@@ -28,7 +28,7 @@ pub enum Case {
 impl CaseOptions<'_> {
     pub fn process(&self, file: &mut String) {
         *file = match self.case {
-            Case::Keep => file.to_string(),
+            Case::Keep => file.to_owned(),
             Case::Lower => file.to_lowercase(),
             Case::Upper => file.to_uppercase(),
             Case::Title => file.to_title_case(),
@@ -37,7 +37,7 @@ impl CaseOptions<'_> {
         if let Some(exceptions) = self.exceptions {
             for exception in exceptions.split(";") {
                 let mod_exception = match self.case {
-                    Case::Keep => exception.to_string(),
+                    Case::Keep => exception.to_owned(),
                     Case::Lower => exception.to_lowercase(),
                     Case::Upper => exception.to_uppercase(),
                     Case::Title => exception.to_title_case(),

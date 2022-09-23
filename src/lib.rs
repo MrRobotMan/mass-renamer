@@ -1,12 +1,18 @@
 pub mod file {
-    pub mod case_options;
-    pub mod name_options;
-    pub mod regex_options;
-    pub mod replace_options;
-    use case_options::CaseOptions;
-    use name_options::NameOptions;
-    use regex_options::RegexOptions;
-    use replace_options::ReplaceOptions;
+    pub mod case;
+    pub mod name;
+    pub mod reg;
+    pub mod remove;
+    pub mod replace;
+    use case::CaseOptions;
+    use name::NameOptions;
+    use reg::RegexOptions;
+    use replace::ReplaceOptions;
+
+    pub trait Process {
+        #[allow(unused_variables)]
+        fn process(&self, file: &mut String) {}
+    }
 
     /// Tool to rename a single file.
     /// Takes the `&path` and various options (processed in order) to return a `PathBuf`
@@ -27,18 +33,19 @@ pub mod file {
     ///
     /// ```
     /// # use std::path::{Path, PathBuf};
-    /// # use bulk_rename::file::{name_options::NameOptions, case_options::{Case, CaseOptions}, rename_file};
+    /// # use bulk_rename::file::{name::NameOptions, case::{Case, CaseOptions}, rename_file};
     /// let file = "file";
     /// let ext = ".txt";
     /// let name = NameOptions::Fixed("new_name");
-    /// let case = CaseOptions{case: Case::Upper, snake: false, exceptions: Some(&"txt")};
+    /// let case = CaseOptions{case: Case::Upper, snake: false, exceptions: Some(&"n")};
     /// let modes = (None, Some(name), None, Some(case), None, None, None, None, None, None);
     /// let new_name = rename_file(file, ext, modes);
-    /// assert_eq!(new_name.unwrap(), "NEW_NAME.txt");
+    /// assert_eq!(new_name.unwrap(), "nEW_nAME.txt");
     /// ```
     pub fn rename_file(
         file: &str,
         ext: &str,
+        // options: Vec<Box<dyn Process>>,
         modes: (
             Option<RegexOptions>,
             Option<NameOptions>,
@@ -57,6 +64,9 @@ pub mod file {
         if let Some(opt) = modes.0 {
             opt.process(&mut new_name, &mut extension)
         };
+        // for opt in options {
+        //     opt.process(&mut new_name)
+        // }
         if let Some(opt) = modes.1 {
             opt.process(&mut new_name);
         }
@@ -116,7 +126,7 @@ pub mod file {
         fn test_name() {
             let file = "file";
             let ext = ".txt";
-            let name = NameOptions::Fixed("new_name");
+            let name = NameOptions::Fixed("new_name".to_owned());
             let modes = (
                 None,
                 Some(name),

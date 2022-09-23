@@ -29,8 +29,8 @@ impl RegexOptions<'_> {
                     match split {
                         None => *file = res,
                         Some(r) => {
-                            *file = String::from(r.0);
-                            *ext = String::from(format!("{}{}", ".", r.1));
+                            *file = r.0.to_owned();
+                            *ext = format!("{}{}", ".", r.1).to_owned();
                         }
                     }
                 }
@@ -39,7 +39,7 @@ impl RegexOptions<'_> {
     }
     // if let Some(s) = base {
     //     if let Some(s) = s.to_str() {
-    //         let res = exp.replace_all(s, self.rep).to_string();
+    //         let res = exp.replace_all(s, self.rep).to_owned();
     //         if !self.extension {
     //             if let Some(e) = ext {
     //                 if let Some(e) = e.to_str() {
@@ -52,7 +52,7 @@ impl RegexOptions<'_> {
     //             }
     //         }
     //         if let Some(new_name) = res.rsplit_once(".") {
-    //             return Ok((new_name.0.to_string(), Some(new_name.1.to_string())));
+    //             return Ok((new_name.0.to_owned(), Some(new_name.1.to_owned())));
     //         } else {
     //             Ok((res, None))
     //         }

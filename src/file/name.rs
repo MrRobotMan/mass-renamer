@@ -1,12 +1,12 @@
 /// Options for the name feature.
-pub enum NameOptions<'a> {
+pub enum NameOptions {
     Keep,
     Remove,
-    Fixed(&'a str),
+    Fixed(String),
     Reverse,
 }
 
-impl NameOptions<'_> {
+impl NameOptions {
     /// Using the `NameOptions` enum and the name function, return a modified string.
     /// - `Keep` - Do not change the original file name (default).
     /// - `Remove` - Completely erase the file from the selected items. This allows it to be rebuilt using components higher than (2).
@@ -15,8 +15,8 @@ impl NameOptions<'_> {
     pub fn process(&self, file: &mut String) {
         match self {
             NameOptions::Keep => (),
-            NameOptions::Remove => *file = String::from(""),
-            NameOptions::Fixed(x) => *file = String::from(*x),
+            NameOptions::Remove => *file = "".to_owned(),
+            NameOptions::Fixed(x) => *file = x.to_owned(),
             NameOptions::Reverse => *file = file.chars().rev().collect::<String>(),
         };
     }
@@ -43,7 +43,7 @@ mod name_tests {
     fn fixed_name() {
         let mut file = String::from("file");
         let new_name = "renamed_file";
-        let opt = NameOptions::Fixed(new_name);
+        let opt = NameOptions::Fixed(new_name.to_owned());
         opt.process(&mut file);
         assert_eq!(file, String::from(new_name));
     }
