@@ -34,68 +34,28 @@ pub mod file {
     ///
     /// ```
     /// # use std::path::{Path, PathBuf};
-    /// # use bulk_rename::file::{name::NameOptions, case::{Case, CaseOptions}, rename_file};
+    /// # use bulk_rename::file::{name::NameOptions, case::{Case, CaseOptions}, rename_file, Process};
     /// let file = "file";
     /// let ext = ".txt";
     /// let name = NameOptions::Fixed("new_name".to_owned());
     /// let case = CaseOptions{case: Case::Upper, snake: false, exceptions: Some(&"n")};
-    /// let modes = (None, Some(name), None, Some(case), None, None, None, None, None, None);
+    /// let modes: Vec<Box<dyn Process>> = vec![Box::new(name), Box::new(case)];
     /// let new_name = rename_file(file, ext, modes);
-    /// assert_eq!(new_name.unwrap(), "nEW_nAME.txt");
+    /// assert_eq!(new_name, "nEW_nAME.txt");
     /// ```
-    pub fn rename_file(
-        file: &str,
-        ext: &str,
-        // options: Vec<Box<dyn Process>>,
-        modes: (
-            Option<RegexOptions>,
-            Option<NameOptions>,
-            Option<ReplaceOptions>,
-            Option<CaseOptions>,
-            Option<RemoveOptions>,
-            Option<String>,
-            Option<String>,
-            Option<String>,
-            Option<String>,
-            Option<String>,
-        ),
-    ) -> Option<String> {
+    pub fn rename_file(file: &str, ext: &str, options: Vec<Box<dyn Process>>) -> String {
         let mut new_name = String::from(file);
-        let mut extension = String::from(ext);
-        if let Some(opt) = modes.0 {
-            opt.process(&mut new_name, &mut extension)
-        };
-        // for opt in options {
-        //     opt.process(&mut new_name)
-        // }
-        if let Some(opt) = modes.1 {
-            opt.process(&mut new_name);
-        }
-        if let Some(opt) = modes.2 {
-            opt.process(&mut new_name);
-        };
-        if let Some(opt) = modes.3 {
+        let extension = String::from(ext);
+        for opt in options {
             opt.process(&mut new_name)
-        };
+        }
         new_name.push_str(&extension);
-        Some(new_name)
+        new_name
     }
 
     #[cfg(test)]
     mod file_tests {
         use super::*;
-        /// let modes = (
-        ///        None,
-        ///        None,
-        ///        None,
-        ///        None,
-        ///        None,
-        ///        None,
-        ///        None,
-        ///        None,
-        ///        None,
-        ///        None,
-        ///    )
 
         #[test]
         fn test_regex() {
@@ -105,22 +65,10 @@ pub mod file {
             let opt = RegexOptions {
                 exp: "123",
                 rep: "ABC",
-                extension: true,
             };
-            let modes = (
-                Some(opt),
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-            );
+            let modes: Vec<Box<dyn Process>> = vec![Box::new(opt)];
             let result = rename_file(file, ext, modes);
-            assert_eq!(result.unwrap(), expected)
+            assert_eq!(result, expected)
         }
 
         #[test]
@@ -128,20 +76,9 @@ pub mod file {
             let file = "file";
             let ext = ".txt";
             let name = NameOptions::Fixed("new_name".to_owned());
-            let modes = (
-                None,
-                Some(name),
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-            );
+            let modes: Vec<Box<dyn Process>> = vec![Box::new(name)];
             let new_name = rename_file(file, ext, modes);
-            assert_eq!(new_name.unwrap(), (String::from("new_name.txt")))
+            assert_eq!(new_name, String::from("new_name.txt"))
         }
     }
 }
