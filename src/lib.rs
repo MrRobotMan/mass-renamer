@@ -4,10 +4,11 @@ pub mod file {
     pub mod reg;
     pub mod remove;
     pub mod replace;
-    use case::CaseOptions;
-    use name::NameOptions;
-    use reg::RegexOptions;
-    use replace::ReplaceOptions;
+    pub use case::{Case, CaseOptions};
+    pub use name::NameOptions;
+    pub use reg::RegexOptions;
+    pub use remove::{LeadDots, RemoveOptions};
+    pub use replace::ReplaceOptions;
 
     pub trait Process {
         #[allow(unused_variables)]
@@ -36,7 +37,7 @@ pub mod file {
     /// # use bulk_rename::file::{name::NameOptions, case::{Case, CaseOptions}, rename_file};
     /// let file = "file";
     /// let ext = ".txt";
-    /// let name = NameOptions::Fixed("new_name");
+    /// let name = NameOptions::Fixed("new_name".to_owned());
     /// let case = CaseOptions{case: Case::Upper, snake: false, exceptions: Some(&"n")};
     /// let modes = (None, Some(name), None, Some(case), None, None, None, None, None, None);
     /// let new_name = rename_file(file, ext, modes);
@@ -51,7 +52,7 @@ pub mod file {
             Option<NameOptions>,
             Option<ReplaceOptions>,
             Option<CaseOptions>,
-            Option<String>,
+            Option<RemoveOptions>,
             Option<String>,
             Option<String>,
             Option<String>,

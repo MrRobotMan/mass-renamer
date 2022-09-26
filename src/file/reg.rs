@@ -10,14 +10,7 @@ pub struct RegexOptions<'a> {
 impl RegexOptions<'_> {
     /// Use a regular expression `Match` to find the offending text and `Replace` it with new.
     /// Check the `Include Ext.` box to include the file extension in the `Match`.
-    pub fn process(
-        &self,
-        // exp: &str,
-        // rep: &str,
-        file: &mut String,
-        ext: &mut String,
-        // extension: bool,
-    ) -> () {
+    pub fn process(&self, file: &mut String, ext: &mut String) -> () {
         if let Ok(exp) = Regex::new(self.exp) {
             match self.extension {
                 false => *file = exp.replace_all(&file, self.rep).to_string(),
@@ -37,31 +30,6 @@ impl RegexOptions<'_> {
             }
         };
     }
-    // if let Some(s) = base {
-    //     if let Some(s) = s.to_str() {
-    //         let res = exp.replace_all(s, self.rep).to_owned();
-    //         if !self.extension {
-    //             if let Some(e) = ext {
-    //                 if let Some(e) = e.to_str() {
-    //                     return Ok((res, Some(String::from(e))));
-    //                 } else {
-    //                     return Err("Extension could not be converted to str.".into());
-    //                 };
-    //             } else {
-    //                 return Err("Extension does not exist.".into());
-    //             }
-    //         }
-    //         if let Some(new_name) = res.rsplit_once(".") {
-    //             return Ok((new_name.0.to_owned(), Some(new_name.1.to_owned())));
-    //         } else {
-    //             Ok((res, None))
-    //         }
-    //     } else {
-    //         Err("Could not convert file to str in regex match, likely invalid unicode.".into())
-    //     }
-    // } else {
-    //     Err("Bad file in regex match.".into())
-    // }
 }
 
 #[cfg(test)]

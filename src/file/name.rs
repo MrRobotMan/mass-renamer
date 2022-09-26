@@ -6,13 +6,14 @@ pub enum NameOptions {
     Reverse,
 }
 
-impl NameOptions {
+use crate::file::Process;
+impl Process for NameOptions {
     /// Using the `NameOptions` enum and the name function, return a modified string.
     /// - `Keep` - Do not change the original file name (default).
     /// - `Remove` - Completely erase the file from the selected items. This allows it to be rebuilt using components higher than (2).
     /// - `Fixed` - Specify a new file in the box for all selected items. Only really useful if you're also using the Numbering section.
     /// - `Reverse` - Reverse the name, e.g. 12345.txt becomes 54321.txt.
-    pub fn process(&self, file: &mut String) {
+    fn process(&self, file: &mut String) {
         match self {
             NameOptions::Keep => (),
             NameOptions::Remove => *file = "".to_owned(),

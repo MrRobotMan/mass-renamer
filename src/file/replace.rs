@@ -8,11 +8,12 @@ pub struct ReplaceOptions<'a> {
     pub case: bool,
 }
 
-impl ReplaceOptions<'_> {
+use crate::file::Process;
+impl Process for ReplaceOptions<'_> {
     /// `Replace` the text in this field with the text in the `With` field.
     /// `Replace` can be case-sensitive using `Match Case` checkbox.
     /// Note that the `With` text is always replaced with the text as written, including any specific text case.
-    pub fn process(&self, file: &mut String) {
+    fn process(&self, file: &mut String) {
         if self.case {
             *file = file.replace(self.replace, self.with);
         } else {
