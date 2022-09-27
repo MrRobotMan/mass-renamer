@@ -1,3 +1,5 @@
+use crate::file::Process;
+
 /// Options for removing parts of the filename.
 /// Remove specific parts of a filename but not file extensions.
 ///
@@ -44,8 +46,6 @@ pub enum LeadDots {
     Two,
     Both,
 }
-
-use crate::file::Process;
 
 impl Process for RemoveOptions<'_> {
     fn process(&self, file: &mut String) {

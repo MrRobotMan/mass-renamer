@@ -1,3 +1,5 @@
+use crate::file::Process;
+
 /// Options for the name feature.
 pub enum NameOptions {
     Keep,
@@ -6,7 +8,6 @@ pub enum NameOptions {
     Reverse,
 }
 
-use crate::file::Process;
 impl Process for NameOptions {
     /// Using the `NameOptions` enum and the name function, return a modified string.
     /// - `Keep` - Do not change the original file name (default).

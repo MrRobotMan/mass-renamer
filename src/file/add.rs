@@ -1,0 +1,112 @@
+use crate::file::Process;
+
+/// Add a fixed `Prefix` or`Suffix` to the filename,
+/// or `Insert` text at a specific location (0 indexed, negative to index from the end).
+///
+/// You may also choose to add a `Word Space`. This will insert a space before any
+/// capital letter (except the first character), unless there's a space already there.
+pub struct AddOptions<'a> {
+    prefix: Option<&'a str>,
+    insert: Option<(i32, &'a str)>,
+    suffix: Option<&'a str>,
+    word_space: bool,
+}
+
+impl Process for AddOptions<'_> {
+    fn process(&self, file: &mut String) {
+        if let Some(prefix) = self.prefix {
+            file.insert_str(0, prefix);
+        }
+
+        if let Some((pos, insert)) = self.insert {
+            match pos {
+                p if p >= file.len() as i32 => file.push_str(insert),
+                p if p >= 0 => file.insert_str(p as usize, insert),
+                p if -1 * p >= file.len() as i32 => file.insert_str(0, insert),
+                _ => {
+                    let p = (file.len() as i32 + pos) as usize;
+                    file.insert_str(p, insert);
+                } // pos is negative
+            }
+        }
+
+        if let Some(suffix) = self.suffix {
+            file.push_str(suffix);
+        }
+
+        if self.word_space {
+            let mut new = String::new();
+            for chr in file.chars() {
+                if chr.is_uppercase() {
+                    new.push_str(" ");
+                }
+                new.push(chr);
+            }
+            *file = new
+        }
+    }
+}
+
+#[cfg(test)]
+mod add_tests {
+    use super::*;
+
+    #[test]
+    fn add_all_options() {
+        let prefix = Some("prefix-");
+        let insert = Some((15, "-insert-"));
+        let suffix = Some("-suffix");
+        let word_space = true;
+        let mut file = "SomeTestFile".to_owned();
+        let opt = AddOptions {
+            prefix,
+            insert,
+            suffix,
+            word_space,
+        };
+        opt.process(&mut file);
+        assert_eq!(file, "prefix- Some Test-insert- File-suffix".to_owned())
+    }
+
+    #[test]
+    fn test_negative_insert() {
+        let insert = Some((-1, "!"));
+        let mut file = "Some Test File".to_owned();
+        let opt = AddOptions {
+            prefix: None,
+            insert,
+            suffix: None,
+            word_space: false,
+        };
+        opt.process(&mut file);
+        assert_eq!(file, "Some Test Fil!e".to_owned());
+    }
+
+    #[test]
+    fn test_insert_too_far_positive() {
+        let insert = Some((100, "!"));
+        let mut file = "Some Test File".to_owned();
+        let opt = AddOptions {
+            prefix: None,
+            insert,
+            suffix: None,
+            word_space: false,
+        };
+        opt.process(&mut file);
+        assert_eq!(file, "Some Test File!".to_owned());
+    }
+
+    #[test]
+    fn test_insert_too_far_negative() {
+        let insert = Some((-100, "!"));
+        let mut file = "Some Test File".to_owned();
+        let opt = AddOptions {
+            prefix: None,
+            insert,
+            suffix: None,
+            word_space: false,
+        };
+        opt.process(&mut file);
+        assert_eq!(file, "!Some Test File".to_owned());
+    }
+}

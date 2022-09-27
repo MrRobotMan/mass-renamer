@@ -1,9 +1,11 @@
 pub mod file {
+    pub mod add;
     pub mod case;
     pub mod name;
     pub mod reg;
     pub mod remove;
     pub mod replace;
+    pub use add::AddOptions;
     pub use case::{Case, CaseOptions};
     pub use name::NameOptions;
     pub use reg::RegexOptions;
@@ -25,10 +27,10 @@ pub mod file {
     ///    -  4 Case
     ///    -  5 Remove
     ///    -  6 Add
-    ///    -  7 Auto Date
-    ///    -  8 Append Folder Name
-    ///    -  9 Numbering
-    ///    - 10 Extension
+    ///    -  7 Auto Date - To Do
+    ///    -  8 Append Folder Name - To Do
+    ///    -  9 Numbering - To Do
+    ///    - 10 Extension - To Do
     ///
     /// # Example
     ///

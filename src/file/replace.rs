@@ -1,3 +1,5 @@
+use crate::file::Process;
+
 /// Options for basic renaming rules.
 /// replace: text to be replaced
 /// with: new text
@@ -8,7 +10,6 @@ pub struct ReplaceOptions<'a> {
     pub case: bool,
 }
 
-use crate::file::Process;
 impl Process for ReplaceOptions<'_> {
     /// `Replace` the text in this field with the text in the `With` field.
     /// `Replace` can be case-sensitive using `Match Case` checkbox.

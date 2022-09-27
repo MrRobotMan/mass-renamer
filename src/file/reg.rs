@@ -1,3 +1,4 @@
+use crate::file::Process;
 use regex::Regex;
 
 /// Options for the regex feature
@@ -6,7 +7,6 @@ pub struct RegexOptions<'a> {
     pub rep: &'a str,
 }
 
-use crate::file::Process;
 impl Process for RegexOptions<'_> {
     /// Use a regular expression `Match` to find the offending text and `Replace` it with new.
     fn process(&self, file: &mut String) -> () {

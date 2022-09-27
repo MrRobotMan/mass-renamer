@@ -1,3 +1,5 @@
+use inflector::Inflector;
+
 /// Change the case of the file.
 /// - `Keep` - Do change the capitalization (default).
 /// - `Lower` - change all selected files to lowercase.
@@ -26,7 +28,6 @@ pub enum Case {
 use crate::file::Process;
 impl Process for CaseOptions<'_> {
     fn process(&self, file: &mut String) {
-        use inflector::Inflector;
         *file = match self.case {
             Case::Keep => file.to_owned(),
             Case::Lower => file.to_lowercase(),
