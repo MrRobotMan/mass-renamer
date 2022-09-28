@@ -12,7 +12,7 @@ impl Process for RegexOptions<'_> {
     /// Use a regular expression `Match` to find the offending text and `Replace` it with new.
     fn process(&self, file: &mut RenameFile) -> () {
         if let Ok(exp) = Regex::new(self.exp) {
-            match (self.extension, file.extension) {
+            match (self.extension, &file.extension) {
                 (false, _) | (_, None) => {
                     file.stem = exp.replace_all(&file.stem, self.rep).to_string()
                 }
@@ -48,11 +48,11 @@ mod regex_tests {
             rep,
             extension: true,
         };
-        let rename = RenameFile::new(file).unwrap();
+        let mut rename = RenameFile::new(file).unwrap();
         opt.process(&mut rename);
         assert_eq!(
             (rename.stem, rename.extension),
-            (String::from("fileABCD"), Some(String::from(".csv")))
+            (String::from("fileABCD"), Some(String::from("csv")))
         );
     }
     #[test]
@@ -65,11 +65,11 @@ mod regex_tests {
             rep,
             extension: false,
         };
-        let rename = RenameFile::new(file).unwrap();
+        let mut rename = RenameFile::new(file).unwrap();
         opt.process(&mut rename);
         assert_eq!(
             (rename.stem, rename.extension),
-            (String::from("fileABCD"), Some(String::from(".txt")))
+            (String::from("fileABCD"), Some(String::from("txt")))
         );
     }
     #[test]
@@ -82,11 +82,11 @@ mod regex_tests {
             rep,
             extension: false,
         };
-        let rename = RenameFile::new(file).unwrap();
+        let mut rename = RenameFile::new(file).unwrap();
         opt.process(&mut rename);
         assert_eq!(
             (rename.stem, rename.extension),
-            (String::from("file123"), Some(String::from(".txt")))
+            (String::from("file123"), Some(String::from("txt")))
         );
     }
 }

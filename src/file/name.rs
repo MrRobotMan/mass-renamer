@@ -30,32 +30,31 @@ mod name_tests {
     use std::path::Path;
     #[test]
     fn keep_name() {
-        let file = RenameFile::new(Path::new("file")).unwrap();
+        let mut file = RenameFile::new(Path::new("file")).unwrap();
         let opt = NameOptions::Keep;
         opt.process(&mut file);
-        assert_eq!(file.stem, String::from("file"));
+        assert_eq!(&file.stem, "file");
     }
     #[test]
     fn remove_name() {
-        let file = RenameFile::new(Path::new("file")).unwrap();
+        let mut file = RenameFile::new(Path::new("file")).unwrap();
         let opt = NameOptions::Remove;
         opt.process(&mut file);
-        assert_eq!(file.stem, String::from(""));
+        assert_eq!(&file.stem, "");
     }
     #[test]
     fn fixed_name() {
-        let file = RenameFile::new(Path::new("file")).unwrap();
+        let mut file = RenameFile::new(Path::new("file")).unwrap();
         let new_name = "renamed_file";
         let opt = NameOptions::Fixed(new_name.to_owned());
         opt.process(&mut file);
-        assert_eq!(file.stem, String::from(new_name));
+        assert_eq!(&file.stem, new_name);
     }
     #[test]
     fn reverse_name() {
-        let file = RenameFile::new(Path::new("file")).unwrap();
-        let reversed = String::from("elif");
+        let mut file = RenameFile::new(Path::new("file")).unwrap();
         let opt = NameOptions::Reverse;
         opt.process(&mut file);
-        assert_eq!(file.stem, reversed);
+        assert_eq!(&file.stem, "elif");
     }
 }

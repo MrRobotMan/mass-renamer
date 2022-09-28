@@ -10,7 +10,7 @@ pub mod file {
     pub use case::{Case, CaseOptions};
     pub use name::NameOptions;
     pub use reg::RegexOptions;
-    pub use remove::{LeadDots, RemoveOptions};
+    pub use remove::RemoveOptions;
     pub use replace::ReplaceOptions;
     use std::{
         ffi::OsStr,
@@ -30,7 +30,7 @@ pub mod file {
 
     impl RenameFile<'_> {
         pub fn new(path: &Path) -> Option<RenameFile> {
-            if !path.is_file() {
+            if path.is_dir() {
                 return None;
             }
             let extension = generate_path_as_string(path.extension());
@@ -63,25 +63,25 @@ pub mod file {
         ///
         /// ```
         /// # use std::path::{Path, PathBuf};
-        /// # use bulk_rename::file::{name::NameOptions, case::{Case, CaseOptions}, rename_file, Process};
+        /// # use bulk_rename::file::{name::NameOptions, case::{Case, CaseOptions}, RenameFile, Process};
         /// let file = Path::new("file.txt");
         /// let name = NameOptions::Fixed("new_name".to_owned());
         /// let case = CaseOptions{case: Case::Upper, snake: false, exceptions: Some(&"n")};
         /// let modes: Vec<Box<dyn Process>> = vec![Box::new(name), Box::new(case)];
-        /// let rename = RenameFile::new(file);
+        /// let mut rename = RenameFile::new(file).unwrap();
         /// let new_name = rename.rename(modes);
         /// assert_eq!(new_name, PathBuf::from("nEW_nAME.txt"));
         /// ```
         pub fn rename(&mut self, options: Vec<Box<dyn Process>>) -> PathBuf {
             for opt in options {
-                opt.process(&mut self);
+                opt.process(self);
             }
-            let new_name = match self.original.parent() {
+            let mut new_name = match self.original.parent() {
                 None => PathBuf::from("/"),
                 Some(p) => PathBuf::from(p),
             };
             new_name.push(Path::new(&self.stem));
-            match self.extension {
+            match &self.extension {
                 None => new_name,
                 Some(e) => new_name.with_extension(e),
             }
@@ -110,7 +110,7 @@ pub mod file {
                 extension: false,
             };
             let modes: Vec<Box<dyn Process>> = vec![Box::new(opt)];
-            let rename = RenameFile::new(file).unwrap();
+            let mut rename = RenameFile::new(file).unwrap();
             let result = rename.rename(modes);
             assert_eq!(result, expected)
         }
@@ -121,7 +121,7 @@ pub mod file {
             let expected = PathBuf::from("new_name.txt");
             let name = NameOptions::Fixed("new_name".to_owned());
             let modes: Vec<Box<dyn Process>> = vec![Box::new(name)];
-            let rename = RenameFile::new(file).unwrap();
+            let mut rename = RenameFile::new(file).unwrap();
             let new_name = rename.rename(modes);
             assert_eq!(new_name, expected)
         }

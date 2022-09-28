@@ -1,6 +1,6 @@
 use crate::file::{Process, RenameFile};
-use chrono;
-use std::{fs, path::Path};
+// use chrono;
+// use std::{fs, path::Path};
 
 /// Use the prefix or suffix `Mode` to modify the filename with a date format.
 /// The `Date` that the file was created, modified, or the current date can be added in
@@ -14,7 +14,7 @@ use std::{fs, path::Path};
 pub struct DateOptions {}
 
 impl Process for DateOptions {
-    fn process(&self, file: &mut RenameFile) {}
+    fn process(&self, _file: &mut RenameFile) {}
 }
 
 #[cfg(test)]

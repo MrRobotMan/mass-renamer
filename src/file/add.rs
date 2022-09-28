@@ -66,7 +66,7 @@ mod add_tests {
             suffix,
             word_space,
         };
-        let rename = RenameFile::new(file).unwrap();
+        let mut rename = RenameFile::new(file).unwrap();
         opt.process(&mut rename);
         assert_eq!(
             rename.stem,
@@ -84,7 +84,7 @@ mod add_tests {
             suffix: None,
             word_space: false,
         };
-        let rename = RenameFile::new(file).unwrap();
+        let mut rename = RenameFile::new(file).unwrap();
         opt.process(&mut rename);
         assert_eq!(rename.stem, "Some Test Fil!e".to_owned());
     }
@@ -99,7 +99,7 @@ mod add_tests {
             suffix: None,
             word_space: false,
         };
-        let rename = RenameFile::new(file).unwrap();
+        let mut rename = RenameFile::new(file).unwrap();
         opt.process(&mut rename);
         assert_eq!(rename.stem, "Some Test File!".to_owned());
     }
@@ -114,7 +114,7 @@ mod add_tests {
             suffix: None,
             word_space: false,
         };
-        let rename = RenameFile::new(file).unwrap();
+        let mut rename = RenameFile::new(file).unwrap();
         opt.process(&mut rename);
         assert_eq!(rename.stem, "!Some Test File".to_owned());
     }
