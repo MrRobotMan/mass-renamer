@@ -1,4 +1,4 @@
-use crate::file::Process;
+use crate::file::{Process, RenameFile};
 
 /// Add a fixed `Prefix` or`Suffix` to the filename,
 /// or `Insert` text at a specific location (0 indexed, negative to index from the end).
@@ -13,7 +13,8 @@ pub struct AddOptions<'a> {
 }
 
 impl Process for AddOptions<'_> {
-    fn process(&self, file: &mut String) {
+    fn process(&self, file: &mut RenameFile) {
+        let file = &mut file.stem;
         if let Some(prefix) = self.prefix {
             file.insert_str(0, prefix);
         }
@@ -50,6 +51,7 @@ impl Process for AddOptions<'_> {
 #[cfg(test)]
 mod add_tests {
     use super::*;
+    use std::path::Path;
 
     #[test]
     fn add_all_options() {
@@ -57,56 +59,63 @@ mod add_tests {
         let insert = Some((15, "-insert-"));
         let suffix = Some("-suffix");
         let word_space = true;
-        let mut file = "SomeTestFile".to_owned();
+        let file = Path::new("SomeTestFile");
         let opt = AddOptions {
             prefix,
             insert,
             suffix,
             word_space,
         };
-        opt.process(&mut file);
-        assert_eq!(file, "prefix- Some Test-insert- File-suffix".to_owned())
+        let rename = RenameFile::new(file).unwrap();
+        opt.process(&mut rename);
+        assert_eq!(
+            rename.stem,
+            "prefix- Some Test-insert- File-suffix".to_owned()
+        )
     }
 
     #[test]
     fn test_negative_insert() {
         let insert = Some((-1, "!"));
-        let mut file = "Some Test File".to_owned();
+        let file = Path::new("Some Test File");
         let opt = AddOptions {
             prefix: None,
             insert,
             suffix: None,
             word_space: false,
         };
-        opt.process(&mut file);
-        assert_eq!(file, "Some Test Fil!e".to_owned());
+        let rename = RenameFile::new(file).unwrap();
+        opt.process(&mut rename);
+        assert_eq!(rename.stem, "Some Test Fil!e".to_owned());
     }
 
     #[test]
     fn test_insert_too_far_positive() {
         let insert = Some((100, "!"));
-        let mut file = "Some Test File".to_owned();
+        let file = Path::new("Some Test File");
         let opt = AddOptions {
             prefix: None,
             insert,
             suffix: None,
             word_space: false,
         };
-        opt.process(&mut file);
-        assert_eq!(file, "Some Test File!".to_owned());
+        let rename = RenameFile::new(file).unwrap();
+        opt.process(&mut rename);
+        assert_eq!(rename.stem, "Some Test File!".to_owned());
     }
 
     #[test]
     fn test_insert_too_far_negative() {
         let insert = Some((-100, "!"));
-        let mut file = "Some Test File".to_owned();
+        let file = Path::new("Some Test File");
         let opt = AddOptions {
             prefix: None,
             insert,
             suffix: None,
             word_space: false,
         };
-        opt.process(&mut file);
-        assert_eq!(file, "!Some Test File".to_owned());
+        let rename = RenameFile::new(file).unwrap();
+        opt.process(&mut rename);
+        assert_eq!(rename.stem, "!Some Test File".to_owned());
     }
 }

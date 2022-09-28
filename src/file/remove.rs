@@ -1,4 +1,4 @@
-use crate::file::Process;
+use crate::file::{Process, RenameFile};
 
 /// Options for removing parts of the filename.
 /// Remove specific parts of a filename but not file extensions.
@@ -48,7 +48,8 @@ pub enum LeadDots {
 }
 
 impl Process for RemoveOptions<'_> {
-    fn process(&self, file: &mut String) {
+    fn process(&self, file: &mut RenameFile) {
+        let file = &mut file.stem;
         if self.first_n + self.last_n > 0 {
             self.first_last(file)
         }
@@ -187,6 +188,7 @@ impl RemoveOptions<'_> {
 #[cfg(test)]
 mod remove_tests {
     use super::*;
+    use std::path::Path;
 
     #[test]
     fn combined_removals() {
@@ -203,7 +205,7 @@ mod remove_tests {
         let chars = false;
         let symbols = true;
         let lead_dots = LeadDots::None;
-        let mut file = String::from("some test file  1234withÃ!  testing");
+        let file = RenameFile::new(Path::new("some test file  1234withÃ!  testing")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -220,7 +222,7 @@ mod remove_tests {
             lead_dots,
         };
         opt.process(&mut file);
-        assert_eq!(file, String::from("es esi"))
+        assert_eq!(file.stem, String::from("es esi"))
     }
 
     #[test]
@@ -238,7 +240,7 @@ mod remove_tests {
         let chars = false;
         let symbols = false;
         let lead_dots = LeadDots::None;
-        let mut file = String::from("test_file");
+        let file = RenameFile::new(Path::new("test_file")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -255,7 +257,7 @@ mod remove_tests {
             lead_dots,
         };
         opt.process(&mut file);
-        assert_eq!(file, String::from(""))
+        assert_eq!(file.stem, String::from(""))
     }
 
     #[test]
@@ -273,7 +275,7 @@ mod remove_tests {
         let chars = false;
         let symbols = false;
         let lead_dots = LeadDots::None;
-        let mut file = String::from("test_file");
+        let file = RenameFile::new(Path::new("test_file")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -290,7 +292,7 @@ mod remove_tests {
             lead_dots,
         };
         opt.process(&mut file);
-        assert_eq!(file, String::from(""))
+        assert_eq!(file.stem, String::from(""))
     }
 
     #[test]
@@ -308,7 +310,7 @@ mod remove_tests {
         let chars = false;
         let symbols = false;
         let lead_dots = LeadDots::One;
-        let mut file = String::from("file to test");
+        let file = RenameFile::new(Path::new("file to test")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -325,7 +327,7 @@ mod remove_tests {
             lead_dots,
         };
         opt.process(&mut file);
-        assert_eq!(file, String::from("to test"));
+        assert_eq!(file.stem, String::from("to test"));
     }
 
     #[test]
@@ -343,8 +345,8 @@ mod remove_tests {
         let chars = true;
         let symbols = false;
         let lead_dots = LeadDots::One;
-        let mut file = String::from(".file123");
-        let mut file2 = String::from("..file123");
+        let file = RenameFile::new(Path::new(".file123")).unwrap();
+        let file2 = RenameFile::new(Path::new("..file123")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -362,8 +364,8 @@ mod remove_tests {
         };
         opt.process(&mut file);
         opt.process(&mut file2);
-        assert_eq!(file, String::from("123"));
-        assert_eq!(file2, String::from("..123"));
+        assert_eq!(file.stem, String::from("123"));
+        assert_eq!(file2.stem, String::from("..123"));
     }
 
     #[test]
@@ -381,8 +383,8 @@ mod remove_tests {
         let chars = false;
         let symbols = false;
         let lead_dots = LeadDots::Two;
-        let mut file = String::from(".file123");
-        let mut file2 = String::from("..file123");
+        let file = RenameFile::new(Path::new(".file123")).unwrap();
+        let file2 = RenameFile::new(Path::new("..file123")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -400,8 +402,8 @@ mod remove_tests {
         };
         opt.process(&mut file);
         opt.process(&mut file2);
-        assert_eq!(file, String::from(".file"));
-        assert_eq!(file2, String::from("file"));
+        assert_eq!(file.stem, String::from(".file"));
+        assert_eq!(file2.stem, String::from("file"));
     }
 
     #[test]
@@ -419,8 +421,8 @@ mod remove_tests {
         let chars = false;
         let symbols = false;
         let lead_dots = LeadDots::Both;
-        let mut file = String::from(".file123");
-        let mut file2 = String::from("..file123");
+        let file = RenameFile::new(Path::new(".file123")).unwrap();
+        let file2 = RenameFile::new(Path::new("..file123")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -438,7 +440,7 @@ mod remove_tests {
         };
         opt.process(&mut file);
         opt.process(&mut file2);
-        assert_eq!(file, String::from("file123"));
-        assert_eq!(file2, String::from("file123"));
+        assert_eq!(file.stem, String::from("file123"));
+        assert_eq!(file2.stem, String::from("file123"));
     }
 }

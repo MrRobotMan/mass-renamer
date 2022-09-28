@@ -1,4 +1,4 @@
-use crate::file::Process;
+use crate::file::{Process, RenameFile};
 
 /// Options for basic renaming rules.
 /// replace: text to be replaced
@@ -14,7 +14,8 @@ impl Process for ReplaceOptions<'_> {
     /// `Replace` the text in this field with the text in the `With` field.
     /// `Replace` can be case-sensitive using `Match Case` checkbox.
     /// Note that the `With` text is always replaced with the text as written, including any specific text case.
-    fn process(&self, file: &mut String) {
+    fn process(&self, file: &mut RenameFile) {
+        let file = &mut file.stem;
         if self.case {
             *file = file.replace(self.replace, self.with);
         } else {
@@ -36,11 +37,12 @@ impl Process for ReplaceOptions<'_> {
 #[cfg(test)]
 mod match_tests {
     use super::*;
+    use std::path::Path;
     #[test]
     fn no_matching_text_case_sensitive() {
         let replace = "ABC";
         let with = "123";
-        let mut file = String::from("fileabc");
+        let mut file = RenameFile::new(Path::new("fileabc")).unwrap();
         let case = true;
         let opt = ReplaceOptions {
             replace,
@@ -48,13 +50,13 @@ mod match_tests {
             case,
         };
         opt.process(&mut file);
-        assert_eq!(file, String::from("fileabc"))
+        assert_eq!(file.stem, String::from("fileabc"))
     }
     #[test]
     fn no_matching_text_case_insensitive() {
         let replace = "qrs";
         let with = "123";
-        let mut file = String::from("fileabc");
+        let mut file = RenameFile::new(Path::new("fileabc")).unwrap();
         let case = false;
         let opt = ReplaceOptions {
             replace,
@@ -62,13 +64,13 @@ mod match_tests {
             case,
         };
         opt.process(&mut file);
-        assert_eq!(file, String::from("fileabc"))
+        assert_eq!(file.stem, String::from("fileabc"))
     }
     #[test]
     fn matched_case_sensitive() {
         let replace = "abc";
         let with = "123";
-        let mut file = String::from("fileabc");
+        let mut file = RenameFile::new(Path::new("fileabc")).unwrap();
         let case = true;
         let opt = ReplaceOptions {
             replace,
@@ -76,13 +78,13 @@ mod match_tests {
             case,
         };
         opt.process(&mut file);
-        assert_eq!(file, String::from("file123"))
+        assert_eq!(file.stem, String::from("file123"))
     }
     #[test]
     fn matched_case_insensitive() {
         let replace = "ABC";
         let with = "123";
-        let mut file = String::from("fileabc");
+        let mut file = RenameFile::new(Path::new("fileabc")).unwrap();
         let case = false;
         let opt = ReplaceOptions {
             replace,
@@ -90,6 +92,6 @@ mod match_tests {
             case,
         };
         opt.process(&mut file);
-        assert_eq!(file, String::from("file123"))
+        assert_eq!(file.stem, String::from("file123"))
     }
 }
