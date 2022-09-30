@@ -8,6 +8,7 @@ pub mod file {
     pub mod replace;
     pub use add::AddOptions;
     pub use case::{Case, CaseOptions};
+    pub use date::{DateFormat, DateMode, DateOptions, DatePrefix, DateSuffix};
     pub use name::NameOptions;
     pub use reg::RegexOptions;
     pub use remove::RemoveOptions;

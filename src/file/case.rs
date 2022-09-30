@@ -18,6 +18,12 @@ pub struct CaseOptions<'a> {
     pub exceptions: Option<&'a str>,
 }
 
+/// Select from
+/// `Case::Keep` to not change case (default),
+/// `Case::Lower` to convert to lowercase,
+/// `Case::Upper` to convert to uppercase,
+/// `Case::Title` to convert to titlecase, or
+/// `Case::Sentence` to convert to sentence case.
 pub enum Case {
     Keep,
     Lower,

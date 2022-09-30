@@ -23,9 +23,27 @@ pub struct DateOptions<'a> {
 
 impl Process for DateOptions<'_> {
     fn process(&self, file: &mut RenameFile) {
-        let datetime = self.get_date(&file.original);
-        if datetime.is_err() {
-            return;
+        if let Ok(datetime) = self.get_date(&file.original) {
+            let format = match &self.fmt {
+                DateFormat::Std((prefix, suffix)) => {
+                    let mut fmt = prefix.get_format(self.seg, self.full_year);
+                    if let Some(suf) = suffix {
+                        fmt.push_str(self.seg);
+                        fmt.push_str(&suf.get_format(self.seg));
+                    }
+                    fmt
+                }
+                DateFormat::Custom(fmt) => (*fmt).to_owned(),
+            };
+            match self.date_mode {
+                DateMode::Prefix => file
+                    .stem
+                    .insert_str(0, &format!("{}{}", datetime.format(&format), self.sep)),
+                DateMode::Suffix => {
+                    file.stem
+                        .push_str(&format!("{}{}", self.sep, datetime.format(&format)));
+                }
+            }
         }
     }
 }
@@ -43,35 +61,71 @@ impl DateOptions<'_> {
     }
 }
 
+/// Select from
+/// `DateMode::Prefix` or
+/// `DateMode::Suffix`.
 pub enum DateMode {
-    Before,
-    After,
+    Prefix,
+    Suffix,
 }
 
+/// Select from
+/// `DateType::Created` for the file creation date,
+/// `Datetype::Modified` for the date last modified, or
+/// `DateType::Current` for today's date.
+///
+/// Note, if an OS does not support `Created` or `Modified` this option will
+/// result in no change to the file name.
 pub enum DateType {
     Created,
     Modified,
     Current,
 }
 
+/// `DateFormat` can be
+/// `DateFormat::Std(DatePrefix, Option<DateSuffix>)` to use the standard options
+/// or `DateFormat::Custom(&str)` to use a custom `strftime` format.
 pub enum DateFormat<'a> {
-    Std(StdDateFormat),
+    Std((DatePrefix, Option<DateSuffix>)),
     Custom(&'a str),
 }
 
-pub struct StdDateFormat {
-    pub prefix: DatePrefix,
-    pub suffix: Option<DateSuffix>,
-}
-
+/// Select from
+/// `DatePrefix::DMY` for Day Month Year,
+/// `DatePrefix::MDY` for Month Year Day, or
+/// `DatePrefix::YMD` for Year Month Day
 pub enum DatePrefix {
     DMY,
     MDY,
     YMD,
 }
+
+impl DatePrefix {
+    fn get_format(&self, sep: &str, full_year: bool) -> String {
+        let y = if full_year { "%Y" } else { "%y" };
+        match self {
+            DatePrefix::DMY => format!("%d{sep}%m{sep}{y}"),
+            DatePrefix::MDY => format!("%m{sep}%d{sep}{y}"),
+            DatePrefix::YMD => format!("{y}{sep}%m{sep}%d"),
+        }
+    }
+}
+
+/// Select from
+/// `DateSuffix::HM` for Hour Minute, or
+/// `DateSuffix::HMS` for Hour Minute Second
 pub enum DateSuffix {
     HM,
     HMS,
+}
+
+impl DateSuffix {
+    fn get_format(&self, sep: &str) -> String {
+        match self {
+            DateSuffix::HM => format!("%H{sep}%M{sep}"),
+            DateSuffix::HMS => format!("%H{sep}%M{sep}%S"),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -91,15 +145,12 @@ mod date_tests {
     }
 
     #[test]
-    fn prefix_date_created_hyphen_separator_full_year() {
+    fn prefix_date_modified_hyphen_separator_full_year() {
         run_test(|| {
             let mut file = RenameFile::new(Path::new("test file.txt")).unwrap();
-            let date_mode = DateMode::Before;
-            let date_type = DateType::Created;
-            let fmt = DateFormat::Std(StdDateFormat {
-                prefix: DatePrefix::DMY,
-                suffix: None,
-            });
+            let date_mode = DateMode::Prefix;
+            let date_type = DateType::Modified;
+            let fmt = DateFormat::Std((DatePrefix::DMY, None));
             let sep = "-";
             let seg = "_";
             let full_year = true;
@@ -111,8 +162,58 @@ mod date_tests {
                 seg,
                 full_year,
             };
-            let date = format!("{}", chrono::Local::now().format("%d_%m_%y"));
+            let date = format!("{}", chrono::Local::now().format("%d_%m_%Y"));
             let expected = format!("{date}-test file");
+            opt.process(&mut file);
+            assert_eq!(file.stem, expected);
+        })
+    }
+
+    #[test]
+    fn suffix_date_created_no_separator() {
+        run_test(|| {
+            let mut file = RenameFile::new(Path::new("test file.txt")).unwrap();
+            let date_mode = DateMode::Suffix;
+            let date_type = DateType::Created;
+            let fmt = DateFormat::Std((DatePrefix::DMY, Some(DateSuffix::HMS)));
+            let sep = "";
+            let seg = "_";
+            let full_year = false;
+            let opt = DateOptions {
+                date_mode,
+                date_type,
+                fmt,
+                sep,
+                seg,
+                full_year,
+            };
+            let date = format!("{}", chrono::Local::now().format("%d_%m_%y_%H_%M_%S"));
+            let expected = format!("test file{date}");
+            opt.process(&mut file);
+            assert_eq!(file.stem, expected);
+        })
+    }
+
+    #[test]
+    fn prefix_date_current_custom_format() {
+        run_test(|| {
+            let mut file = RenameFile::new(Path::new("test file.txt")).unwrap();
+            let date_mode = DateMode::Prefix;
+            let date_type = DateType::Current;
+            let fmt = DateFormat::Custom("%v++");
+            let sep = "~";
+            let seg = "_";
+            let full_year = true;
+            let opt = DateOptions {
+                date_mode,
+                date_type,
+                fmt,
+                sep,
+                seg,
+                full_year,
+            };
+            let date = format!("{}", chrono::Local::now().format("%v"));
+            let expected = format!("{date}++~test file");
             opt.process(&mut file);
             assert_eq!(file.stem, expected);
         })
