@@ -2,6 +2,7 @@ pub mod file {
     pub mod add;
     pub mod case;
     pub mod date;
+    pub mod extension;
     pub mod name;
     pub mod reg;
     pub mod remove;
@@ -9,6 +10,7 @@ pub mod file {
     pub use add::AddOptions;
     pub use case::{Case, CaseOptions};
     pub use date::{DateFormat, DateMode, DateOptions, DatePrefix, DateSuffix};
+    pub use extension::ExtensionOptions;
     pub use name::NameOptions;
     pub use reg::RegexOptions;
     pub use remove::RemoveOptions;
@@ -55,10 +57,10 @@ pub mod file {
         ///    -  4 Case
         ///    -  5 Remove
         ///    -  6 Add
-        ///    -  7 Auto Date - To Do
+        ///    -  7 Auto Date
         ///    -  8 Append Folder Name - To Do
         ///    -  9 Numbering - To Do
-        ///    - 10 Extension - To Do
+        ///    - 10 Extension
         ///
         /// # Example
         ///
