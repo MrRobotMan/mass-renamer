@@ -8,6 +8,7 @@ use inflector::Inflector;
 /// - `Title` - Change All Selected Files To Title Case.
 /// - `Sentence` - Change all selected files to sentence case.
 /// - `Snake` - Flag_to_change_all_selected_files_to_snake_case.
+///
 /// Exceptions: You can also enter a list of "exceptions", separated by semicolons.
 /// So for example if you entered PDF;doc then any occurrence of pdf (or PDF, Pdf,
 /// etc) would be converted to upper-case, and every occurrence of DOC (or DoC)

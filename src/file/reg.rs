@@ -1,7 +1,9 @@
 use crate::file::{Process, RenameFile};
 use regex::Regex;
 
-/// Options for the regex feature
+/// Use a regular expression `exp` to find the offending text and `rep` it with new.
+///
+/// Using the `extension` boolean to declare whether to search the file extension too.
 pub struct RegexOptions<'a> {
     pub exp: &'a str,
     pub rep: &'a str,
@@ -9,7 +11,6 @@ pub struct RegexOptions<'a> {
 }
 
 impl Process for RegexOptions<'_> {
-    /// Use a regular expression `Match` to find the offending text and `Replace` it with new.
     fn process(&self, file: &mut RenameFile) -> () {
         if let Ok(exp) = Regex::new(self.exp) {
             match (self.extension, &file.extension) {

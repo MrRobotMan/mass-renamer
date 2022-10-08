@@ -1,6 +1,10 @@
 use crate::file::{Process, RenameFile};
 
-/// Options for the name feature.
+/// Select from.
+/// - `NameOptions::Keep` - Do not change the original file name (default).
+/// - `NameOptions::Remove` - Completely erase the file from the selected items. This allows it to be rebuilt using components higher than (2).
+/// - `NameOptions::Fixed` - Specify a new file in the box for all selected items. Only really useful if you're also using the Numbering section.
+/// - `NameOptions::Reverse` - Reverse the name, e.g. 12345.txt becomes 54321.txt.
 pub enum NameOptions {
     Keep,
     Remove,
@@ -9,11 +13,6 @@ pub enum NameOptions {
 }
 
 impl Process for NameOptions {
-    /// Using the `NameOptions` enum and the name function, return a modified string.
-    /// - `Keep` - Do not change the original file name (default).
-    /// - `Remove` - Completely erase the file from the selected items. This allows it to be rebuilt using components higher than (2).
-    /// - `Fixed` - Specify a new file in the box for all selected items. Only really useful if you're also using the Numbering section.
-    /// - `Reverse` - Reverse the name, e.g. 12345.txt becomes 54321.txt.
     fn process(&self, file: &mut RenameFile) {
         match self {
             NameOptions::Keep => (),

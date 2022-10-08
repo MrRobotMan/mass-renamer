@@ -11,7 +11,7 @@ pub mod file {
     mod replace;
     pub use add::AddOptions;
     pub use case::{Case, CaseOptions};
-    pub use date::{DateFormat, DateMode, DateOptions, DatePrefix, DateSuffix};
+    pub use date::{DateFormat, DateMode, DateOptions, DatePrefix, DateSuffix, DateType};
     pub use extension::ExtensionOptions;
     pub use folder::{FolderMode, FolderOptions};
     pub use name::NameOptions;

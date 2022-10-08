@@ -1,9 +1,9 @@
 use crate::file::{Process, RenameFile};
 
 /// Options for basic renaming rules.
-/// replace: text to be replaced
-/// with: new text
-/// case: true for case sensitive, false for case-insensitive
+/// - `replace` - text to be replaced
+/// - `with` - new text. Note: the text is always replaced with the text as written, including any specific text case.
+/// - `case` - true for case sensitive, false for case-insensitive
 pub struct ReplaceOptions<'a> {
     pub replace: &'a str,
     pub with: &'a str,
@@ -11,9 +11,6 @@ pub struct ReplaceOptions<'a> {
 }
 
 impl Process for ReplaceOptions<'_> {
-    /// `Replace` the text in this field with the text in the `With` field.
-    /// `Replace` can be case-sensitive using `Match Case` checkbox.
-    /// Note that the `With` text is always replaced with the text as written, including any specific text case.
     fn process(&self, file: &mut RenameFile) {
         let file = &mut file.stem;
         if self.case {

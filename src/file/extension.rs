@@ -2,13 +2,13 @@ use crate::file::{Process, RenameFile};
 use inflector::Inflector;
 
 /// Select from
-/// `Case::Keep` to not change case (default),
-/// `Case::Lower` to convert to lowercase,
-/// `Case::Upper` to convert to uppercase,
-/// `Case::Title` to convert to titlecase,
-/// `Case::New(&'a str)` to convert to a new extension,
-/// `Case::Extra(&'a str)` to add a new extension, or
-/// `Case::Remove` to remove the extension.
+/// - `ExtensionOptions::Keep` to not change case (default)
+/// - `ExtensionOptions::Lower` to convert to lowercase
+/// - `ExtensionOptions::Upper` to convert to uppercase
+/// - `ExtensionOptions::Title` to convert to titlecase
+/// - `ExtensionOptions::New(&'a str)` to convert to a new extension
+/// - `ExtensionOptions::Extra(&'a str)` to add a new extension
+/// - `ExtensionOptions::Remove` to remove the extension
 pub enum ExtensionOptions<'a> {
     Keep,
     Lower,

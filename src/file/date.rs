@@ -70,9 +70,9 @@ pub enum DateMode {
 }
 
 /// Select from
-/// `DateType::Created` for the file creation date,
-/// `Datetype::Modified` for the date last modified, or
-/// `DateType::Current` for today's date.
+/// - `DateType::Created` for the file creation date
+/// - `Datetype::Modified` for the date last modified
+/// - `DateType::Current` for today's date
 ///
 /// Note, if an OS does not support `Created` or `Modified` this option will
 /// result in no change to the file name.
@@ -82,18 +82,18 @@ pub enum DateType {
     Current,
 }
 
-/// `DateFormat` can be
-/// `DateFormat::Std(DatePrefix, Option<DateSuffix>)` to use the standard options
-/// or `DateFormat::Custom(&str)` to use a custom `strftime` format.
+/// Select from
+/// - `DateFormat::Std(DatePrefix, Option<DateSuffix>)` to use the standard options
+/// - `DateFormat::Custom(&str)` to use a custom `strftime` format
 pub enum DateFormat<'a> {
     Std((DatePrefix, Option<DateSuffix>)),
     Custom(&'a str),
 }
 
 /// Select from
-/// `DatePrefix::DMY` for Day Month Year,
-/// `DatePrefix::MDY` for Month Year Day, or
-/// `DatePrefix::YMD` for Year Month Day
+/// - `DatePrefix::DMY` for Day Month Year
+/// - `DatePrefix::MDY` for Month Year Day
+/// - `DatePrefix::YMD` for Year Month Day
 pub enum DatePrefix {
     DMY,
     MDY,
@@ -112,8 +112,8 @@ impl DatePrefix {
 }
 
 /// Select from
-/// `DateSuffix::HM` for Hour Minute, or
-/// `DateSuffix::HMS` for Hour Minute Second
+/// - `DateSuffix::HM` for Hour Minute
+/// - `DateSuffix::HMS` for Hour Minute Second
 pub enum DateSuffix {
     HM,
     HMS,
