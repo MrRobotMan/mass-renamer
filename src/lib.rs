@@ -1,20 +1,21 @@
 pub mod file {
-    pub mod add;
-    pub mod case;
-    pub mod date;
-    pub mod extension;
-    pub mod folder;
-    pub mod name;
-    pub mod number;
-    pub mod reg;
-    pub mod remove;
-    pub mod replace;
+    mod add;
+    mod case;
+    mod date;
+    mod extension;
+    mod folder;
+    mod name;
+    mod number;
+    mod reg;
+    mod remove;
+    mod replace;
     pub use add::AddOptions;
     pub use case::{Case, CaseOptions};
     pub use date::{DateFormat, DateMode, DateOptions, DatePrefix, DateSuffix};
     pub use extension::ExtensionOptions;
     pub use folder::{FolderMode, FolderOptions};
     pub use name::NameOptions;
+    pub use number::{NumberFormat, NumberMode, NumberingOptions};
     pub use reg::RegexOptions;
     pub use remove::RemoveOptions;
     pub use replace::ReplaceOptions;
@@ -24,8 +25,9 @@ pub mod file {
     };
 
     pub trait Process {
-        #[allow(unused_variables)]
-        fn process(&self, file: &mut RenameFile) {}
+        fn process(&self, file: &mut RenameFile) {
+            let _ = file;
+        }
     }
 
     pub struct RenameFile<'a> {
@@ -131,5 +133,20 @@ pub mod file {
             let new_name = rename.rename(modes);
             assert_eq!(new_name, expected)
         }
+    }
+}
+
+#[cfg(test)]
+pub(crate) mod tester {
+    use std::{fs, panic};
+    #[allow(unused_must_use)]
+    pub(crate) fn run_test<T>(test: T) -> ()
+    where
+        T: FnOnce() -> () + panic::UnwindSafe,
+    {
+        fs::File::create("test file.txt");
+        let result = panic::catch_unwind(|| test());
+        fs::remove_file("test file.txt");
+        assert!(result.is_ok())
     }
 }

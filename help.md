@@ -86,7 +86,7 @@ Add sequential numbers.
 - `Pad` - The minimum number of digits occupied by the numeric element. Bases 1-36 will be padded with leading zeros; the a-z and A-Z options will be padded with "a" or "A" as appropriate.
 - `Sep`. - A character or characters that you wish to be inserted between the old filename and the number. If you enter the special character ":" (colon) in the Sep. box then this will be replaced with the auto-number. So a separator value of ABC:DEF: would result in ABC1DEF1, ABC2ABC2 etc.
 - `Break` - Reset the auto-number when the nth character changes. e.g. enter 4 to cause the number to reset when the 4th character of the NEW name changes.
-- `Base` - You can choose to append the auto-number in any numeric base, from base 2 to base 36. e.g. a value of 26 in base 16 would be appended as 1A. Or even use letters, e.g. A-Z or a-z or Roman numerals (upper or lower).
+- `Format` - You can choose to append the auto-number in any various bases (binary, decimal, hex, octal), ASCII letters A-Z or Roman numerals (upper or lower).
 
 ## Extension (10)
 

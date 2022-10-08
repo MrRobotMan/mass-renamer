@@ -131,18 +131,8 @@ impl DateSuffix {
 #[cfg(test)]
 mod date_tests {
     use super::*;
-    use std::{fs, panic, path::Path};
-
-    #[allow(unused_must_use)]
-    fn run_test<T>(test: T) -> ()
-    where
-        T: FnOnce() -> () + panic::UnwindSafe,
-    {
-        fs::File::create("test file.txt");
-        let result = panic::catch_unwind(|| test());
-        fs::remove_file("test file.txt");
-        assert!(result.is_ok())
-    }
+    use crate::tester::run_test;
+    use std::path::Path;
 
     #[test]
     fn prefix_date_modified_hyphen_separator_full_year() {
@@ -171,7 +161,7 @@ mod date_tests {
 
     #[test]
     fn suffix_date_created_no_separator() {
-        run_test(|| {
+        crate::tester::run_test(|| {
             let mut file = RenameFile::new(Path::new("test file.txt")).unwrap();
             let date_mode = DateMode::Suffix;
             let date_type = DateType::Created;
@@ -196,7 +186,7 @@ mod date_tests {
 
     #[test]
     fn prefix_date_current_custom_format() {
-        run_test(|| {
+        crate::tester::run_test(|| {
             let mut file = RenameFile::new(Path::new("test file.txt")).unwrap();
             let date_mode = DateMode::Prefix;
             let date_type = DateType::Current;
