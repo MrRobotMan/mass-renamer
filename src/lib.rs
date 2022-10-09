@@ -1,3 +1,24 @@
+use std::{collections::HashMap, fs, io, path::Path};
+
+pub fn process_selected(
+    files: HashMap<&Path, Vec<Box<dyn file::Process>>>,
+) -> HashMap<&Path, io::Result<()>> {
+    let mut res = HashMap::new();
+    for (file, options) in files {
+        if let Some(mut renamed) = file::RenameFile::new(&file) {
+            let new_name = renamed.rename(options);
+            let v = fs::rename(file, new_name);
+            res.insert(file, v);
+        } else {
+            res.insert(
+                file,
+                Err(io::Error::new(io::ErrorKind::Other, "Not a file.")),
+            );
+        }
+    }
+    res
+}
+
 pub mod file {
     mod add;
     mod case;
@@ -38,7 +59,7 @@ pub mod file {
 
     impl RenameFile<'_> {
         pub fn new(path: &Path) -> Option<RenameFile> {
-            if path.is_dir() {
+            if !path.is_file() {
                 return None;
             }
             let extension = generate_path_as_string(path.extension());
@@ -71,7 +92,7 @@ pub mod file {
         ///
         /// ```
         /// # use std::path::{Path, PathBuf};
-        /// # use bulk_rename::file::{name::NameOptions, case::{Case, CaseOptions}, RenameFile, Process};
+        /// # use bulk_rename::file::{NameOptions, Case, CaseOptions, RenameFile, Process};
         /// let file = Path::new("file.txt");
         /// let name = NameOptions::Fixed("new_name".to_owned());
         /// let case = CaseOptions{case: Case::Upper, snake: false, exceptions: Some(&"n")};
@@ -140,13 +161,17 @@ pub mod file {
 pub(crate) mod tester {
     use std::{fs, panic};
     #[allow(unused_must_use)]
-    pub(crate) fn run_test<T>(test: T) -> ()
+    pub(crate) fn run_test<T>(files: &Vec<&str>, test: T) -> ()
     where
         T: FnOnce() -> () + panic::UnwindSafe,
     {
-        fs::File::create("test file.txt");
+        for file in files {
+            fs::File::create(file);
+        }
         let result = panic::catch_unwind(|| test());
-        fs::remove_file("test file.txt");
+        for file in files {
+            fs::remove_file(file);
+        }
         assert!(result.is_ok())
     }
 }

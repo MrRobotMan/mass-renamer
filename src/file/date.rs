@@ -136,7 +136,7 @@ mod date_tests {
 
     #[test]
     fn prefix_date_modified_hyphen_separator_full_year() {
-        run_test(|| {
+        run_test(&vec!["test file.txt"], || {
             let mut file = RenameFile::new(Path::new("test file.txt")).unwrap();
             let date_mode = DateMode::Prefix;
             let date_type = DateType::Modified;
@@ -161,7 +161,8 @@ mod date_tests {
 
     #[test]
     fn suffix_date_created_no_separator() {
-        crate::tester::run_test(|| {
+        crate::tester::run_test(&vec!["test file.txt"], || {
+            let date = format!("{}", chrono::Local::now().format("%d_%m_%y_%H_%M_%S"));
             let mut file = RenameFile::new(Path::new("test file.txt")).unwrap();
             let date_mode = DateMode::Suffix;
             let date_type = DateType::Created;
@@ -177,7 +178,6 @@ mod date_tests {
                 seg,
                 full_year,
             };
-            let date = format!("{}", chrono::Local::now().format("%d_%m_%y_%H_%M_%S"));
             let expected = format!("test file{date}");
             opt.process(&mut file);
             assert_eq!(file.stem, expected);
@@ -186,7 +186,7 @@ mod date_tests {
 
     #[test]
     fn prefix_date_current_custom_format() {
-        crate::tester::run_test(|| {
+        crate::tester::run_test(&vec!["test file.txt"], || {
             let mut file = RenameFile::new(Path::new("test file.txt")).unwrap();
             let date_mode = DateMode::Prefix;
             let date_type = DateType::Current;
