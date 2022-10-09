@@ -1,5 +1,5 @@
 use crate::file::{Process, RenameFile};
-use std::{cmp::min, path::Component};
+use std::{cmp::min, fmt::Write, path::Component};
 
 /// Add the name of the containing folder or hierarchy of folders.
 /// These can be added in prefix or suffix `Mode`, with a `Sep`arator specified and the
@@ -24,21 +24,19 @@ impl Process for FolderOptions<'_> {
                 _ => None,
             })
             .collect();
-        let end = min(components.len(), self.levels.abs() as usize);
+        let end = min(components.len(), self.levels.unsigned_abs() as usize);
         let start = if self.levels >= 0 { 0 } else { end - 1 };
         match self.mode {
             FolderMode::Prefix => {
-                for idx in start..end {
-                    if let Some(s) = components[idx] {
-                        file.stem.insert_str(0, &format!("{}{}", s, self.sep))
-                    };
+                for component in components[start..end].iter().flatten() {
+                    file.stem
+                        .insert_str(0, &format!("{}{}", component, self.sep));
                 }
             }
             FolderMode::Suffix => {
-                for idx in start..end {
-                    if let Some(s) = components[idx] {
-                        file.stem.push_str(&format!("{}{}", s, self.sep))
-                    }
+                for component in components[start..end].iter().flatten() {
+                    write!(file.stem, "{}{}", component, self.sep)
+                        .expect("Unexpected error appending string.")
                 }
             }
         };

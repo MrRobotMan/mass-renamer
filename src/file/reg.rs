@@ -11,7 +11,7 @@ pub struct RegexOptions<'a> {
 }
 
 impl Process for RegexOptions<'_> {
-    fn process(&self, file: &mut RenameFile) -> () {
+    fn process(&self, file: &mut RenameFile) {
         if let Ok(exp) = Regex::new(self.exp) {
             match (self.extension, &file.extension) {
                 (false, _) | (_, None) => {
@@ -20,7 +20,7 @@ impl Process for RegexOptions<'_> {
                 (true, Some(ext)) => {
                     let mut f = file.stem.clone();
                     f.push('.');
-                    f.push_str(&ext);
+                    f.push_str(ext);
                     let res = exp.replace_all(&f, self.rep).to_string();
                     match res.rsplit_once('.') {
                         None => file.stem = res,

@@ -1,4 +1,4 @@
-use std::{error::Error, path::Path, time::SystemTime};
+use std::{error::Error, fmt::Write, path::Path, time::SystemTime};
 
 use crate::file::{Process, RenameFile};
 use chrono::{DateTime, Local};
@@ -23,7 +23,7 @@ pub struct DateOptions<'a> {
 
 impl Process for DateOptions<'_> {
     fn process(&self, file: &mut RenameFile) {
-        if let Ok(datetime) = self.get_date(&file.original) {
+        if let Ok(datetime) = self.get_date(file.original) {
             let format = match &self.fmt {
                 DateFormat::Std((prefix, suffix)) => {
                     let mut fmt = prefix.get_format(self.seg, self.full_year);
@@ -40,8 +40,8 @@ impl Process for DateOptions<'_> {
                     .stem
                     .insert_str(0, &format!("{}{}", datetime.format(&format), self.sep)),
                 DateMode::Suffix => {
-                    file.stem
-                        .push_str(&format!("{}{}", self.sep, datetime.format(&format)));
+                    write!(file.stem, "{}{}", self.sep, datetime.format(&format))
+                        .expect("Unexpected error appending to string.");
                 }
             }
         }
@@ -56,7 +56,7 @@ impl DateOptions<'_> {
             DateType::Modified => metadata.modified()?,
             DateType::Current => SystemTime::now(),
         };
-        let datetime: DateTime<Local> = dt.clone().into();
+        let datetime: DateTime<Local> = dt.into();
         Ok(datetime)
     }
 }

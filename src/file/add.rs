@@ -23,7 +23,7 @@ impl Process for AddOptions<'_> {
             match pos {
                 p if p >= file.len() as i32 => file.push_str(insert),
                 p if p >= 0 => file.insert_str(p as usize, insert),
-                p if -1 * p >= file.len() as i32 => file.insert_str(0, insert),
+                p if -p >= file.len() as i32 => file.insert_str(0, insert),
                 _ => {
                     let p = (file.len() as i32 + pos) as usize;
                     file.insert_str(p, insert);
@@ -39,7 +39,7 @@ impl Process for AddOptions<'_> {
             let mut new = String::new();
             for chr in file.chars() {
                 if chr.is_uppercase() {
-                    new.push_str(" ");
+                    new.push(' ');
                 }
                 new.push(chr);
             }

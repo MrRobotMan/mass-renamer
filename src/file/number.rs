@@ -1,4 +1,5 @@
 use crate::file::{Process, RenameFile};
+use std::fmt::Write;
 
 /// Add sequential numbers to the file.
 /// - `Mode` - Choose between prefix, suffix, both, or insert at a location (0 indexed).
@@ -22,7 +23,8 @@ impl Process for NumberingOptions<'_> {
         let val = self.number_value();
         match self.mode {
             NumberMode::Prefix => file.stem.insert_str(0, &format!("{}{}", val, self.sep)),
-            NumberMode::Suffix => file.stem.push_str(&format!("{}{}", self.sep, val)),
+            NumberMode::Suffix => write!(file.stem, "{}{}", self.sep, val)
+                .expect("Unexpected error appending string."),
             NumberMode::Insert(idx) => file
                 .stem
                 .insert_str(idx, &format!("{}{}{}", self.sep, val, self.sep)),

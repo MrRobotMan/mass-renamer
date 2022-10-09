@@ -47,7 +47,7 @@ impl Process for RemoveOptions<'_> {
             self.first_last(file)
         }
         if 0 < self.range.0 && self.range.0 < file.len() && self.range.1 > 0 {
-            self.from_to(file)
+            self.start_end(file)
         }
 
         if let Some(characters) = self.characters {
@@ -57,7 +57,7 @@ impl Process for RemoveOptions<'_> {
         }
 
         if let Some(words) = self.words {
-            for word in words.split(" ") {
+            for word in words.split(' ') {
                 self.remove_word(file, word);
             }
         }
@@ -78,7 +78,7 @@ impl Process for RemoveOptions<'_> {
         }
 
         if self.ascii_high {
-            let chars = (128..=255).map(|c| char::from(c));
+            let chars = (128..=255).map(char::from);
             for chr in chars {
                 self.remove_char(file, chr);
             }
@@ -89,9 +89,7 @@ impl Process for RemoveOptions<'_> {
         }
 
         if self.chars {
-            let chars = (65..=90)
-                .map(|c| char::from(c))
-                .chain((97..=122).map(|c| char::from(c)));
+            let chars = (65..=90).map(char::from).chain((97..=122).map(char::from));
             for chr in chars {
                 self.remove_char(file, chr)
             }
@@ -126,7 +124,7 @@ impl RemoveOptions<'_> {
         }
     }
 
-    fn from_to(&self, file: &mut String) {
+    fn start_end(&self, file: &mut String) {
         use std::cmp::min;
         // Change from 1 indexed to 0 indexed.
         for _ in (self.range.0 - 1)..min(file.len(), self.range.1) {
@@ -139,17 +137,14 @@ impl RemoveOptions<'_> {
     }
 
     fn remove_word(&self, file: &mut String, word: &str) {
-        if word.contains("*") {
-            let w = word.split("*").collect::<Vec<&str>>();
+        if word.contains('*') {
+            let w = word.split('*').collect::<Vec<&str>>();
             let (start, end) = (w[0], w[1]);
             let start_idx = file.find(start);
             let end_idx = file.find(end);
-            match (start_idx, end_idx) {
-                (Some(start_idx), Some(end_idx)) => {
-                    let word = &file[start_idx..(end_idx + end.len())];
-                    *file = file.replace(word, "");
-                }
-                _ => return (),
+            if let (Some(start_idx), Some(end_idx)) = (start_idx, end_idx) {
+                let word = &file[start_idx..(end_idx + end.len())];
+                *file = file.replace(word, "");
             }
         } else {
             *file = file.replace(&word, "")

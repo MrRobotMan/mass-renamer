@@ -1,5 +1,6 @@
 use crate::file::{Process, RenameFile};
 use inflector::Inflector;
+use std::fmt::Write;
 
 /// Select from
 /// - `ExtensionOptions::Keep` to not change case (default)
@@ -36,7 +37,7 @@ impl Process for ExtensionOptions<'_> {
             }
             (ExtensionOptions::Extra(s), ext) => {
                 match ext {
-                    Some(ext) => ext.push_str(&format!(".{s}")),
+                    Some(ext) => write!(ext, ".{s}").expect("Unexpected error appending string."),
                     None => file.extension = Some(s.to_string()),
                 };
             }

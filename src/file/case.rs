@@ -51,7 +51,7 @@ impl Process for CaseOptions<'_> {
             }
         };
         if let Some(exceptions) = self.exceptions {
-            for exception in exceptions.split(";") {
+            for exception in exceptions.split(';') {
                 let mod_exception = match self.case {
                     Case::Keep => exception.to_owned(),
                     Case::Lower => exception.to_lowercase(),
@@ -59,11 +59,11 @@ impl Process for CaseOptions<'_> {
                     Case::Title => exception.to_title_case(),
                     Case::Sentence => exception.to_sentence_case(),
                 };
-                file.stem = file.stem.replace(&mod_exception, &exception);
+                file.stem = file.stem.replace(&mod_exception, exception);
             }
         }
         if self.snake {
-            file.stem = file.stem.replace(" ", "_")
+            file.stem = file.stem.replace(' ', "_")
         };
     }
 }
@@ -201,9 +201,10 @@ mod case_tests {
         let opt = CaseOptions {
             case: Case::Upper,
             snake: false,
-            exceptions: Some(&"doc;PDF"),
+            exceptions: Some("doc;PDF"),
         };
-        (opt.process(&mut files.0), opt.process(&mut files.1));
+        opt.process(&mut files.0);
+        opt.process(&mut files.1);
         let expected = (String::from("TEST FILE.doc"), String::from("TEST FILE.PDF"));
         assert_eq!((files.0.stem, files.1.stem), expected);
     }

@@ -5,7 +5,7 @@ pub fn process_selected(
 ) -> HashMap<&Path, io::Result<()>> {
     let mut res = HashMap::new();
     for (file, options) in files {
-        if let Some(mut renamed) = file::RenameFile::new(&file) {
+        if let Some(mut renamed) = file::RenameFile::new(file) {
             let new_name = renamed.rename(options);
             let v = fs::rename(file, new_name);
             res.insert(file, v);
@@ -63,14 +63,11 @@ pub mod file {
                 return None;
             }
             let extension = generate_path_as_string(path.extension());
-            match generate_path_as_string(path.file_stem()) {
-                None => None,
-                Some(stem) => Some(RenameFile {
+            generate_path_as_string(path.file_stem()).map(|stem| RenameFile {
                     stem,
                     extension,
                     original: path,
-                }),
-            }
+                })
         }
 
         /// Tool to rename a single file.
@@ -119,10 +116,7 @@ pub mod file {
 
     /// Convert a Path to a mutable string
     fn generate_path_as_string(part: Option<&OsStr>) -> Option<String> {
-        match part {
-            Some(s) => Some(s.to_string_lossy().into_owned()),
-            None => None,
-        }
+        part.map(|s| s.to_string_lossy().into_owned())
     }
 
     #[cfg(test)]
@@ -161,14 +155,14 @@ pub mod file {
 pub(crate) mod tester {
     use std::{fs, panic};
     #[allow(unused_must_use)]
-    pub(crate) fn run_test<T>(files: &Vec<&str>, test: T) -> ()
+    pub(crate) fn run_test<T>(files: &Vec<&str>, test: T)
     where
-        T: FnOnce() -> () + panic::UnwindSafe,
+        T: FnOnce() + panic::UnwindSafe,
     {
         for file in files {
             fs::File::create(file);
         }
-        let result = panic::catch_unwind(|| test());
+        let result = panic::catch_unwind(test);
         for file in files {
             fs::remove_file(file);
         }
