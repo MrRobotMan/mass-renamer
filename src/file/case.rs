@@ -25,7 +25,9 @@ pub struct CaseOptions<'a> {
 /// `Case::Upper` to convert to uppercase,
 /// `Case::Title` to convert to titlecase, or
 /// `Case::Sentence` to convert to sentence case.
+#[derive(Default)]
 pub enum Case {
+    #[default]
     Keep,
     Lower,
     Upper,

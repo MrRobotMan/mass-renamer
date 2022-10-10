@@ -1,8 +1,15 @@
-use std::{collections::HashMap, fs, io, path::Path};
+use std::{
+    collections::HashMap,
+    fs, io,
+    path::{Path, PathBuf},
+};
+
+pub mod gui;
+pub use gui::App;
 
 pub fn process_selected(
-    files: HashMap<&Path, Vec<Box<dyn file::Process>>>,
-) -> HashMap<&Path, io::Result<()>> {
+    files: HashMap<&PathBuf, Vec<Box<dyn file::Process>>>,
+) -> HashMap<&PathBuf, io::Result<()>> {
     let mut res = HashMap::new();
     for (file, options) in files {
         if let Some(mut renamed) = file::RenameFile::new(file) {
@@ -17,6 +24,10 @@ pub fn process_selected(
         }
     }
     res
+}
+
+pub fn get_directory_listing(path: &Path) -> Result<fs::ReadDir, io::Error> {
+    fs::read_dir(path)
 }
 
 pub mod file {
@@ -59,15 +70,15 @@ pub mod file {
 
     impl RenameFile<'_> {
         pub fn new(path: &Path) -> Option<RenameFile> {
-            if !path.is_file() {
-                return None;
-            }
+            // if !path.is_file() {
+            //     return None;
+            // }
             let extension = generate_path_as_string(path.extension());
             generate_path_as_string(path.file_stem()).map(|stem| RenameFile {
-                    stem,
-                    extension,
-                    original: path,
-                })
+                stem,
+                extension,
+                original: path,
+            })
         }
 
         /// Tool to rename a single file.
@@ -89,7 +100,7 @@ pub mod file {
         ///
         /// ```
         /// # use std::path::{Path, PathBuf};
-        /// # use bulk_rename::file::{NameOptions, Case, CaseOptions, RenameFile, Process};
+        /// # use bulk_file_renamer::file::{NameOptions, Case, CaseOptions, RenameFile, Process};
         /// let file = Path::new("file.txt");
         /// let name = NameOptions::Fixed("new_name".to_owned());
         /// let case = CaseOptions{case: Case::Upper, snake: false, exceptions: Some(&"n")};
@@ -142,7 +153,7 @@ pub mod file {
         fn test_name() {
             let file = Path::new("file.txt");
             let expected = PathBuf::from("new_name.txt");
-            let name = NameOptions::Fixed("new_name".to_owned());
+            let name = NameOptions::Fixed("new_name");
             let modes: Vec<Box<dyn Process>> = vec![Box::new(name)];
             let mut rename = RenameFile::new(file).unwrap();
             let new_name = rename.rename(modes);

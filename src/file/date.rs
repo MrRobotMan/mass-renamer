@@ -64,7 +64,9 @@ impl DateOptions<'_> {
 /// Select from
 /// `DateMode::Prefix` or
 /// `DateMode::Suffix`.
+#[derive(Default)]
 pub enum DateMode {
+    #[default]
     Prefix,
     Suffix,
 }
@@ -76,7 +78,9 @@ pub enum DateMode {
 ///
 /// Note, if an OS does not support `Created` or `Modified` this option will
 /// result in no change to the file name.
+#[derive(Default)]
 pub enum DateType {
+    #[default]
     Created,
     Modified,
     Current,
@@ -88,6 +92,12 @@ pub enum DateType {
 pub enum DateFormat<'a> {
     Std((DatePrefix, Option<DateSuffix>)),
     Custom(&'a str),
+}
+
+impl Default for DateFormat<'_> {
+    fn default() -> Self {
+        Self::Std((DatePrefix::DMY, None))
+    }
 }
 
 /// Select from

@@ -1,5 +1,5 @@
 [package]
-name = "bulk_rename"
+name = "bulk_file_renamer"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -9,6 +9,8 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 Inflector = "0.11.4"
 chrono = "0.4.20"
-eframe = "0.18.0"
+eframe = "0.19.0"
+egui = "0.19.0"
 regex = "1.6.0"
 tracing = "0.1.36"
+tracing-subscriber = "0.3.16"

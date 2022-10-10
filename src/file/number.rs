@@ -71,7 +71,9 @@ impl NumberingOptions<'_> {
 /// `NumberMode::Prefix`,
 /// `NumberMode::Suffix`, or
 /// `NumberMode::Insert(usize)`.
+#[derive(Default)]
 pub enum NumberMode {
+    #[default]
     Prefix,
     Suffix,
     Insert(usize),
@@ -85,9 +87,11 @@ pub enum NumberMode {
 /// `NumberFormat:Octal`,
 /// `NumberFormat:ASCII_Upper`, or
 /// `NumberFormat:ASCII_Lower`
+#[derive(Default)]
 #[allow(non_camel_case_types)]
 pub enum NumberFormat {
     Binary,
+    #[default]
     Decimal,
     Hex_Upper,
     Hex_Lower,

@@ -5,19 +5,21 @@ use crate::file::{Process, RenameFile};
 /// - `NameOptions::Remove` - Completely erase the file from the selected items. This allows it to be rebuilt using components higher than (2).
 /// - `NameOptions::Fixed` - Specify a new file in the box for all selected items. Only really useful if you're also using the Numbering section.
 /// - `NameOptions::Reverse` - Reverse the name, e.g. 12345.txt becomes 54321.txt.
-pub enum NameOptions {
+#[derive(Default)]
+pub enum NameOptions<'a> {
+    #[default]
     Keep,
     Remove,
-    Fixed(String),
+    Fixed(&'a str),
     Reverse,
 }
 
-impl Process for NameOptions {
+impl Process for NameOptions<'_> {
     fn process(&self, file: &mut RenameFile) {
         match self {
             NameOptions::Keep => (),
             NameOptions::Remove => file.stem = "".to_owned(),
-            NameOptions::Fixed(x) => file.stem = x.to_owned(),
+            NameOptions::Fixed(x) => file.stem = x.to_string(),
             NameOptions::Reverse => file.stem = file.stem.chars().rev().collect::<String>(),
         };
     }
@@ -45,7 +47,7 @@ mod name_tests {
     fn fixed_name() {
         let mut file = RenameFile::new(Path::new("file")).unwrap();
         let new_name = "renamed_file";
-        let opt = NameOptions::Fixed(new_name.to_owned());
+        let opt = NameOptions::Fixed(&new_name.to_owned());
         opt.process(&mut file);
         assert_eq!(&file.stem, new_name);
     }

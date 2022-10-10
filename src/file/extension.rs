@@ -10,7 +10,9 @@ use std::fmt::Write;
 /// - `ExtensionOptions::New(&'a str)` to convert to a new extension
 /// - `ExtensionOptions::Extra(&'a str)` to add a new extension
 /// - `ExtensionOptions::Remove` to remove the extension
+#[derive(Default)]
 pub enum ExtensionOptions<'a> {
+    #[default]
     Keep,
     Lower,
     Upper,
