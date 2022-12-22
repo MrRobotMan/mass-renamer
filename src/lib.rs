@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+    cmp::Ordering,
+    path::{Path, PathBuf},
+};
 
 pub mod gui;
 pub use gui::App;
@@ -30,11 +33,47 @@ pub trait Process {
     fn process(&self, file: &mut RenameFile) {}
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct RenameFile {
     stem: String,
     extension: Option<String>,
     original: PathBuf,
+}
+
+impl PartialOrd for RenameFile {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for RenameFile {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self.original.is_dir(), other.original.is_dir()) {
+            (true, true) => self.stem.cmp(&other.stem),
+            (true, false) => Ordering::Less,
+            (false, true) => Ordering::Greater,
+            (false, false) => match (&self.extension, &other.extension) {
+                (None, None) => self.stem.cmp(&other.stem),
+                (None, Some(ext)) => {
+                    let mut rhs = other.stem.clone();
+                    rhs.push_str(ext);
+                    self.stem.cmp(&rhs)
+                }
+                (Some(ext), None) => {
+                    let mut lhs = self.stem.clone();
+                    lhs.push_str(ext);
+                    lhs.cmp(&other.stem)
+                }
+                (Some(self_ext), Some(other_ext)) => {
+                    let mut lhs = self.stem.clone();
+                    lhs.push_str(self_ext);
+                    let mut rhs = other.stem.clone();
+                    rhs.push_str(other_ext);
+                    lhs.cmp(&rhs)
+                }
+            },
+        }
+    }
 }
 
 impl RenameFile {

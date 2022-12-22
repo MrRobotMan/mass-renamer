@@ -10,7 +10,7 @@ pub struct AddData {
 }
 
 impl AddData {
-    pub fn make_options(&self) -> AddOptions {
+    pub fn _make_options(&self) -> AddOptions {
         let prefix = match &self.prefix {
             s if s.is_empty() => None,
             s => Some(s.as_str()),
