@@ -16,16 +16,7 @@ mod data;
 
 use data::*;
 
-type FileListing = (
-    PathBuf,
-    RenameFile,
-    Option<u64>,
-    Option<DateTime<Local>>,
-    Option<DateTime<Local>>,
-    bool, // is selected
-);
-
-const FILES_HEIGHT: (f32, f32) = (100.0, 300.0);
+const FILES_HEIGHT: f32 = 300.0;
 
 #[derive(Default)]
 pub struct App<'a> {
@@ -65,12 +56,12 @@ fn file_no_parents(path: &Path) -> Cow<'_, str> {
     match path.file_name() {
         None => Cow::Owned(String::new()),
         Some(file) => match path.is_dir() {
-            false => return file.to_string_lossy(),
+            false => file.to_string_lossy(),
             true => {
                 let mut folder = String::from_utf8(vec![0xf0, 0x9f, 0x97, 0x80]).unwrap(); // U+1F5C0
                 folder.push(' ');
                 folder.push_str(&file.to_string_lossy());
-                return Cow::Owned(folder);
+                Cow::Owned(folder)
             }
         },
     }
@@ -85,11 +76,22 @@ fn cmp(rhs: &Path, lhs: &Path) -> Ordering {
     }
 }
 
+struct FileListing {
+    name: PathBuf,
+    renamed: RenameFile,
+    extension: Option<String>,
+    size: Option<u64>,
+    modified: Option<DateTime<Local>>,
+    created: Option<DateTime<Local>>,
+    selected: bool,
+}
+
 #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 enum Columns {
     #[default]
     Name,
     NewName,
+    Extension,
     Size,
     Created,
     Modified,
@@ -134,7 +136,10 @@ impl App<'_> {
         if let Ok(dir) = self.cwd_path.read_dir() {
             let mut file_listing = Vec::new();
             for file in dir.flatten() {
-                let file_name = file.path();
+                let name = file.path();
+                let extension = name
+                    .extension()
+                    .map(|ext| ext.to_string_lossy().to_string());
                 let renamed = RenameFile::new(&file.path());
                 let mut size = None;
                 let mut modified = None;
@@ -144,7 +149,7 @@ impl App<'_> {
                     if format!("{:?}", meta.file_type()).contains("attributes: 38") {
                         continue; // Remove system hidden files (.blf, .regtrans-ms, etc)
                     }
-                    if file_name.is_file() {
+                    if name.is_file() {
                         size = Some(meta.len())
                     };
                     if let Ok(dt) = meta.modified() {
@@ -155,19 +160,27 @@ impl App<'_> {
                     };
                 }
                 if let Some(renamed) = renamed {
-                    file_listing.push((file_name, renamed, size, modified, created, false));
+                    file_listing.push(FileListing {
+                        name,
+                        renamed,
+                        extension,
+                        size,
+                        modified,
+                        created,
+                        selected: false,
+                    });
                 }
             }
-            file_listing.sort_unstable_by(|lhs, rhs| cmp(&lhs.0, &rhs.0));
+            file_listing.sort_unstable_by(|lhs, rhs| cmp(&lhs.name, &rhs.name));
             self.files = file_listing;
         }
     }
 
     fn _process_selected(&mut self) {
         for (_cnt, file) in self.files.iter().enumerate() {
-            if file.5 {
-                let mut _orig = &file.0;
-                let mut _renamed = &file.1;
+            if file.selected {
+                let mut _orig = &file.name;
+                let mut _renamed = &file.renamed;
                 // self.add.make_options().process(&mut renamed);
             }
         }
@@ -221,7 +234,7 @@ impl eframe::App for App<'_> {
                     };
                 });
                 egui::ScrollArea::vertical()
-                    .max_height(FILES_HEIGHT.1)
+                    .max_height(FILES_HEIGHT)
                     .show(ui, |ui| {
                         egui::Grid::new("Files").striped(true).show(ui, |ui| {
                             ui.label("Sel");
@@ -231,11 +244,13 @@ impl eframe::App for App<'_> {
                             {
                                 match self.columns {
                                     (_, Order::Forward, Columns::Name) => {
-                                        self.files.sort_unstable_by(|lhs, rhs| cmp(&rhs.0, &lhs.0));
+                                        self.files
+                                            .sort_unstable_by(|lhs, rhs| cmp(&rhs.name, &lhs.name));
                                         self.columns.1 = Order::Reverse;
                                     }
                                     _ => {
-                                        self.files.sort_unstable_by(|lhs, rhs| cmp(&lhs.0, &rhs.0));
+                                        self.files
+                                            .sort_unstable_by(|lhs, rhs| cmp(&lhs.name, &rhs.name));
                                         self.columns.1 = Order::Forward;
                                     }
                                 };
@@ -247,15 +262,39 @@ impl eframe::App for App<'_> {
                             {
                                 match self.columns {
                                     (_, Order::Forward, Columns::NewName) => {
-                                        self.files.sort_unstable_by(|lhs, rhs| rhs.1.cmp(&lhs.1));
+                                        self.files.sort_unstable_by(|lhs, rhs| {
+                                            rhs.renamed.cmp(&lhs.renamed)
+                                        });
                                         self.columns.1 = Order::Reverse;
                                     }
                                     _ => {
-                                        self.files.sort_unstable_by(|lhs, rhs| lhs.1.cmp(&rhs.1));
+                                        self.files.sort_unstable_by(|lhs, rhs| {
+                                            lhs.renamed.cmp(&rhs.renamed)
+                                        });
                                         self.columns.1 = Order::Forward;
                                     }
                                 };
                                 self.columns.2 = Columns::NewName;
+                            };
+                            if ui
+                                .selectable_value(&mut self.columns.0, Columns::Extension, "Ext")
+                                .clicked()
+                            {
+                                match self.columns {
+                                    (_, Order::Forward, Columns::Extension) => {
+                                        self.files.sort_unstable_by(|lhs, rhs| {
+                                            rhs.extension.cmp(&lhs.extension)
+                                        });
+                                        self.columns.1 = Order::Reverse;
+                                    }
+                                    _ => {
+                                        self.files.sort_unstable_by(|lhs, rhs| {
+                                            lhs.extension.cmp(&rhs.extension)
+                                        });
+                                        self.columns.1 = Order::Forward;
+                                    }
+                                };
+                                self.columns.2 = Columns::Extension;
                             };
                             if ui
                                 .selectable_value(&mut self.columns.0, Columns::Size, "Size")
@@ -263,11 +302,13 @@ impl eframe::App for App<'_> {
                             {
                                 match self.columns {
                                     (_, Order::Forward, Columns::Size) => {
-                                        self.files.sort_unstable_by(|lhs, rhs| rhs.2.cmp(&lhs.2));
+                                        self.files
+                                            .sort_unstable_by(|lhs, rhs| rhs.size.cmp(&lhs.size));
                                         self.columns.1 = Order::Reverse;
                                     }
                                     _ => {
-                                        self.files.sort_unstable_by(|lhs, rhs| lhs.2.cmp(&rhs.2));
+                                        self.files
+                                            .sort_unstable_by(|lhs, rhs| lhs.size.cmp(&rhs.size));
                                         self.columns.1 = Order::Forward;
                                     }
                                 };
@@ -283,11 +324,15 @@ impl eframe::App for App<'_> {
                             {
                                 match self.columns {
                                     (_, Order::Forward, Columns::Modified) => {
-                                        self.files.sort_unstable_by(|lhs, rhs| rhs.3.cmp(&lhs.3));
+                                        self.files.sort_unstable_by(|lhs, rhs| {
+                                            rhs.modified.cmp(&lhs.modified)
+                                        });
                                         self.columns.1 = Order::Reverse;
                                     }
                                     _ => {
-                                        self.files.sort_unstable_by(|lhs, rhs| lhs.3.cmp(&rhs.3));
+                                        self.files.sort_unstable_by(|lhs, rhs| {
+                                            lhs.modified.cmp(&rhs.modified)
+                                        });
                                         self.columns.1 = Order::Forward;
                                     }
                                 };
@@ -299,11 +344,15 @@ impl eframe::App for App<'_> {
                             {
                                 match self.columns {
                                     (_, Order::Forward, Columns::Created) => {
-                                        self.files.sort_unstable_by(|lhs, rhs| rhs.4.cmp(&lhs.4));
+                                        self.files.sort_unstable_by(|lhs, rhs| {
+                                            rhs.created.cmp(&lhs.created)
+                                        });
                                         self.columns.1 = Order::Reverse;
                                     }
                                     _ => {
-                                        self.files.sort_unstable_by(|lhs, rhs| lhs.4.cmp(&rhs.4));
+                                        self.files.sort_unstable_by(|lhs, rhs| {
+                                            lhs.created.cmp(&rhs.created)
+                                        });
                                         self.columns.1 = Order::Forward;
                                     }
                                 };
@@ -312,18 +361,23 @@ impl eframe::App for App<'_> {
                             ui.end_row();
 
                             for item in self.files.iter_mut() {
-                                ui.checkbox(&mut item.5, "");
-                                ui.label(file_no_parents(&item.0));
-                                ui.label(&item.1);
-                                ui.label(if let Some(size) = &item.2 {
+                                ui.checkbox(&mut item.selected, "");
+                                ui.label(file_no_parents(&item.name));
+                                ui.label(&item.renamed);
+                                ui.label(if let Some(ext) = &item.extension {
+                                    ext.as_str()
+                                } else {
+                                    ""
+                                });
+                                ui.label(if let Some(size) = &item.size {
                                     format!("{}", &size)
                                 } else {
                                     String::new()
                                 });
-                                if let Some(time) = &item.3 {
+                                if let Some(time) = &item.modified {
                                     ui.label(datetime_to_string(time));
                                 }
-                                if let Some(time) = &item.4 {
+                                if let Some(time) = &item.created {
                                     ui.label(datetime_to_string(time));
                                 }
                                 ui.end_row();
