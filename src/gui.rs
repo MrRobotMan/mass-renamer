@@ -64,7 +64,15 @@ fn datetime_to_string(datetime: &DateTime<Local>) -> String {
 fn file_no_parents(path: &Path) -> Cow<'_, str> {
     match path.file_name() {
         None => Cow::Owned(String::new()),
-        Some(file) => file.to_string_lossy(),
+        Some(file) => match path.is_dir() {
+            false => return file.to_string_lossy(),
+            true => {
+                let mut folder = String::from_utf8(vec![0xf0, 0x9f, 0x97, 0x80]).unwrap(); // U+1F5C0
+                folder.push(' ');
+                folder.push_str(&file.to_string_lossy());
+                return Cow::Owned(folder);
+            }
+        },
     }
 }
 
@@ -136,7 +144,6 @@ impl App<'_> {
                     if format!("{:?}", meta.file_type()).contains("attributes: 38") {
                         continue; // Remove system hidden files (.blf, .regtrans-ms, etc)
                     }
-                    println!("{file_name:?}");
                     if file_name.is_file() {
                         size = Some(meta.len())
                     };
