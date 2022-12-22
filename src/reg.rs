@@ -1,4 +1,4 @@
-use crate::file::{Process, RenameFile};
+use crate::{Process, RenameFile};
 use regex::Regex;
 
 /// Use a regular expression `exp` to find the offending text and `rep` it with new.

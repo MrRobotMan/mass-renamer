@@ -1,4 +1,4 @@
-use crate::file::{Process, RenameFile};
+use crate::{Process, RenameFile};
 use inflector::Inflector;
 use std::fmt::Write;
 

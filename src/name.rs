@@ -1,4 +1,4 @@
-use crate::file::{Process, RenameFile};
+use crate::{Process, RenameFile};
 
 /// Select from.
 /// - `NameOptions::Keep` - Do not change the original file name (default).
@@ -47,7 +47,7 @@ mod name_tests {
     fn fixed_name() {
         let mut file = RenameFile::new(Path::new("file")).unwrap();
         let new_name = "renamed_file";
-        let opt = NameOptions::Fixed(&new_name.to_owned());
+        let opt = NameOptions::Fixed(&new_name);
         opt.process(&mut file);
         assert_eq!(&file.stem, new_name);
     }

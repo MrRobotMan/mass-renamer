@@ -1,4 +1,4 @@
-use crate::file::{Process, RenameFile};
+use crate::{Process, RenameFile};
 
 /// Options for removing parts of the filename.
 /// Remove specific parts of a filename but not file extensions.
@@ -147,7 +147,7 @@ impl RemoveOptions<'_> {
                 *file = file.replace(word, "");
             }
         } else {
-            *file = file.replace(&word, "")
+            *file = file.replace(word, "")
         }
     }
 

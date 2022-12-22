@@ -1,4 +1,4 @@
-use crate::file::{Process, RenameFile};
+use crate::{Process, RenameFile};
 use std::{
     cmp::min,
     env,
@@ -43,7 +43,7 @@ impl Process for FolderOptions<'_> {
                 for component in components[start..end].iter().flatten() {
                     let mut component = component.replace(r"\\?\", "");
                     if env::consts::OS == "windows" {
-                        component = component.replace(":", "")
+                        component = component.replace(':', "")
                     }
                     file.stem
                         .insert_str(0, &format!("{}{}", component, self.sep));
@@ -53,7 +53,7 @@ impl Process for FolderOptions<'_> {
                 for component in components[start..end].iter().flatten() {
                     let mut component = component.replace(r"\\?\", "");
                     if env::consts::OS == "windows" {
-                        component = component.replace(":", "")
+                        component = component.replace(':', "")
                     }
                     write!(file.stem, "{}{}", component, self.sep)
                         .expect("Unexpected error appending string.")

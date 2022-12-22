@@ -1,6 +1,6 @@
 use std::{error::Error, fmt::Write, path::Path, time::SystemTime};
 
-use crate::file::{Process, RenameFile};
+use crate::{Process, RenameFile};
 use chrono::{DateTime, Local};
 
 /// Use the prefix or suffix `Mode` to modify the filename with a date format.
@@ -23,7 +23,7 @@ pub struct DateOptions<'a> {
 
 impl Process for DateOptions<'_> {
     fn process(&self, file: &mut RenameFile) {
-        if let Ok(datetime) = self.get_date(file.original) {
+        if let Ok(datetime) = self.get_date(&file.original) {
             let format = match &self.fmt {
                 DateFormat::Std((prefix, suffix)) => {
                     let mut fmt = prefix.get_format(self.seg, self.full_year);

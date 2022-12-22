@@ -1,4 +1,4 @@
-use crate::file::{Process, RenameFile};
+use crate::{Process, RenameFile};
 
 /// Options for basic renaming rules.
 /// - `replace` - text to be replaced
@@ -18,15 +18,12 @@ impl Process for ReplaceOptions<'_> {
         } else {
             let start = file.to_lowercase().find(&self.replace.to_lowercase());
             let span = self.replace.len();
-            match start {
-                Some(idx) => {
-                    for _ in idx..(idx + span) {
-                        file.remove(idx);
-                    }
-                    file.insert_str(idx, self.with);
+            if let Some(idx) = start {
+                for _ in idx..(idx + span) {
+                    file.remove(idx);
                 }
-                None => (),
-            }
+                file.insert_str(idx, self.with);
+            };
         }
     }
 }

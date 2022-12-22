@@ -1,6 +1,6 @@
-use crate::file;
+use crate::*;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct AddData {
     pub prefix: String,
     pub insert: String,
@@ -9,18 +9,41 @@ pub struct AddData {
     pub word_space: bool,
 }
 
+impl AddData {
+    pub fn make_options(&self) -> AddOptions {
+        let prefix = match &self.prefix {
+            s if s.is_empty() => None,
+            s => Some(s.as_str()),
+        };
+        let insert = match &self.insert {
+            s if s.is_empty() => None,
+            s => Some((self.position, s.as_str())),
+        };
+        let suffix = match &self.suffix {
+            x if x.is_empty() => None,
+            s => Some(s.as_str()),
+        };
+        AddOptions {
+            prefix,
+            insert,
+            suffix,
+            word_space: self.word_space,
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct CaseData {
-    pub choice: file::Case,
+    pub choice: Case,
     pub snake: bool,
     pub exceptions: String,
 }
 
 #[derive(Default)]
 pub struct DateData<'a> {
-    pub position: file::DateMode,
-    pub date_type: file::DateType,
-    pub fmt: file::DateFormat<'a>,
+    pub position: DateMode,
+    pub date_type: DateType,
+    pub fmt: DateFormat<'a>,
     pub sep: String,
     pub seg: String,
     pub full_year: bool,
@@ -29,26 +52,26 @@ pub struct DateData<'a> {
 
 #[derive(Default)]
 pub struct ExtensionData<'a> {
-    pub value: file::ExtensionOptions<'a>,
+    pub value: ExtensionOptions<'a>,
     pub new: String,
 }
 
 #[derive(Default)]
 pub struct Folderdata {
-    pub postion: file::FolderMode,
+    pub postion: FolderMode,
     pub sep: String,
     pub levels: i32,
 }
 
 #[derive(Default)]
 pub struct NameData<'a> {
-    pub value: file::NameOptions<'a>,
+    pub value: NameOptions<'a>,
     pub new: String,
 }
 
 #[derive(Default)]
 pub struct Numberdata {
-    pub choice: file::NumberMode,
+    pub choice: NumberMode,
     pub position: usize,
     pub start: u32,
     pub increment: u32,
@@ -56,7 +79,7 @@ pub struct Numberdata {
     pub padding_char: char,
     pub sep: String,
     pub reset_pos: Option<usize>,
-    pub format: file::NumberFormat,
+    pub format: NumberFormat,
 }
 
 #[derive(Default)]

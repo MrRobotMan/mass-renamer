@@ -1,4 +1,4 @@
-use crate::file::{Process, RenameFile};
+use crate::{Process, RenameFile};
 
 /// Add a fixed `Prefix` or`Suffix` to the filename,
 /// or `Insert` text at a specific location (0 indexed, negative to index from the end).
@@ -6,10 +6,10 @@ use crate::file::{Process, RenameFile};
 /// You may also choose to add a `Word Space`. This will insert a space before any
 /// capital letter (except the first character), unless there's a space already there.
 pub struct AddOptions<'a> {
-    prefix: Option<&'a str>,
-    insert: Option<(i32, &'a str)>,
-    suffix: Option<&'a str>,
-    word_space: bool,
+    pub prefix: Option<&'a str>,
+    pub insert: Option<(i32, &'a str)>,
+    pub suffix: Option<&'a str>,
+    pub word_space: bool,
 }
 
 impl Process for AddOptions<'_> {
