@@ -5,10 +5,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::RenameFile;
+use crate::*;
 use chrono::{DateTime, Local};
 use eframe;
-use egui::{self, Color32, Frame, Stroke, WidgetText};
+use egui::{self, style::Margin, Color32, Frame, Rounding, Stroke, WidgetText};
 use home;
 use rfd;
 
@@ -17,6 +17,8 @@ mod data;
 use data::*;
 
 const FILES_HEIGHT: f32 = 300.0;
+const FRAME_RADIUS: f32 = 10.0;
+const FRAME_MARGIN: f32 = 5.0;
 
 #[derive(Default)]
 pub struct App<'a> {
@@ -29,9 +31,9 @@ pub struct App<'a> {
     _date: DateData<'a>,
     _extension: ExtensionData<'a>,
     _folder: Folderdata,
-    _name: NameData<'a>,
+    name: NameData,
     _number: Numberdata,
-    _reg_exp: RegExData,
+    reg_exp: RegExData,
     _remove: RemoveData,
     _replace: ReplaceData,
 }
@@ -385,13 +387,79 @@ impl eframe::App for App<'_> {
                         });
                     });
                 ui.horizontal(|ui| {
+                    //ui.with_layout(egui::Layout::top_down_justified(egui::Align::Center),
                     ui.vertical(|ui| {
                         Frame::none()
                             .stroke(Stroke::new(1.0, Color32::BLACK))
-                            .show(ui, |ui| ui.label("Regex"));
+                            .inner_margin(Margin::same(FRAME_MARGIN))
+                            .rounding(Rounding::same(FRAME_RADIUS))
+                            .show(ui, |ui| {
+                                ui.vertical(|ui| {
+                                    ui.label("Regex");
+                                    ui.horizontal(|ui| {
+                                        ui.label("Match:");
+                                        ui.text_edit_singleline(&mut self.reg_exp.exp)
+                                    });
+                                    ui.horizontal(|ui| {
+                                        ui.label("Replacement:");
+                                        ui.text_edit_singleline(&mut self.reg_exp.replace)
+                                    });
+                                    ui.horizontal(|ui| {
+                                        ui.label("Include Extension?: ");
+                                        egui::ComboBox::new("Regex Extension", "")
+                                            .selected_text(match self.reg_exp.extension {
+                                                true => "Yes",
+                                                false => "No",
+                                            })
+                                            .show_ui(ui, |ui| {
+                                                ui.selectable_value(
+                                                    &mut self.reg_exp.extension,
+                                                    false,
+                                                    "No",
+                                                );
+                                                ui.selectable_value(
+                                                    &mut self.reg_exp.extension,
+                                                    true,
+                                                    "Yes",
+                                                );
+                                            });
+                                    })
+                                })
+                            });
                         Frame::none()
                             .stroke(Stroke::new(1.0, Color32::BLACK))
-                            .show(ui, |ui| ui.label("Name"));
+                            .inner_margin(Margin::same(FRAME_MARGIN))
+                            .rounding(Rounding::same(FRAME_RADIUS))
+                            .show(ui, |ui| {
+                                ui.vertical(|ui| {
+                                    ui.label("Name");
+                                    egui::ComboBox::new("Name Options", "")
+                                        .selected_text(&self.name.value)
+                                        .show_ui(ui, |ui| {
+                                            ui.selectable_value(
+                                                &mut self.name.value,
+                                                NameOpts::Keep,
+                                                "Keep",
+                                            );
+                                            ui.selectable_value(
+                                                &mut self.name.value,
+                                                NameOpts::Remove,
+                                                "Remove",
+                                            );
+                                            ui.selectable_value(
+                                                &mut self.name.value,
+                                                NameOpts::Fixed,
+                                                "Fixed",
+                                            );
+                                            ui.selectable_value(
+                                                &mut self.name.value,
+                                                NameOpts::Reverse,
+                                                "Reverse",
+                                            );
+                                        });
+                                    ui.text_edit_singleline(&mut self.name.new);
+                                })
+                            });
                         Frame::none()
                             .stroke(Stroke::new(1.0, Color32::BLACK))
                             .show(ui, |ui| {

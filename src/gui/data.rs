@@ -1,3 +1,5 @@
+use egui::WidgetText;
+
 use crate::*;
 
 #[derive(Default, Clone)]
@@ -64,9 +66,30 @@ pub struct Folderdata {
 }
 
 #[derive(Default)]
-pub struct NameData<'a> {
-    pub value: NameOptions<'a>,
+pub struct NameData {
+    pub value: NameOpts,
     pub new: String,
+}
+
+#[derive(Debug, Default, PartialEq)]
+pub enum NameOpts {
+    #[default]
+    Keep,
+    Remove,
+    Fixed,
+    Reverse,
+}
+
+#[allow(clippy::from_over_into)]
+impl Into<WidgetText> for &NameOpts {
+    fn into(self) -> WidgetText {
+        WidgetText::RichText(egui::widget_text::RichText::new(match &self {
+            NameOpts::Keep => "Keep",
+            NameOpts::Remove => "Remove",
+            NameOpts::Fixed => "Fixed",
+            NameOpts::Reverse => "Reverse",
+        }))
+    }
 }
 
 #[derive(Default)]
