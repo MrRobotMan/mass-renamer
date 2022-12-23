@@ -8,7 +8,7 @@ use std::{
 use crate::RenameFile;
 use chrono::{DateTime, Local};
 use eframe;
-use egui::{self, WidgetText};
+use egui::{self, Color32, Frame, Stroke, WidgetText};
 use home;
 use rfd;
 
@@ -277,7 +277,7 @@ impl eframe::App for App<'_> {
                                 self.columns.2 = Columns::NewName;
                             };
                             if ui
-                                .selectable_value(&mut self.columns.0, Columns::Extension, "Ext")
+                                .selectable_value(&mut self.columns.0, Columns::Extension, "Type")
                                 .clicked()
                             {
                                 match self.columns {
@@ -384,7 +384,58 @@ impl eframe::App for App<'_> {
                             }
                         });
                     });
-                ui.horizontal(|ui| ui.label("This will be the fields area."));
+                ui.horizontal(|ui| {
+                    ui.vertical(|ui| {
+                        Frame::none()
+                            .stroke(Stroke::new(1.0, Color32::BLACK))
+                            .show(ui, |ui| ui.label("Regex"));
+                        Frame::none()
+                            .stroke(Stroke::new(1.0, Color32::BLACK))
+                            .show(ui, |ui| ui.label("Name"));
+                        Frame::none()
+                            .stroke(Stroke::new(1.0, Color32::BLACK))
+                            .show(ui, |ui| {
+                                ui.label("Append Folder Name");
+                            });
+                    });
+                    ui.vertical(|ui| {
+                        Frame::none()
+                            .stroke(Stroke::new(1.0, Color32::BLACK))
+                            .show(ui, |ui| {
+                                ui.label("Replace");
+                            });
+                        Frame::none()
+                            .stroke(Stroke::new(1.0, Color32::BLACK))
+                            .show(ui, |ui| {
+                                ui.label("Case");
+                            });
+                        Frame::none()
+                            .stroke(Stroke::new(1.0, Color32::BLACK))
+                            .show(ui, |ui| {
+                                ui.label("Extension");
+                            });
+                    });
+                    Frame::none()
+                        .stroke(Stroke::new(1.0, Color32::BLACK))
+                        .show(ui, |ui| {
+                            ui.label("Remove");
+                        });
+                    Frame::none()
+                        .stroke(Stroke::new(1.0, Color32::BLACK))
+                        .show(ui, |ui| {
+                            ui.label("Add");
+                        });
+                    Frame::none()
+                        .stroke(Stroke::new(1.0, Color32::BLACK))
+                        .show(ui, |ui| {
+                            ui.label("Auto Date");
+                        });
+                    Frame::none()
+                        .stroke(Stroke::new(1.0, Color32::BLACK))
+                        .show(ui, |ui| {
+                            ui.label("Numbering");
+                        });
+                });
             })
         });
     }
