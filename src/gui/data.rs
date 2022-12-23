@@ -53,9 +53,37 @@ pub struct DateData<'a> {
 }
 
 #[derive(Default)]
-pub struct ExtensionData<'a> {
-    pub value: ExtensionOptions<'a>,
+pub struct ExtensionData {
+    pub value: ExtOpts,
     pub new: String,
+}
+
+#[derive(Debug, Default, PartialEq, Copy, Clone)]
+pub enum ExtOpts {
+    #[default]
+    Keep,
+    Lower,
+    Upper,
+    Title,
+    New,
+    Extra,
+    Remove,
+}
+
+impl ExtOpts {
+    pub fn iterator() -> impl Iterator<Item = ExtOpts> {
+        [
+            Self::Keep,
+            Self::Lower,
+            Self::Upper,
+            Self::Title,
+            Self::New,
+            Self::Extra,
+            Self::Remove,
+        ]
+        .iter()
+        .copied()
+    }
 }
 
 #[derive(Default)]
@@ -71,13 +99,21 @@ pub struct NameData {
     pub new: String,
 }
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, PartialEq, Clone, Copy)]
 pub enum NameOpts {
     #[default]
     Keep,
     Remove,
     Fixed,
     Reverse,
+}
+
+impl NameOpts {
+    pub fn iterator() -> impl Iterator<Item = NameOpts> {
+        [Self::Keep, Self::Remove, Self::Fixed, Self::Reverse]
+            .iter()
+            .copied()
+    }
 }
 
 #[allow(clippy::from_over_into)]

@@ -27,15 +27,15 @@ pub struct App<'a> {
     files: Vec<FileListing>,
     columns: (Columns, Order, Columns), // 3rd field is previous
     _add: AddData,
-    _case: CaseData,
+    case: CaseData,
     _date: DateData<'a>,
-    _extension: ExtensionData<'a>,
+    extension: ExtensionData,
     folder: Folderdata,
     name: NameData,
     _number: Numberdata,
     reg_exp: RegExData,
     _remove: RemoveData,
-    _replace: ReplaceData,
+    replace: ReplaceData,
 }
 
 #[allow(clippy::from_over_into)]
@@ -404,26 +404,7 @@ impl eframe::App for App<'_> {
                                         ui.label("Replacement:");
                                         ui.text_edit_singleline(&mut self.reg_exp.replace)
                                     });
-                                    ui.horizontal(|ui| {
-                                        ui.label("Include Extension?: ");
-                                        egui::ComboBox::new("Regex Extension", "")
-                                            .selected_text(match self.reg_exp.extension {
-                                                true => "Yes",
-                                                false => "No",
-                                            })
-                                            .show_ui(ui, |ui| {
-                                                ui.selectable_value(
-                                                    &mut self.reg_exp.extension,
-                                                    false,
-                                                    "No",
-                                                );
-                                                ui.selectable_value(
-                                                    &mut self.reg_exp.extension,
-                                                    true,
-                                                    "Yes",
-                                                );
-                                            });
-                                    })
+                                    ui.checkbox(&mut self.reg_exp.extension, "Include Extension");
                                 })
                             });
                         Frame::none()
@@ -436,26 +417,13 @@ impl eframe::App for App<'_> {
                                     egui::ComboBox::new("Name Options", "")
                                         .selected_text(&self.name.value)
                                         .show_ui(ui, |ui| {
-                                            ui.selectable_value(
-                                                &mut self.name.value,
-                                                NameOpts::Keep,
-                                                "Keep",
-                                            );
-                                            ui.selectable_value(
-                                                &mut self.name.value,
-                                                NameOpts::Remove,
-                                                "Remove",
-                                            );
-                                            ui.selectable_value(
-                                                &mut self.name.value,
-                                                NameOpts::Fixed,
-                                                "Fixed",
-                                            );
-                                            ui.selectable_value(
-                                                &mut self.name.value,
-                                                NameOpts::Reverse,
-                                                "Reverse",
-                                            );
+                                            for opt in NameOpts::iterator() {
+                                                ui.selectable_value(
+                                                    &mut self.name.value,
+                                                    opt,
+                                                    format!("{:?}", opt),
+                                                );
+                                            }
                                         });
                                     ui.text_edit_singleline(&mut self.name.new);
                                 })
@@ -502,37 +470,98 @@ impl eframe::App for App<'_> {
                     ui.vertical(|ui| {
                         Frame::none()
                             .stroke(Stroke::new(1.0, Color32::BLACK))
+                            .inner_margin(Margin::same(FRAME_MARGIN))
+                            .rounding(Rounding::same(FRAME_RADIUS))
                             .show(ui, |ui| {
-                                ui.label("Replace");
+                                ui.vertical(|ui| {
+                                    ui.label("Replace");
+                                    ui.horizontal(|ui| {
+                                        ui.label("Replace: ");
+                                        ui.text_edit_singleline(&mut self.replace.replace);
+                                    });
+                                    ui.horizontal(|ui| {
+                                        ui.label("With: ");
+                                        ui.text_edit_singleline(&mut self.replace.with);
+                                    });
+                                    ui.checkbox(&mut self.replace.match_case, "Match Case")
+                                });
                             });
                         Frame::none()
                             .stroke(Stroke::new(1.0, Color32::BLACK))
+                            .inner_margin(Margin::same(FRAME_MARGIN))
+                            .rounding(Rounding::same(FRAME_RADIUS))
                             .show(ui, |ui| {
-                                ui.label("Case");
+                                ui.vertical(|ui| {
+                                    ui.label("Case");
+                                    ui.horizontal(|ui| {
+                                        egui::ComboBox::new("Case", "")
+                                            .selected_text(format!("{:?}", &self.case.choice))
+                                            .show_ui(ui, |ui| {
+                                                for opt in Case::iterator() {
+                                                    ui.selectable_value(
+                                                        &mut self.case.choice,
+                                                        opt,
+                                                        format!("{:?}", opt),
+                                                    );
+                                                }
+                                            });
+                                        ui.checkbox(&mut self.case.snake, "Snake_Case")
+                                    });
+                                    ui.horizontal(|ui| {
+                                        ui.label("Except:");
+                                        ui.text_edit_singleline(&mut self.case.exceptions);
+                                    });
+                                })
                             });
                         Frame::none()
                             .stroke(Stroke::new(1.0, Color32::BLACK))
+                            .inner_margin(Margin::same(FRAME_MARGIN))
+                            .rounding(Rounding::same(FRAME_RADIUS))
                             .show(ui, |ui| {
-                                ui.label("Extension");
+                                ui.vertical(|ui| {
+                                    ui.label("Extension");
+                                    ui.horizontal(|ui| {
+                                        egui::ComboBox::new("Extension", "")
+                                            .selected_text(format!("{:?}", &self.extension.value))
+                                            .show_ui(ui, |ui| {
+                                                for opt in ExtOpts::iterator() {
+                                                    ui.selectable_value(
+                                                        &mut self.extension.value,
+                                                        opt,
+                                                        format!("{:?}", opt),
+                                                    );
+                                                }
+                                            });
+                                        ui.text_edit_singleline(&mut self.extension.new);
+                                    });
+                                });
                             });
                     });
                     Frame::none()
                         .stroke(Stroke::new(1.0, Color32::BLACK))
+                        .inner_margin(Margin::same(FRAME_MARGIN))
+                        .rounding(Rounding::same(FRAME_RADIUS))
                         .show(ui, |ui| {
                             ui.label("Remove");
                         });
                     Frame::none()
                         .stroke(Stroke::new(1.0, Color32::BLACK))
+                        .inner_margin(Margin::same(FRAME_MARGIN))
+                        .rounding(Rounding::same(FRAME_RADIUS))
                         .show(ui, |ui| {
                             ui.label("Add");
                         });
                     Frame::none()
                         .stroke(Stroke::new(1.0, Color32::BLACK))
+                        .inner_margin(Margin::same(FRAME_MARGIN))
+                        .rounding(Rounding::same(FRAME_RADIUS))
                         .show(ui, |ui| {
                             ui.label("Auto Date");
                         });
                     Frame::none()
                         .stroke(Stroke::new(1.0, Color32::BLACK))
+                        .inner_margin(Margin::same(FRAME_MARGIN))
+                        .rounding(Rounding::same(FRAME_RADIUS))
                         .show(ui, |ui| {
                             ui.label("Numbering");
                         });

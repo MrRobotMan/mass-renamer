@@ -25,7 +25,7 @@ pub struct CaseOptions<'a> {
 /// `Case::Upper` to convert to uppercase,
 /// `Case::Title` to convert to titlecase, or
 /// `Case::Sentence` to convert to sentence case.
-#[derive(Default)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum Case {
     #[default]
     Keep,
@@ -33,6 +33,20 @@ pub enum Case {
     Upper,
     Title,
     Sentence,
+}
+
+impl Case {
+    pub fn iterator() -> impl Iterator<Item = Case> {
+        [
+            Self::Keep,
+            Self::Lower,
+            Self::Upper,
+            Self::Title,
+            Self::Sentence,
+        ]
+        .iter()
+        .copied()
+    }
 }
 
 impl Process for CaseOptions<'_> {
