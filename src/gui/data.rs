@@ -60,9 +60,9 @@ pub struct ExtensionData<'a> {
 
 #[derive(Default)]
 pub struct Folderdata {
-    pub postion: FolderMode,
+    pub position: FolderMode,
     pub sep: String,
-    pub levels: i32,
+    pub levels: String,
 }
 
 #[derive(Default)]

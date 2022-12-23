@@ -30,7 +30,7 @@ pub struct App<'a> {
     _case: CaseData,
     _date: DateData<'a>,
     _extension: ExtensionData<'a>,
-    _folder: Folderdata,
+    folder: Folderdata,
     name: NameData,
     _number: Numberdata,
     reg_exp: RegExData,
@@ -462,8 +462,41 @@ impl eframe::App for App<'_> {
                             });
                         Frame::none()
                             .stroke(Stroke::new(1.0, Color32::BLACK))
+                            .inner_margin(Margin::same(FRAME_MARGIN))
+                            .rounding(Rounding::same(FRAME_RADIUS))
                             .show(ui, |ui| {
-                                ui.label("Append Folder Name");
+                                ui.vertical(|ui| {
+                                    ui.label("Append Folder Name");
+                                    ui.horizontal(|ui| {
+                                        egui::ComboBox::new("Append File Name", "")
+                                            .selected_text(format!("{:?}", &self.folder.position))
+                                            .show_ui(ui, |ui| {
+                                                ui.selectable_value(
+                                                    &mut self.folder.position,
+                                                    FolderMode::None,
+                                                    "None",
+                                                );
+                                                ui.selectable_value(
+                                                    &mut self.folder.position,
+                                                    FolderMode::Prefix,
+                                                    "Prefix",
+                                                );
+                                                ui.selectable_value(
+                                                    &mut self.folder.position,
+                                                    FolderMode::Suffix,
+                                                    "Suffix",
+                                                )
+                                            });
+                                        ui.label("Sep.");
+                                        ui.text_edit_singleline(&mut self.folder.sep);
+                                        ui.separator();
+                                        ui.label("Pos.");
+                                        ui.add_sized(
+                                            [10.0, 20.0],
+                                            egui::TextEdit::singleline(&mut self.folder.levels),
+                                        );
+                                    });
+                                });
                             });
                     });
                     ui.vertical(|ui| {

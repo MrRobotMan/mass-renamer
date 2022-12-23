@@ -59,6 +59,7 @@ impl Process for FolderOptions<'_> {
                         .expect("Unexpected error appending string.")
                 }
             }
+            _ => (),
         };
     }
 }
@@ -66,9 +67,10 @@ impl Process for FolderOptions<'_> {
 /// Select from
 /// `FolderMode::Prefix` or
 /// `FolderMode::Suffix`.
-#[derive(Default)]
+#[derive(Default, Debug, PartialEq)]
 pub enum FolderMode {
     #[default]
+    None,
     Prefix,
     Suffix,
 }
