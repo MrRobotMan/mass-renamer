@@ -86,6 +86,7 @@ impl ExtOpts {
     }
 }
 
+#[derive(Debug)]
 pub struct FolderData {
     pub position: FolderMode,
     pub sep: String,
@@ -103,12 +104,16 @@ impl Default for FolderData {
 }
 
 impl Increment for FolderData {
-    fn increment(&mut self, increment: bool) {
+    fn increment(&mut self, increment: bool, field: &str) {
         let delta = match increment {
             true => 1,
             false => -1,
         };
-        self.levels = format!("{}", self.levels.parse::<i32>().unwrap() + delta)
+        if let Ok(num) = self.levels.parse::<i32>() {
+            self.levels = format!("{}", num + delta)
+        } else if self.levels.is_empty() {
+            self.levels = delta.to_string();
+        };
     }
 }
 
@@ -183,6 +188,22 @@ pub struct RemoveData {
     pub chars: bool,
     pub symbols: bool,
     pub lead_dots: bool,
+}
+
+impl Increment for RemoveData {
+    fn increment(&mut self, increment: bool, field: &str) {
+        let delta: i32 = match increment {
+            true => 1,
+            false => -1,
+        };
+        match field {
+            "first_n" => self.first_n = 0.max(self.first_n as i32 + delta) as usize,
+            "last_n" => self.last_n = 0.max(self.last_n as i32 + delta) as usize,
+            "start" => self.start = 0.max(self.start as i32 + delta) as usize,
+            "end" => self.end = 0.max(self.end as i32 + delta) as usize,
+            _ => panic!("Unknown field"),
+        };
+    }
 }
 
 impl Default for RemoveData {
