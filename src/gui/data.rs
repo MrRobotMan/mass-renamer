@@ -1,6 +1,6 @@
 use egui::WidgetText;
 
-use crate::*;
+use super::*;
 
 #[derive(Default, Clone)]
 pub struct AddData {
@@ -86,11 +86,30 @@ impl ExtOpts {
     }
 }
 
-#[derive(Default)]
-pub struct Folderdata {
+pub struct FolderData {
     pub position: FolderMode,
     pub sep: String,
     pub levels: String,
+}
+
+impl Default for FolderData {
+    fn default() -> Self {
+        Self {
+            position: Default::default(),
+            sep: Default::default(),
+            levels: "0".to_string(),
+        }
+    }
+}
+
+impl Increment for FolderData {
+    fn increment(&mut self, increment: bool) {
+        let delta = match increment {
+            true => 1,
+            false => -1,
+        };
+        self.levels = format!("{}", self.levels.parse::<i32>().unwrap() + delta)
+    }
 }
 
 #[derive(Default)]

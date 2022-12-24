@@ -8,13 +8,15 @@ use std::{
 use crate::*;
 use chrono::{DateTime, Local};
 use eframe;
-use egui::{self, style::Margin, Color32, Frame, Rounding, Stroke, WidgetText};
+use egui::{self, style::Margin, Color32, Frame, Id, Rounding, Stroke, WidgetText};
 use home;
 use rfd;
 
 mod data;
+mod increment_decrement;
 
 use data::*;
+use increment_decrement::{Arrows, Increment};
 
 const FILES_HEIGHT: f32 = 300.0;
 const FRAME_RADIUS: f32 = 10.0;
@@ -30,7 +32,7 @@ pub struct App<'a> {
     case: CaseData,
     _date: DateData<'a>,
     extension: ExtensionData,
-    folder: Folderdata,
+    folder: FolderData,
     name: NameData,
     _number: Numberdata,
     reg_exp: RegExData,
@@ -60,8 +62,7 @@ fn file_no_parents(path: &Path) -> Cow<'_, str> {
         Some(file) => match path.is_dir() {
             false => file.to_string_lossy(),
             true => {
-                let mut folder = String::from_utf8(vec![0xf0, 0x9f, 0x97, 0x80]).unwrap(); // U+1F5C0
-                folder.push(' ');
+                let mut folder = String::from("🗀");
                 folder.push_str(&file.to_string_lossy());
                 Cow::Owned(folder)
             }
@@ -463,6 +464,10 @@ impl eframe::App for App<'_> {
                                             [10.0, 20.0],
                                             egui::TextEdit::singleline(&mut self.folder.levels),
                                         );
+                                        ui.add(Arrows {
+                                            id: Id::new("Folder Arrows"),
+                                            value: &mut self.folder,
+                                        });
                                     });
                                 });
                             });
@@ -542,7 +547,9 @@ impl eframe::App for App<'_> {
                         .inner_margin(Margin::same(FRAME_MARGIN))
                         .rounding(Rounding::same(FRAME_RADIUS))
                         .show(ui, |ui| {
-                            ui.label("Remove");
+                            ui.vertical(|ui| {
+                                ui.label("Remove");
+                            });
                         });
                     Frame::none()
                         .stroke(Stroke::new(1.0, Color32::BLACK))
