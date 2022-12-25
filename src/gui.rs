@@ -14,9 +14,18 @@ use rfd;
 
 mod data;
 mod increment_decrement;
+mod validated;
 
 use data::*;
 use increment_decrement::{Arrows, Increment};
+use validated::ValText;
+
+/*
+let num_less_than_ten = ValText::with_validator(|text| {
+  text.parse().ok().filter(|&n| n < 10)
+});
+
+ui.text_edit_singleline(&mut num_less_than_ten); */
 
 const FILES_HEIGHT: f32 = 300.0;
 const FRAME_RADIUS: f32 = 10.0;
