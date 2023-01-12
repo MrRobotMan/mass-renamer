@@ -28,9 +28,8 @@ pub use remove::RemoveOptions;
 pub use replace::ReplaceOptions;
 use std::ffi::OsStr;
 
-#[allow(unused_variables)]
 pub trait Process {
-    fn process(&self, file: &mut RenameFile) {}
+    fn process(&self, file: &mut RenameFile) -> ();
 }
 
 #[derive(Debug, Eq, PartialEq)]

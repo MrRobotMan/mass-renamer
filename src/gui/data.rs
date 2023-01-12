@@ -1,6 +1,7 @@
 use egui::WidgetText;
 
 use super::*;
+use valid_text::ValText;
 
 #[derive(Default, Clone)]
 pub struct AddData {
@@ -86,34 +87,24 @@ impl ExtOpts {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct FolderData {
     pub position: FolderMode,
     pub sep: String,
-    pub levels: String,
-}
-
-impl Default for FolderData {
-    fn default() -> Self {
-        Self {
-            position: Default::default(),
-            sep: Default::default(),
-            levels: "0".to_string(),
-        }
-    }
+    pub levels: ValText<i32>,
 }
 
 impl Increment for FolderData {
-    fn increment(&mut self, increment: bool, field: &str) {
+    fn increment(&mut self, increment: bool, _field: &str) {
         let delta = match increment {
             true => 1,
             false => -1,
         };
-        if let Ok(num) = self.levels.parse::<i32>() {
-            self.levels = format!("{}", num + delta)
+        if let Some(val) = self.levels.get_val() {
+            self.levels.set_val(val + delta)
         } else if self.levels.is_empty() {
-            self.levels = delta.to_string();
-        };
+            self.levels.set_val(delta)
+        }
     }
 }
 
@@ -173,10 +164,10 @@ pub struct RegExData {
 }
 
 pub struct RemoveData {
-    pub first_n: usize,
-    pub last_n: usize,
-    pub start: usize,
-    pub end: usize,
+    pub first_n: ValText<usize>,
+    pub last_n: ValText<usize>,
+    pub start: ValText<usize>,
+    pub end: ValText<usize>,
     pub characters: String,
     pub words: String,
     pub crop_before: bool,
@@ -196,12 +187,20 @@ impl Increment for RemoveData {
             true => 1,
             false => -1,
         };
-        match field {
-            "first_n" => self.first_n = 0.max(self.first_n as i32 + delta) as usize,
-            "last_n" => self.last_n = 0.max(self.last_n as i32 + delta) as usize,
-            "start" => self.start = 0.max(self.start as i32 + delta) as usize,
-            "end" => self.end = 0.max(self.end as i32 + delta) as usize,
+        let val = match field {
+            "first_n" => &mut self.first_n,
+            "last_n" => &mut self.last_n,
+            "start" => &mut self.start,
+            "end" => &mut self.end,
             _ => panic!("Unknown field"),
+        };
+        if let Some(v) = val.get_val() {
+            val.set_val(0.max(v as i32 + delta) as usize)
+        } else if val.is_empty() {
+            val.set_val(match increment {
+                true => 1,
+                false => 0,
+            })
         };
     }
 }
@@ -209,14 +208,14 @@ impl Increment for RemoveData {
 impl Default for RemoveData {
     fn default() -> Self {
         Self {
-            first_n: 0,
-            last_n: 0,
-            start: 0,
-            end: 0,
-            characters: String::new(),
-            words: String::new(),
+            first_n: Default::default(),
+            last_n: Default::default(),
+            start: Default::default(),
+            end: Default::default(),
+            characters: Default::default(),
+            words: Default::default(),
             crop_before: true,
-            crop: String::new(),
+            crop: Default::default(),
             digits: false,
             ascii_high: false,
             trim: false,

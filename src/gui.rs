@@ -14,6 +14,7 @@ use rfd;
 
 mod data;
 mod increment_decrement;
+mod valid_text;
 
 use data::*;
 use increment_decrement::{Arrows, Increment};
@@ -461,10 +462,21 @@ impl eframe::App for App<'_> {
                                         ui.text_edit_singleline(&mut self.folder.sep);
                                         ui.separator();
                                         ui.label("Pos.");
-                                        ui.add(
-                                            egui::TextEdit::singleline(&mut self.folder.levels)
-                                                .desired_width(NUM_WIDTH),
-                                        );
+                                        if ui
+                                            .add(
+                                                egui::TextEdit::singleline(&mut self.folder.levels)
+                                                    .desired_width(NUM_WIDTH),
+                                            )
+                                            .changed()
+                                        {
+                                            if !self.folder.levels.is_valid() {
+                                                let prev = match self.folder.levels.get_prev() {
+                                                    Some(v) => v,
+                                                    None => 0,
+                                                };
+                                                self.folder.levels.set_val(prev);
+                                            }
+                                        };
                                         ui.add(Arrows {
                                             id: Id::new("Folder Arrows"),
                                             value: &mut self.folder,
@@ -553,18 +565,19 @@ impl eframe::App for App<'_> {
                                 ui.label("Remove");
                                 ui.horizontal(|ui| {
                                     ui.label("First n");
-                                    let mut first_n = self.remove.first_n.to_string();
                                     if ui
                                         .add(
-                                            egui::TextEdit::singleline(&mut first_n)
+                                            egui::TextEdit::singleline(&mut self.remove.first_n)
                                                 .desired_width(NUM_WIDTH),
                                         )
                                         .changed()
                                     {
-                                        if let Ok(num) = first_n.parse::<usize>() {
-                                            self.remove.first_n = num;
-                                        } else if first_n.is_empty() {
-                                            self.remove.first_n = 0;
+                                        if !self.remove.first_n.is_valid() {
+                                            let prev = match self.remove.first_n.get_prev() {
+                                                Some(v) => v,
+                                                None => 0,
+                                            };
+                                            self.remove.first_n.set_val(prev);
                                         }
                                     };
                                     ui.add(Arrows {
@@ -573,18 +586,19 @@ impl eframe::App for App<'_> {
                                         field: "first_n",
                                     });
                                     ui.label("Last n");
-                                    let mut last_n = self.remove.last_n.to_string();
                                     if ui
                                         .add(
-                                            egui::TextEdit::singleline(&mut last_n)
+                                            egui::TextEdit::singleline(&mut self.remove.last_n)
                                                 .desired_width(NUM_WIDTH),
                                         )
                                         .changed()
                                     {
-                                        if let Ok(num) = last_n.parse::<usize>() {
-                                            self.remove.last_n = num;
-                                        } else if last_n.is_empty() {
-                                            self.remove.last_n = 0;
+                                        if !self.remove.last_n.is_valid() {
+                                            let prev = match self.remove.last_n.get_prev() {
+                                                Some(v) => v,
+                                                None => 0,
+                                            };
+                                            self.remove.last_n.set_val(prev);
                                         }
                                     };
                                     ui.add(Arrows {
@@ -595,18 +609,19 @@ impl eframe::App for App<'_> {
                                 });
                                 ui.horizontal(|ui| {
                                     ui.label("Start");
-                                    let mut start = self.remove.start.to_string();
                                     if ui
                                         .add(
-                                            egui::TextEdit::singleline(&mut start)
+                                            egui::TextEdit::singleline(&mut self.remove.start)
                                                 .desired_width(NUM_WIDTH),
                                         )
                                         .changed()
                                     {
-                                        if let Ok(num) = start.parse::<usize>() {
-                                            self.remove.start = num;
-                                        } else if start.is_empty() {
-                                            self.remove.start = 0;
+                                        if !self.remove.start.is_valid() {
+                                            let prev = match self.remove.start.get_prev() {
+                                                Some(v) => v,
+                                                None => 0,
+                                            };
+                                            self.remove.start.set_val(prev);
                                         }
                                     };
                                     ui.add(Arrows {
@@ -615,18 +630,19 @@ impl eframe::App for App<'_> {
                                         field: "start",
                                     });
                                     ui.label("End");
-                                    let mut end = self.remove.end.to_string();
                                     if ui
                                         .add(
-                                            egui::TextEdit::singleline(&mut end)
+                                            egui::TextEdit::singleline(&mut self.remove.end)
                                                 .desired_width(NUM_WIDTH),
                                         )
                                         .changed()
                                     {
-                                        if let Ok(num) = end.parse::<usize>() {
-                                            self.remove.end = num;
-                                        } else if end.is_empty() {
-                                            self.remove.end = 0;
+                                        if !self.remove.end.is_valid() {
+                                            let prev = match self.remove.end.get_prev() {
+                                                Some(v) => v,
+                                                None => 0,
+                                            };
+                                            self.remove.end.set_val(prev);
                                         }
                                     };
                                     ui.add(Arrows {
