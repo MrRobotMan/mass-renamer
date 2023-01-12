@@ -18,7 +18,6 @@ mod valid_text;
 
 use data::*;
 use increment_decrement::{Arrows, Increment};
-use validated::ValText;
 
 /*
 let num_less_than_ten = ValText::with_validator(|text| {
