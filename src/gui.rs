@@ -14,6 +14,7 @@ use rfd;
 
 mod data;
 mod increment_decrement;
+mod remove;
 mod valid_text;
 
 use data::*;
@@ -45,7 +46,7 @@ pub struct App<'a> {
     name: NameData,
     _number: Numberdata,
     reg_exp: RegExData,
-    remove: RemoveData,
+    remove: remove::RemoveData,
     replace: ReplaceData,
 }
 
@@ -567,99 +568,99 @@ impl eframe::App for App<'_> {
                         .stroke(Stroke::new(1.0, Color32::BLACK))
                         .inner_margin(Margin::same(FRAME_MARGIN))
                         .rounding(Rounding::same(FRAME_RADIUS))
-                        .show(ui, |ui| {
-                            ui.vertical(|ui| {
-                                ui.label("Remove");
-                                ui.horizontal(|ui| {
-                                    ui.label("First n");
-                                    if ui
-                                        .add(
-                                            egui::TextEdit::singleline(&mut self.remove.first_n)
-                                                .desired_width(NUM_WIDTH),
-                                        )
-                                        .changed()
-                                    {
-                                        if !self.remove.first_n.is_valid() {
-                                            let prev = match self.remove.first_n.get_prev() {
-                                                Some(v) => v,
-                                                None => 0,
-                                            };
-                                            self.remove.first_n.set_val(prev);
-                                        }
-                                    };
-                                    ui.add(Arrows {
-                                        id: Id::new("Remove First N"),
-                                        value: &mut self.remove,
-                                        field: "first_n",
-                                    });
-                                    ui.label("Last n");
-                                    if ui
-                                        .add(
-                                            egui::TextEdit::singleline(&mut self.remove.last_n)
-                                                .desired_width(NUM_WIDTH),
-                                        )
-                                        .changed()
-                                    {
-                                        if !self.remove.last_n.is_valid() {
-                                            let prev = match self.remove.last_n.get_prev() {
-                                                Some(v) => v,
-                                                None => 0,
-                                            };
-                                            self.remove.last_n.set_val(prev);
-                                        }
-                                    };
-                                    ui.add(Arrows {
-                                        id: Id::new("Remove Last N"),
-                                        value: &mut self.remove,
-                                        field: "last_n",
-                                    });
-                                });
-                                ui.horizontal(|ui| {
-                                    ui.label("Start");
-                                    if ui
-                                        .add(
-                                            egui::TextEdit::singleline(&mut self.remove.start)
-                                                .desired_width(NUM_WIDTH),
-                                        )
-                                        .changed()
-                                    {
-                                        if !self.remove.start.is_valid() {
-                                            let prev = match self.remove.start.get_prev() {
-                                                Some(v) => v,
-                                                None => 0,
-                                            };
-                                            self.remove.start.set_val(prev);
-                                        }
-                                    };
-                                    ui.add(Arrows {
-                                        id: Id::new("Start"),
-                                        value: &mut self.remove,
-                                        field: "start",
-                                    });
-                                    ui.label("End");
-                                    if ui
-                                        .add(
-                                            egui::TextEdit::singleline(&mut self.remove.end)
-                                                .desired_width(NUM_WIDTH),
-                                        )
-                                        .changed()
-                                    {
-                                        if !self.remove.end.is_valid() {
-                                            let prev = match self.remove.end.get_prev() {
-                                                Some(v) => v,
-                                                None => 0,
-                                            };
-                                            self.remove.end.set_val(prev);
-                                        }
-                                    };
-                                    ui.add(Arrows {
-                                        id: Id::new("End"),
-                                        value: &mut self.remove,
-                                        field: "end",
-                                    });
-                                });
-                            });
-                        });
+                        .show(ui, |ui| ui.add(remove::RemoveView::new(&mut self.remove)));
+                    //     ui.vertical(|ui| {
+                    //         ui.label("Remove");
+                    //         ui.horizontal(|ui| {
+                    //             ui.label("First n");
+                    //             if ui
+                    //                 .add(
+                    //                     egui::TextEdit::singleline(&mut self.remove.first_n)
+                    //                         .desired_width(NUM_WIDTH),
+                    //                 )
+                    //                 .changed()
+                    //             {
+                    //                 if !self.remove.first_n.is_valid() {
+                    //                     let prev = match self.remove.first_n.get_prev() {
+                    //                         Some(v) => v,
+                    //                         None => 0,
+                    //                     };
+                    //                     self.remove.first_n.set_val(prev);
+                    //                 }
+                    //             };
+                    //             ui.add(Arrows {
+                    //                 id: Id::new("Remove First N"),
+                    //                 value: &mut self.remove,
+                    //                 field: "first_n",
+                    //             });
+                    //             ui.label("Last n");
+                    //             if ui
+                    //                 .add(
+                    //                     egui::TextEdit::singleline(&mut self.remove.last_n)
+                    //                         .desired_width(NUM_WIDTH),
+                    //                 )
+                    //                 .changed()
+                    //             {
+                    //                 if !self.remove.last_n.is_valid() {
+                    //                     let prev = match self.remove.last_n.get_prev() {
+                    //                         Some(v) => v,
+                    //                         None => 0,
+                    //                     };
+                    //                     self.remove.last_n.set_val(prev);
+                    //                 }
+                    //             };
+                    //             ui.add(Arrows {
+                    //                 id: Id::new("Remove Last N"),
+                    //                 value: &mut self.remove,
+                    //                 field: "last_n",
+                    //             });
+                    //         });
+                    //         ui.horizontal(|ui| {
+                    //             ui.label("Start");
+                    //             if ui
+                    //                 .add(
+                    //                     egui::TextEdit::singleline(&mut self.remove.start)
+                    //                         .desired_width(NUM_WIDTH),
+                    //                 )
+                    //                 .changed()
+                    //             {
+                    //                 if !self.remove.start.is_valid() {
+                    //                     let prev = match self.remove.start.get_prev() {
+                    //                         Some(v) => v,
+                    //                         None => 0,
+                    //                     };
+                    //                     self.remove.start.set_val(prev);
+                    //                 }
+                    //             };
+                    //             ui.add(Arrows {
+                    //                 id: Id::new("Start"),
+                    //                 value: &mut self.remove,
+                    //                 field: "start",
+                    //             });
+                    //             ui.label("End");
+                    //             if ui
+                    //                 .add(
+                    //                     egui::TextEdit::singleline(&mut self.remove.end)
+                    //                         .desired_width(NUM_WIDTH),
+                    //                 )
+                    //                 .changed()
+                    //             {
+                    //                 if !self.remove.end.is_valid() {
+                    //                     let prev = match self.remove.end.get_prev() {
+                    //                         Some(v) => v,
+                    //                         None => 0,
+                    //                     };
+                    //                     self.remove.end.set_val(prev);
+                    //                 }
+                    //             };
+                    //             ui.add(Arrows {
+                    //                 id: Id::new("End"),
+                    //                 value: &mut self.remove,
+                    //                 field: "end",
+                    //             });
+                    //         });
+                    //     });
+                    // });
                     Frame::none()
                         .stroke(Stroke::new(1.0, Color32::BLACK))
                         .inner_margin(Margin::same(FRAME_MARGIN))
