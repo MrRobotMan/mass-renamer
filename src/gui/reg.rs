@@ -2,9 +2,9 @@ use egui::{Response, Ui, Widget};
 
 #[derive(Default)]
 pub struct RegExData {
-    pub exp: String,
-    pub replace: String,
-    pub extension: bool,
+    exp: String,
+    replace: String,
+    extension: bool,
 }
 
 pub struct RegExView<'a> {

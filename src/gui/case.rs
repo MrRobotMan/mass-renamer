@@ -3,9 +3,9 @@ use egui::{Response, Ui, Widget};
 
 #[derive(Default)]
 pub struct CaseData {
-    pub choice: Case,
-    pub snake: bool,
-    pub exceptions: String,
+    choice: Case,
+    snake: bool,
+    exceptions: String,
 }
 
 pub struct CaseView<'a> {

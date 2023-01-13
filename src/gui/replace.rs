@@ -2,9 +2,9 @@ use egui::{Response, Ui, Widget};
 
 #[derive(Default)]
 pub struct ReplaceData {
-    pub replace: String,
-    pub with: String,
-    pub match_case: bool,
+    replace: String,
+    with: String,
+    match_case: bool,
 }
 
 pub struct ReplaceView<'a> {

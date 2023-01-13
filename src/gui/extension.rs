@@ -2,8 +2,8 @@ use egui::{Response, Ui, Widget};
 
 #[derive(Default)]
 pub struct ExtensionData {
-    pub value: ExtOpts,
-    pub new: String,
+    value: ExtOpts,
+    new: String,
 }
 
 #[derive(Debug, Default, PartialEq, Copy, Clone)]

@@ -3,13 +3,13 @@ use egui::{Response, Ui, Widget};
 
 #[derive(Default)]
 pub struct DateData<'a> {
-    pub position: DateMode,
-    pub date_type: DateType,
-    pub fmt: DateFormat<'a>,
-    pub sep: String,
-    pub seg: String,
-    pub full_year: bool,
-    pub custom: String,
+    position: DateMode,
+    date_type: DateType,
+    fmt: DateFormat<'a>,
+    sep: String,
+    seg: String,
+    full_year: bool,
+    custom: String,
 }
 
 pub struct DateView<'a> {

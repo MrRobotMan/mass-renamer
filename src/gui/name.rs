@@ -2,8 +2,8 @@ use egui::{Response, Ui, Widget, WidgetText};
 
 #[derive(Default)]
 pub struct NameData {
-    pub value: NameOpts,
-    pub new: String,
+    value: NameOpts,
+    new: String,
 }
 
 #[derive(Debug, Default, PartialEq, Clone, Copy)]

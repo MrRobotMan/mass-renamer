@@ -3,15 +3,15 @@ use egui::{Response, Ui, Widget};
 
 #[derive(Default)]
 pub struct NumberData {
-    pub choice: NumberMode,
-    pub position: usize,
-    pub start: u32,
-    pub increment: u32,
-    pub pad: usize,
-    pub padding_char: char,
-    pub sep: String,
-    pub reset_pos: Option<usize>,
-    pub format: NumberFormat,
+    choice: NumberMode,
+    position: usize,
+    start: u32,
+    increment: u32,
+    pad: usize,
+    padding_char: char,
+    sep: String,
+    reset_pos: Option<usize>,
+    format: NumberFormat,
 }
 
 pub struct NumberView<'a> {

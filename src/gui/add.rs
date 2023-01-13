@@ -3,11 +3,11 @@ use egui::{Response, Ui, Widget};
 
 #[derive(Default, Clone)]
 pub struct AddData {
-    pub prefix: String,
-    pub insert: String,
-    pub position: i32,
-    pub suffix: String,
-    pub word_space: bool,
+    prefix: String,
+    insert: String,
+    position: i32,
+    suffix: String,
+    word_space: bool,
 }
 
 impl AddData {

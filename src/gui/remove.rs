@@ -7,21 +7,21 @@ use super::{
 };
 
 pub struct RemoveData {
-    pub first_n: ValText<usize>,
-    pub last_n: ValText<usize>,
-    pub start: ValText<usize>,
-    pub end: ValText<usize>,
-    pub characters: String,
-    pub words: String,
-    pub crop_before: bool,
-    pub crop: String,
-    pub digits: bool,
-    pub ascii_high: bool,
-    pub trim: bool,
-    pub double_space: bool,
-    pub chars: bool,
-    pub symbols: bool,
-    pub lead_dots: bool,
+    first_n: ValText<usize>,
+    last_n: ValText<usize>,
+    start: ValText<usize>,
+    end: ValText<usize>,
+    characters: String,
+    words: String,
+    crop_before: bool,
+    crop: String,
+    digits: bool,
+    ascii_high: bool,
+    trim: bool,
+    double_space: bool,
+    chars: bool,
+    symbols: bool,
+    lead_dots: bool,
 }
 
 impl Increment for RemoveData {

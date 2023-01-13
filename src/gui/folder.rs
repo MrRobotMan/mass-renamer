@@ -8,9 +8,9 @@ use egui::{Id, Response, Ui, Widget};
 
 #[derive(Debug, Default)]
 pub struct FolderData {
-    pub position: FolderMode,
-    pub sep: String,
-    pub levels: ValText<i32>,
+    position: FolderMode,
+    sep: String,
+    levels: ValText<i32>,
 }
 impl Increment for FolderData {
     fn increment(&mut self, increment: bool, _field: &str) {
