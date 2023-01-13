@@ -5,7 +5,7 @@ use std::{
 };
 
 use chrono::{DateTime, Local};
-use egui::{Response, Ui, Widget};
+use egui::{Grid, Response, Ui, Widget};
 
 use crate::RenameFile;
 
@@ -79,8 +79,8 @@ fn cmp(rhs: &Path, lhs: &Path) -> Ordering {
 }
 
 impl<'a> Widget for FileView<'a> {
-    fn ui(mut self, ui: &mut Ui) -> Response {
-        egui::Grid::new("Files")
+    fn ui(self, ui: &mut Ui) -> Response {
+        Grid::new("Files")
             .striped(true)
             .show(ui, |ui| {
                 ui.label("Sel");

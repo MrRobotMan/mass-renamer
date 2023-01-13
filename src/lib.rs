@@ -1,10 +1,12 @@
+#![allow(dead_code, unused_imports, unused_variables)]
+
 use std::{
     cmp::Ordering,
     path::{Path, PathBuf},
 };
 
 pub mod gui;
-pub use gui::App;
+pub use gui::Renamer;
 mod add;
 mod case;
 mod date;
@@ -29,7 +31,7 @@ pub use replace::ReplaceOptions;
 use std::ffi::OsStr;
 
 pub trait Process {
-    fn process(&self, file: &mut RenameFile) -> ();
+    fn process(&self, file: &mut RenameFile);
 }
 
 #[derive(Debug, Eq, PartialEq)]

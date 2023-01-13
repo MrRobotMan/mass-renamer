@@ -1,7 +1,7 @@
 use egui::{self, Id, Response, Ui, Widget};
 
 pub trait Increment {
-    fn increment(&mut self, increment: bool, field: &str) -> ();
+    fn increment(&mut self, increment: bool, field: &str);
 }
 
 /// A set of increment decrement arrows stacked vertically.

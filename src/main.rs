@@ -9,6 +9,6 @@ fn main() {
     eframe::run_native(
         "Bulk File Renamer",
         native_options,
-        Box::new(|cc| Box::new(bulk_file_renamer::App::new(cc))),
+        Box::new(|cc| Box::new(bulk_file_renamer::Renamer::new(cc))),
     );
 }

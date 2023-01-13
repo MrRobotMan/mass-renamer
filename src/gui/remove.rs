@@ -91,14 +91,11 @@ impl<'a> Widget for RemoveView<'a> {
                         egui::TextEdit::singleline(&mut self.data.first_n).desired_width(NUM_WIDTH),
                     )
                     .changed()
+                    && !self.data.first_n.is_valid()
                 {
-                    if !self.data.first_n.is_valid() {
-                        let prev = match self.data.first_n.get_prev() {
-                            Some(v) => v,
-                            None => 0,
-                        };
-                        self.data.first_n.set_val(prev);
-                    }
+                    self.data
+                        .first_n
+                        .set_val(self.data.first_n.get_prev().unwrap_or(0));
                 };
                 ui.add(Arrows {
                     id: Id::new("Remove First N"),
@@ -109,14 +106,11 @@ impl<'a> Widget for RemoveView<'a> {
                 if ui
                     .add(egui::TextEdit::singleline(&mut self.data.last_n).desired_width(NUM_WIDTH))
                     .changed()
+                    && !self.data.last_n.is_valid()
                 {
-                    if !self.data.last_n.is_valid() {
-                        let prev = match self.data.last_n.get_prev() {
-                            Some(v) => v,
-                            None => 0,
-                        };
-                        self.data.last_n.set_val(prev);
-                    }
+                    self.data
+                        .last_n
+                        .set_val(self.data.last_n.get_prev().unwrap_or(0));
                 };
                 ui.add(Arrows {
                     id: Id::new("Remove Last N"),
@@ -129,14 +123,11 @@ impl<'a> Widget for RemoveView<'a> {
                 if ui
                     .add(egui::TextEdit::singleline(&mut self.data.start).desired_width(NUM_WIDTH))
                     .changed()
+                    && !self.data.start.is_valid()
                 {
-                    if !self.data.start.is_valid() {
-                        let prev = match self.data.start.get_prev() {
-                            Some(v) => v,
-                            None => 0,
-                        };
-                        self.data.start.set_val(prev);
-                    }
+                    self.data
+                        .start
+                        .set_val(self.data.start.get_prev().unwrap_or(0));
                 };
                 ui.add(Arrows {
                     id: Id::new("Start"),
@@ -147,14 +138,9 @@ impl<'a> Widget for RemoveView<'a> {
                 if ui
                     .add(egui::TextEdit::singleline(&mut self.data.end).desired_width(NUM_WIDTH))
                     .changed()
+                    && !self.data.end.is_valid()
                 {
-                    if !self.data.end.is_valid() {
-                        let prev = match self.data.end.get_prev() {
-                            Some(v) => v,
-                            None => 0,
-                        };
-                        self.data.end.set_val(prev);
-                    }
+                    self.data.end.set_val(self.data.end.get_prev().unwrap_or(0));
                 };
                 ui.add(Arrows {
                     id: Id::new("End"),

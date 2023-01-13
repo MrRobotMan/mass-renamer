@@ -54,14 +54,11 @@ impl<'a> Widget for FolderView<'a> {
                 if ui
                     .add(egui::TextEdit::singleline(&mut self.data.levels).desired_width(NUM_WIDTH))
                     .changed()
+                    && !self.data.levels.is_valid()
                 {
-                    if !self.data.levels.is_valid() {
-                        let prev = match self.data.levels.get_prev() {
-                            Some(v) => v,
-                            None => 0,
-                        };
-                        self.data.levels.set_val(prev);
-                    }
+                    self.data
+                        .levels
+                        .set_val(self.data.levels.get_prev().unwrap_or(0));
                 };
                 ui.add(Arrows {
                     id: Id::new("Folder Arrows"),
