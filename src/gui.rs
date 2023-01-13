@@ -8,17 +8,26 @@ use std::{
 use crate::*;
 use chrono::{DateTime, Local};
 use eframe;
-use egui::{self, style::Margin, Color32, Frame, Id, Rounding, Stroke, WidgetText};
+use egui::{
+    self, style::Margin, Color32, Frame, InnerResponse, Response, Rounding, Stroke, Ui, Widget,
+    WidgetText,
+};
 use home;
 use rfd;
 
-mod data;
+mod add;
+mod case;
+mod date;
+mod extension;
+mod files;
+mod folder;
 mod increment_decrement;
+mod name;
+mod number;
+mod reg;
 mod remove;
+mod replace;
 mod valid_text;
-
-use data::*;
-use increment_decrement::{Arrows, Increment};
 
 /*
 let num_less_than_ten = ValText::with_validator(|text| {
@@ -36,18 +45,18 @@ const NUM_WIDTH: f32 = 15.0;
 pub struct App<'a> {
     cwd: String,
     cwd_path: PathBuf,
-    files: Vec<FileListing>,
-    columns: (Columns, Order, Columns), // 3rd field is previous
-    _add: AddData,
-    case: CaseData,
-    _date: DateData<'a>,
-    extension: ExtensionData,
-    folder: FolderData,
-    name: NameData,
-    _number: Numberdata,
-    reg_exp: RegExData,
+    files: Vec<files::FileListing>,
+    columns: (files::Columns, files::Order, files::Columns), // 3rd field is previous
+    _add: add::AddData,
+    case: case::CaseData,
+    _date: date::DateData<'a>,
+    extension: extension::ExtensionData,
+    folder: folder::FolderData,
+    name: name::NameData,
+    _number: number::NumberData,
+    reg_exp: reg::RegExData,
     remove: remove::RemoveData,
-    replace: ReplaceData,
+    replace: replace::ReplaceData,
 }
 
 #[allow(clippy::from_over_into)]
@@ -87,33 +96,6 @@ fn cmp(rhs: &Path, lhs: &Path) -> Ordering {
         (false, true) => Ordering::Greater,
         _ => rhs.cmp(lhs),
     }
-}
-
-struct FileListing {
-    name: PathBuf,
-    renamed: RenameFile,
-    extension: Option<String>,
-    size: Option<u64>,
-    modified: Option<DateTime<Local>>,
-    created: Option<DateTime<Local>>,
-    selected: bool,
-}
-
-#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
-enum Columns {
-    #[default]
-    Name,
-    NewName,
-    Extension,
-    Size,
-    Created,
-    Modified,
-}
-#[derive(Debug, Default)]
-enum Order {
-    #[default]
-    Forward,
-    Reverse,
 }
 
 impl App<'_> {
@@ -173,7 +155,7 @@ impl App<'_> {
                     };
                 }
                 if let Some(renamed) = renamed {
-                    file_listing.push(FileListing {
+                    file_listing.push(files::FileListing {
                         name,
                         renamed,
                         extension,
@@ -198,6 +180,14 @@ impl App<'_> {
             }
         }
     }
+}
+
+fn framed_widget(ui: &mut Ui, widget: impl Widget) -> InnerResponse<Response> {
+    Frame::none()
+        .stroke(Stroke::new(1.0, Color32::BLACK))
+        .inner_margin(Margin::same(FRAME_MARGIN))
+        .rounding(Rounding::same(FRAME_RADIUS))
+        .show(ui, |ui| ui.add(widget))
 }
 
 impl eframe::App for App<'_> {
@@ -249,439 +239,36 @@ impl eframe::App for App<'_> {
                 egui::ScrollArea::vertical()
                     .max_height(FILES_HEIGHT)
                     .show(ui, |ui| {
-                        egui::Grid::new("Files").striped(true).show(ui, |ui| {
-                            ui.label("Sel");
-                            if ui
-                                .selectable_value(&mut self.columns.0, Columns::Name, "Name")
-                                .clicked()
-                            {
-                                match self.columns {
-                                    (_, Order::Forward, Columns::Name) => {
-                                        self.files
-                                            .sort_unstable_by(|lhs, rhs| cmp(&rhs.name, &lhs.name));
-                                        self.columns.1 = Order::Reverse;
-                                    }
-                                    _ => {
-                                        self.files
-                                            .sort_unstable_by(|lhs, rhs| cmp(&lhs.name, &rhs.name));
-                                        self.columns.1 = Order::Forward;
-                                    }
-                                };
-                                self.columns.2 = Columns::Name;
-                            };
-                            if ui
-                                .selectable_value(&mut self.columns.0, Columns::NewName, "New Name")
-                                .clicked()
-                            {
-                                match self.columns {
-                                    (_, Order::Forward, Columns::NewName) => {
-                                        self.files.sort_unstable_by(|lhs, rhs| {
-                                            rhs.renamed.cmp(&lhs.renamed)
-                                        });
-                                        self.columns.1 = Order::Reverse;
-                                    }
-                                    _ => {
-                                        self.files.sort_unstable_by(|lhs, rhs| {
-                                            lhs.renamed.cmp(&rhs.renamed)
-                                        });
-                                        self.columns.1 = Order::Forward;
-                                    }
-                                };
-                                self.columns.2 = Columns::NewName;
-                            };
-                            if ui
-                                .selectable_value(&mut self.columns.0, Columns::Extension, "Type")
-                                .clicked()
-                            {
-                                match self.columns {
-                                    (_, Order::Forward, Columns::Extension) => {
-                                        self.files.sort_unstable_by(|lhs, rhs| {
-                                            rhs.extension.cmp(&lhs.extension)
-                                        });
-                                        self.columns.1 = Order::Reverse;
-                                    }
-                                    _ => {
-                                        self.files.sort_unstable_by(|lhs, rhs| {
-                                            lhs.extension.cmp(&rhs.extension)
-                                        });
-                                        self.columns.1 = Order::Forward;
-                                    }
-                                };
-                                self.columns.2 = Columns::Extension;
-                            };
-                            if ui
-                                .selectable_value(&mut self.columns.0, Columns::Size, "Size")
-                                .clicked()
-                            {
-                                match self.columns {
-                                    (_, Order::Forward, Columns::Size) => {
-                                        self.files
-                                            .sort_unstable_by(|lhs, rhs| rhs.size.cmp(&lhs.size));
-                                        self.columns.1 = Order::Reverse;
-                                    }
-                                    _ => {
-                                        self.files
-                                            .sort_unstable_by(|lhs, rhs| lhs.size.cmp(&rhs.size));
-                                        self.columns.1 = Order::Forward;
-                                    }
-                                };
-                                self.columns.2 = Columns::Size;
-                            };
-                            if ui
-                                .selectable_value(
-                                    &mut self.columns.0,
-                                    Columns::Modified,
-                                    "Modified",
-                                )
-                                .clicked()
-                            {
-                                match self.columns {
-                                    (_, Order::Forward, Columns::Modified) => {
-                                        self.files.sort_unstable_by(|lhs, rhs| {
-                                            rhs.modified.cmp(&lhs.modified)
-                                        });
-                                        self.columns.1 = Order::Reverse;
-                                    }
-                                    _ => {
-                                        self.files.sort_unstable_by(|lhs, rhs| {
-                                            lhs.modified.cmp(&rhs.modified)
-                                        });
-                                        self.columns.1 = Order::Forward;
-                                    }
-                                };
-                                self.columns.2 = Columns::Modified;
-                            };
-                            if ui
-                                .selectable_value(&mut self.columns.0, Columns::Created, "Created")
-                                .clicked()
-                            {
-                                match self.columns {
-                                    (_, Order::Forward, Columns::Created) => {
-                                        self.files.sort_unstable_by(|lhs, rhs| {
-                                            rhs.created.cmp(&lhs.created)
-                                        });
-                                        self.columns.1 = Order::Reverse;
-                                    }
-                                    _ => {
-                                        self.files.sort_unstable_by(|lhs, rhs| {
-                                            lhs.created.cmp(&rhs.created)
-                                        });
-                                        self.columns.1 = Order::Forward;
-                                    }
-                                };
-                                self.columns.2 = Columns::Created;
-                            };
-                            ui.end_row();
-
-                            for item in self.files.iter_mut() {
-                                ui.checkbox(&mut item.selected, "");
-                                ui.label(file_no_parents(&item.name));
-                                ui.label(&item.renamed);
-                                ui.label(if let Some(ext) = &item.extension {
-                                    ext.as_str()
-                                } else {
-                                    ""
-                                });
-                                ui.label(if let Some(size) = &item.size {
-                                    format!("{}", &size)
-                                } else {
-                                    String::new()
-                                });
-                                if let Some(time) = &item.modified {
-                                    ui.label(datetime_to_string(time));
-                                }
-                                if let Some(time) = &item.created {
-                                    ui.label(datetime_to_string(time));
-                                }
-                                ui.end_row();
-                            }
-                        });
+                        ui.add(files::FileView::new(&mut self.files, &mut self.columns))
                     });
                 ui.horizontal(|ui| {
                     // ui.with_layout(egui::Layout::top_down_justified(egui::Align::Center),
                     ui.vertical(|ui| {
-                        Frame::none()
-                            .stroke(Stroke::new(1.0, Color32::BLACK))
-                            .inner_margin(Margin::same(FRAME_MARGIN))
-                            .rounding(Rounding::same(FRAME_RADIUS))
-                            .show(ui, |ui| {
-                                ui.vertical(|ui| {
-                                    ui.label("Regex");
-                                    ui.horizontal(|ui| {
-                                        ui.label("Match:");
-                                        ui.text_edit_singleline(&mut self.reg_exp.exp)
-                                    });
-                                    ui.horizontal(|ui| {
-                                        ui.label("Replacement:");
-                                        ui.text_edit_singleline(&mut self.reg_exp.replace)
-                                    });
-                                    ui.checkbox(&mut self.reg_exp.extension, "Include Extension");
-                                })
-                            });
-                        Frame::none()
-                            .stroke(Stroke::new(1.0, Color32::BLACK))
-                            .inner_margin(Margin::same(FRAME_MARGIN))
-                            .rounding(Rounding::same(FRAME_RADIUS))
-                            .show(ui, |ui| {
-                                ui.vertical(|ui| {
-                                    ui.label("Name");
-                                    egui::ComboBox::new("Name Options", "")
-                                        .selected_text(&self.name.value)
-                                        .show_ui(ui, |ui| {
-                                            for opt in NameOpts::iterator() {
-                                                ui.selectable_value(
-                                                    &mut self.name.value,
-                                                    opt,
-                                                    format!("{:?}", opt),
-                                                );
-                                            }
-                                        });
-                                    ui.text_edit_singleline(&mut self.name.new);
-                                })
-                            });
-                        Frame::none()
-                            .stroke(Stroke::new(1.0, Color32::BLACK))
-                            .inner_margin(Margin::same(FRAME_MARGIN))
-                            .rounding(Rounding::same(FRAME_RADIUS))
-                            .show(ui, |ui| {
-                                ui.vertical(|ui| {
-                                    ui.label("Append Folder Name");
-                                    ui.horizontal(|ui| {
-                                        egui::ComboBox::new("Append File Name", "")
-                                            .selected_text(format!("{:?}", &self.folder.position))
-                                            .show_ui(ui, |ui| {
-                                                ui.selectable_value(
-                                                    &mut self.folder.position,
-                                                    FolderMode::None,
-                                                    "None",
-                                                );
-                                                ui.selectable_value(
-                                                    &mut self.folder.position,
-                                                    FolderMode::Prefix,
-                                                    "Prefix",
-                                                );
-                                                ui.selectable_value(
-                                                    &mut self.folder.position,
-                                                    FolderMode::Suffix,
-                                                    "Suffix",
-                                                )
-                                            });
-                                        ui.label("Sep.");
-                                        ui.text_edit_singleline(&mut self.folder.sep);
-                                        ui.separator();
-                                        ui.label("Pos.");
-                                        if ui
-                                            .add(
-                                                egui::TextEdit::singleline(&mut self.folder.levels)
-                                                    .desired_width(NUM_WIDTH),
-                                            )
-                                            .changed()
-                                        {
-                                            if !self.folder.levels.is_valid() {
-                                                let prev = match self.folder.levels.get_prev() {
-                                                    Some(v) => v,
-                                                    None => 0,
-                                                };
-                                                self.folder.levels.set_val(prev);
-                                            }
-                                        };
-                                        ui.add(Arrows {
-                                            id: Id::new("Folder Arrows"),
-                                            value: &mut self.folder,
-                                            field: "folder",
-                                        });
-                                    });
-                                });
-                            });
+                        framed_widget(ui, reg::RegExView::new(&mut self.reg_exp));
+                        framed_widget(ui, name::NameView::new(&mut self.name));
+                        framed_widget(ui, folder::FolderView::new(&mut self.folder));
                     });
                     ui.vertical(|ui| {
-                        Frame::none()
-                            .stroke(Stroke::new(1.0, Color32::BLACK))
-                            .inner_margin(Margin::same(FRAME_MARGIN))
-                            .rounding(Rounding::same(FRAME_RADIUS))
-                            .show(ui, |ui| {
-                                ui.vertical(|ui| {
-                                    ui.label("Replace");
-                                    ui.horizontal(|ui| {
-                                        ui.label("Replace: ");
-                                        ui.text_edit_singleline(&mut self.replace.replace);
-                                    });
-                                    ui.horizontal(|ui| {
-                                        ui.label("With: ");
-                                        ui.text_edit_singleline(&mut self.replace.with);
-                                    });
-                                    ui.checkbox(&mut self.replace.match_case, "Match Case")
-                                });
-                            });
-                        Frame::none()
-                            .stroke(Stroke::new(1.0, Color32::BLACK))
-                            .inner_margin(Margin::same(FRAME_MARGIN))
-                            .rounding(Rounding::same(FRAME_RADIUS))
-                            .show(ui, |ui| {
-                                ui.vertical(|ui| {
-                                    ui.label("Case");
-                                    ui.horizontal(|ui| {
-                                        egui::ComboBox::new("Case", "")
-                                            .selected_text(format!("{:?}", &self.case.choice))
-                                            .show_ui(ui, |ui| {
-                                                for opt in Case::iterator() {
-                                                    ui.selectable_value(
-                                                        &mut self.case.choice,
-                                                        opt,
-                                                        format!("{:?}", opt),
-                                                    );
-                                                }
-                                            });
-                                        ui.checkbox(&mut self.case.snake, "Snake_Case")
-                                    });
-                                    ui.horizontal(|ui| {
-                                        ui.label("Except:");
-                                        ui.text_edit_singleline(&mut self.case.exceptions);
-                                    });
-                                })
-                            });
-                        Frame::none()
-                            .stroke(Stroke::new(1.0, Color32::BLACK))
-                            .inner_margin(Margin::same(FRAME_MARGIN))
-                            .rounding(Rounding::same(FRAME_RADIUS))
-                            .show(ui, |ui| {
-                                ui.vertical(|ui| {
-                                    ui.label("Extension");
-                                    ui.horizontal(|ui| {
-                                        egui::ComboBox::new("Extension", "")
-                                            .selected_text(format!("{:?}", &self.extension.value))
-                                            .show_ui(ui, |ui| {
-                                                for opt in ExtOpts::iterator() {
-                                                    ui.selectable_value(
-                                                        &mut self.extension.value,
-                                                        opt,
-                                                        format!("{:?}", opt),
-                                                    );
-                                                }
-                                            });
-                                        ui.text_edit_singleline(&mut self.extension.new);
-                                    });
-                                });
-                            });
+                        framed_widget(ui, replace::ReplaceView::new(&mut self.replace));
+                        framed_widget(ui, case::CaseView::new(&mut self.case));
+                        framed_widget(ui, extension::ExtensionView::new(&mut self.extension));
                     });
+                    framed_widget(ui, remove::RemoveView::new(&mut self.remove));
                     Frame::none()
                         .stroke(Stroke::new(1.0, Color32::BLACK))
                         .inner_margin(Margin::same(FRAME_MARGIN))
                         .rounding(Rounding::same(FRAME_RADIUS))
-                        .show(ui, |ui| ui.add(remove::RemoveView::new(&mut self.remove)));
-                    //     ui.vertical(|ui| {
-                    //         ui.label("Remove");
-                    //         ui.horizontal(|ui| {
-                    //             ui.label("First n");
-                    //             if ui
-                    //                 .add(
-                    //                     egui::TextEdit::singleline(&mut self.remove.first_n)
-                    //                         .desired_width(NUM_WIDTH),
-                    //                 )
-                    //                 .changed()
-                    //             {
-                    //                 if !self.remove.first_n.is_valid() {
-                    //                     let prev = match self.remove.first_n.get_prev() {
-                    //                         Some(v) => v,
-                    //                         None => 0,
-                    //                     };
-                    //                     self.remove.first_n.set_val(prev);
-                    //                 }
-                    //             };
-                    //             ui.add(Arrows {
-                    //                 id: Id::new("Remove First N"),
-                    //                 value: &mut self.remove,
-                    //                 field: "first_n",
-                    //             });
-                    //             ui.label("Last n");
-                    //             if ui
-                    //                 .add(
-                    //                     egui::TextEdit::singleline(&mut self.remove.last_n)
-                    //                         .desired_width(NUM_WIDTH),
-                    //                 )
-                    //                 .changed()
-                    //             {
-                    //                 if !self.remove.last_n.is_valid() {
-                    //                     let prev = match self.remove.last_n.get_prev() {
-                    //                         Some(v) => v,
-                    //                         None => 0,
-                    //                     };
-                    //                     self.remove.last_n.set_val(prev);
-                    //                 }
-                    //             };
-                    //             ui.add(Arrows {
-                    //                 id: Id::new("Remove Last N"),
-                    //                 value: &mut self.remove,
-                    //                 field: "last_n",
-                    //             });
-                    //         });
-                    //         ui.horizontal(|ui| {
-                    //             ui.label("Start");
-                    //             if ui
-                    //                 .add(
-                    //                     egui::TextEdit::singleline(&mut self.remove.start)
-                    //                         .desired_width(NUM_WIDTH),
-                    //                 )
-                    //                 .changed()
-                    //             {
-                    //                 if !self.remove.start.is_valid() {
-                    //                     let prev = match self.remove.start.get_prev() {
-                    //                         Some(v) => v,
-                    //                         None => 0,
-                    //                     };
-                    //                     self.remove.start.set_val(prev);
-                    //                 }
-                    //             };
-                    //             ui.add(Arrows {
-                    //                 id: Id::new("Start"),
-                    //                 value: &mut self.remove,
-                    //                 field: "start",
-                    //             });
-                    //             ui.label("End");
-                    //             if ui
-                    //                 .add(
-                    //                     egui::TextEdit::singleline(&mut self.remove.end)
-                    //                         .desired_width(NUM_WIDTH),
-                    //                 )
-                    //                 .changed()
-                    //             {
-                    //                 if !self.remove.end.is_valid() {
-                    //                     let prev = match self.remove.end.get_prev() {
-                    //                         Some(v) => v,
-                    //                         None => 0,
-                    //                     };
-                    //                     self.remove.end.set_val(prev);
-                    //                 }
-                    //             };
-                    //             ui.add(Arrows {
-                    //                 id: Id::new("End"),
-                    //                 value: &mut self.remove,
-                    //                 field: "end",
-                    //             });
-                    //         });
-                    //     });
-                    // });
+                        .show(ui, |ui| ui.label("Add"));
                     Frame::none()
                         .stroke(Stroke::new(1.0, Color32::BLACK))
                         .inner_margin(Margin::same(FRAME_MARGIN))
                         .rounding(Rounding::same(FRAME_RADIUS))
-                        .show(ui, |ui| {
-                            ui.label("Add");
-                        });
+                        .show(ui, |ui| ui.label("Auto Date"));
                     Frame::none()
                         .stroke(Stroke::new(1.0, Color32::BLACK))
                         .inner_margin(Margin::same(FRAME_MARGIN))
                         .rounding(Rounding::same(FRAME_RADIUS))
-                        .show(ui, |ui| {
-                            ui.label("Auto Date");
-                        });
-                    Frame::none()
-                        .stroke(Stroke::new(1.0, Color32::BLACK))
-                        .inner_margin(Margin::same(FRAME_MARGIN))
-                        .rounding(Rounding::same(FRAME_RADIUS))
-                        .show(ui, |ui| {
-                            ui.label("Numbering");
-                        });
+                        .show(ui, |ui| ui.label("Numbering"));
                 });
             })
         });
