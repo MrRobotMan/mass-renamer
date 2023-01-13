@@ -1,4 +1,4 @@
-use egui::{ComboBox, Id, Response, TextEdit, Ui, Widget};
+use egui::{ComboBox, Response, TextEdit, Ui, Widget};
 
 use super::{
     increment_decrement::{Arrows, Increment},
@@ -92,11 +92,7 @@ impl<'a> Widget for RemoveView<'a> {
                 {
                     self.data.first_n.revert();
                 };
-                ui.add(Arrows {
-                    id: Id::new("Remove First N"),
-                    value: self.data,
-                    field: "first_n",
-                });
+                ui.add(Arrows::new("Remove First N", self.data, "first_n"));
                 ui.label("Last n");
                 if ui
                     .add(TextEdit::singleline(&mut self.data.last_n).desired_width(NUM_WIDTH))
@@ -105,11 +101,7 @@ impl<'a> Widget for RemoveView<'a> {
                 {
                     self.data.last_n.revert();
                 };
-                ui.add(Arrows {
-                    id: Id::new("Remove Last N"),
-                    value: self.data,
-                    field: "last_n",
-                });
+                ui.add(Arrows::new("Remove Last N", self.data, "last_n"));
             });
             ui.horizontal(|ui| {
                 ui.label("Start");
@@ -120,11 +112,7 @@ impl<'a> Widget for RemoveView<'a> {
                 {
                     self.data.start.revert();
                 };
-                ui.add(Arrows {
-                    id: Id::new("Start"),
-                    value: self.data,
-                    field: "start",
-                });
+                ui.add(Arrows::new("Start", self.data, "start"));
                 ui.label("End");
                 if ui
                     .add(TextEdit::singleline(&mut self.data.end).desired_width(NUM_WIDTH))
@@ -133,11 +121,7 @@ impl<'a> Widget for RemoveView<'a> {
                 {
                     self.data.end.revert();
                 };
-                ui.add(Arrows {
-                    id: Id::new("End"),
-                    value: self.data,
-                    field: "end",
-                });
+                ui.add(Arrows::new("End", self.data, "end"));
             });
             ui.horizontal(|ui| {
                 ui.label("Chars");

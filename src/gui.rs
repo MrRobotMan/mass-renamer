@@ -50,13 +50,13 @@ pub struct Renamer<'a> {
     cwd_path: PathBuf,
     files: Vec<FileListing>,
     columns: (Columns, Order, Columns), // 3rd field is previous
-    _add: AddData,
+    add: AddData,
     case: CaseData,
-    _date: DateData<'a>,
+    date: DateData<'a>,
     extension: ExtensionData,
     folder: FolderData,
     name: NameData,
-    _number: NumberData,
+    number: NumberData,
     reg_exp: RegExData,
     remove: RemoveData,
     replace: ReplaceData,
@@ -234,7 +234,7 @@ impl App for Renamer<'_> {
                         frame().show(ui, |ui| ui.add(ExtensionView::new(&mut self.extension)));
                     });
                     frame().show(ui, |ui| ui.add(RemoveView::new(&mut self.remove)));
-                    frame().show(ui, |ui| ui.label("Add"));
+                    frame().show(ui, |ui| ui.add(AddView::new(&mut self.add)));
                     frame().show(ui, |ui| ui.label("Auto Date"));
                     frame().show(ui, |ui| ui.label("Numbering"));
                 });

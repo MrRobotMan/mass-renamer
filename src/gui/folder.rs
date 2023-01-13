@@ -4,7 +4,7 @@ use super::{
     NUM_WIDTH,
 };
 use crate::FolderMode;
-use egui::{Id, Response, Ui, Widget};
+use egui::{ComboBox, Response, TextEdit, Ui, Widget};
 
 #[derive(Debug, Default)]
 pub struct FolderData {
@@ -40,7 +40,7 @@ impl<'a> Widget for FolderView<'a> {
         ui.vertical(|ui| {
             ui.label("Append Folder Name");
             ui.horizontal(|ui| {
-                egui::ComboBox::new("Append File Name", "")
+                ComboBox::new("Append File Name", "")
                     .selected_text(format!("{:?}", &self.data.position))
                     .show_ui(ui, |ui| {
                         ui.selectable_value(&mut self.data.position, FolderMode::None, "None");
@@ -52,17 +52,13 @@ impl<'a> Widget for FolderView<'a> {
                 ui.separator();
                 ui.label("Pos.");
                 if ui
-                    .add(egui::TextEdit::singleline(&mut self.data.levels).desired_width(NUM_WIDTH))
+                    .add(TextEdit::singleline(&mut self.data.levels).desired_width(NUM_WIDTH))
                     .changed()
                     && !self.data.levels.is_valid()
                 {
                     self.data.levels.revert();
                 };
-                ui.add(Arrows {
-                    id: Id::new("Folder Arrows"),
-                    value: self.data,
-                    field: "folder",
-                });
+                ui.add(Arrows::new("Folder Arrows", self.data, "folder"));
             });
         })
         .response

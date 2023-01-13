@@ -11,6 +11,16 @@ pub struct Arrows<'a, I: Increment> {
     pub field: &'a str,
 }
 
+impl<'a, I: Increment> Arrows<'a, I> {
+    pub fn new(id: &str, value: &'a mut I, field: &'a str) -> Self {
+        Self {
+            id: Id::new(id),
+            value,
+            field,
+        }
+    }
+}
+
 impl<I: Increment> Widget for Arrows<'_, I> {
     fn ui(self, ui: &mut Ui) -> Response {
         ui.vertical(|ui| {
