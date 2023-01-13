@@ -56,9 +56,7 @@ impl<'a> Widget for FolderView<'a> {
                     .changed()
                     && !self.data.levels.is_valid()
                 {
-                    self.data
-                        .levels
-                        .set_val(self.data.levels.get_prev().unwrap_or(0));
+                    self.data.levels.revert();
                 };
                 ui.add(Arrows {
                     id: Id::new("Folder Arrows"),

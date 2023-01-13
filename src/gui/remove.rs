@@ -37,14 +37,13 @@ impl Increment for RemoveData {
             "end" => &mut self.end,
             _ => panic!("Unknown field"),
         };
-        if let Some(v) = val.get_val() {
-            val.set_val(0.max(v as i32 + delta) as usize)
-        } else if val.is_empty() {
-            val.set_val(match increment {
+        match val.get_val() {
+            Some(v) => val.set_val(0.max(v as i32 + delta) as usize),
+            None => val.set_val(match increment {
                 true => 1,
                 false => 0,
-            })
-        };
+            }),
+        }
     }
 }
 
@@ -93,9 +92,7 @@ impl<'a> Widget for RemoveView<'a> {
                     .changed()
                     && !self.data.first_n.is_valid()
                 {
-                    self.data
-                        .first_n
-                        .set_val(self.data.first_n.get_prev().unwrap_or(0));
+                    self.data.first_n.revert();
                 };
                 ui.add(Arrows {
                     id: Id::new("Remove First N"),
@@ -108,9 +105,7 @@ impl<'a> Widget for RemoveView<'a> {
                     .changed()
                     && !self.data.last_n.is_valid()
                 {
-                    self.data
-                        .last_n
-                        .set_val(self.data.last_n.get_prev().unwrap_or(0));
+                    self.data.last_n.revert();
                 };
                 ui.add(Arrows {
                     id: Id::new("Remove Last N"),
@@ -125,9 +120,7 @@ impl<'a> Widget for RemoveView<'a> {
                     .changed()
                     && !self.data.start.is_valid()
                 {
-                    self.data
-                        .start
-                        .set_val(self.data.start.get_prev().unwrap_or(0));
+                    self.data.start.revert();
                 };
                 ui.add(Arrows {
                     id: Id::new("Start"),
@@ -140,7 +133,7 @@ impl<'a> Widget for RemoveView<'a> {
                     .changed()
                     && !self.data.end.is_valid()
                 {
-                    self.data.end.set_val(self.data.end.get_prev().unwrap_or(0));
+                    self.data.end.revert();
                 };
                 ui.add(Arrows {
                     id: Id::new("End"),

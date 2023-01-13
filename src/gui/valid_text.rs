@@ -12,7 +12,7 @@ use std::{
     str::FromStr,
 };
 
-use eframe::egui::TextBuffer;
+use egui::TextBuffer;
 
 /// A mutable TextBuffer that will validate it's contents when changed.
 ///
@@ -35,7 +35,7 @@ impl<T: Debug> Debug for ValText<T> {
     }
 }
 
-impl<T: Copy> ValText<T> {
+impl<T: Copy + Display> ValText<T> {
     pub fn _with_validator(validator: impl Fn(&str) -> Option<T> + 'static) -> Self {
         Self {
             text: Default::default(),
@@ -55,6 +55,15 @@ impl<T: Copy> ValText<T> {
 
     pub fn is_valid(&self) -> bool {
         self.val.is_some()
+    }
+
+    pub fn revert(&mut self) {
+        if let Some(v) = self.prev {
+            self.set_val(v)
+        } else {
+            self.text = Default::default();
+            self.val = Default::default();
+        }
     }
 
     pub fn get_prev(&self) -> Option<T> {
@@ -90,14 +99,18 @@ impl<T: Copy> TextBuffer for ValText<T> {
     }
 
     fn insert_text(&mut self, text: &str, char_index: usize) -> usize {
-        self.prev = self.val;
+        if self.val.is_some() {
+            self.prev = self.val
+        }
         let n = self.text.insert_text(text, char_index);
         self.val = (self.validator)(&self.text);
         n
     }
 
     fn delete_char_range(&mut self, char_range: std::ops::Range<usize>) {
-        self.prev = self.val;
+        if self.val.is_some() {
+            self.prev = self.val
+        }
         self.text.delete_char_range(char_range);
         self.val = (self.validator)(&self.text);
     }
