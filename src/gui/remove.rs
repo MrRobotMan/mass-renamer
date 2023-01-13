@@ -1,4 +1,4 @@
-use egui::{Id, Response, Ui, Widget};
+use egui::{ComboBox, Id, Response, TextEdit, Ui, Widget};
 
 use super::{
     increment_decrement::{Arrows, Increment},
@@ -86,9 +86,7 @@ impl<'a> Widget for RemoveView<'a> {
             ui.horizontal(|ui| {
                 ui.label("First n");
                 if ui
-                    .add(
-                        egui::TextEdit::singleline(&mut self.data.first_n).desired_width(NUM_WIDTH),
-                    )
+                    .add(TextEdit::singleline(&mut self.data.first_n).desired_width(NUM_WIDTH))
                     .changed()
                     && !self.data.first_n.is_valid()
                 {
@@ -101,7 +99,7 @@ impl<'a> Widget for RemoveView<'a> {
                 });
                 ui.label("Last n");
                 if ui
-                    .add(egui::TextEdit::singleline(&mut self.data.last_n).desired_width(NUM_WIDTH))
+                    .add(TextEdit::singleline(&mut self.data.last_n).desired_width(NUM_WIDTH))
                     .changed()
                     && !self.data.last_n.is_valid()
                 {
@@ -116,7 +114,7 @@ impl<'a> Widget for RemoveView<'a> {
             ui.horizontal(|ui| {
                 ui.label("Start");
                 if ui
-                    .add(egui::TextEdit::singleline(&mut self.data.start).desired_width(NUM_WIDTH))
+                    .add(TextEdit::singleline(&mut self.data.start).desired_width(NUM_WIDTH))
                     .changed()
                     && !self.data.start.is_valid()
                 {
@@ -129,7 +127,7 @@ impl<'a> Widget for RemoveView<'a> {
                 });
                 ui.label("End");
                 if ui
-                    .add(egui::TextEdit::singleline(&mut self.data.end).desired_width(NUM_WIDTH))
+                    .add(TextEdit::singleline(&mut self.data.end).desired_width(NUM_WIDTH))
                     .changed()
                     && !self.data.end.is_valid()
                 {
@@ -140,6 +138,39 @@ impl<'a> Widget for RemoveView<'a> {
                     value: self.data,
                     field: "end",
                 });
+            });
+            ui.horizontal(|ui| {
+                ui.label("Chars");
+                ui.text_edit_singleline(&mut self.data.characters);
+                ui.label("Words");
+                ui.text_edit_singleline(&mut self.data.words);
+            });
+            ui.horizontal(|ui| {
+                ui.label("Crop");
+                ComboBox::from_id_source("crop")
+                    .selected_text(if self.data.crop_before {
+                        "Before"
+                    } else {
+                        "After"
+                    })
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(&mut self.data.crop_before, true, "Before");
+                        ui.selectable_value(&mut self.data.crop_before, false, "After");
+                    });
+                ui.text_edit_singleline(&mut self.data.crop);
+            });
+            ui.horizontal(|ui| {
+                ui.checkbox(&mut self.data.digits, "Digits");
+                ui.checkbox(&mut self.data.chars, "Chars");
+                ui.checkbox(&mut self.data.ascii_high, "High");
+            });
+            ui.horizontal(|ui| {
+                ui.checkbox(&mut self.data.trim, "Trim");
+                ui.checkbox(&mut self.data.double_space, "Double Space");
+            });
+            ui.horizontal(|ui| {
+                ui.checkbox(&mut self.data.lead_dots, "Lead Dots");
+                ui.checkbox(&mut self.data.symbols, "Symbols");
             });
         })
         .response

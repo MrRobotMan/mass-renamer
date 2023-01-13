@@ -1,5 +1,5 @@
 use crate::case::Case;
-use egui::{Response, Ui, Widget};
+use egui::{ComboBox, Response, Ui, Widget};
 
 #[derive(Default)]
 pub struct CaseData {
@@ -23,7 +23,7 @@ impl<'a> Widget for CaseView<'a> {
         ui.vertical(|ui| {
             ui.label("Case");
             ui.horizontal(|ui| {
-                egui::ComboBox::new("Case", "")
+                ComboBox::from_id_source("Case")
                     .selected_text(format!("{:?}", &self.data.choice))
                     .show_ui(ui, |ui| {
                         for opt in Case::iterator() {
