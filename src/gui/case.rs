@@ -10,17 +10,19 @@ pub struct CaseData {
 
 pub struct CaseView<'a> {
     data: &'a mut CaseData,
+    width: f32,
 }
 
 impl<'a> CaseView<'a> {
-    pub fn new(data: &'a mut CaseData) -> Self {
-        Self { data }
+    pub fn new(data: &'a mut CaseData, width: f32) -> Self {
+        Self { data, width }
     }
 }
 
 impl<'a> Widget for CaseView<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
         ui.vertical(|ui| {
+            ui.set_width(self.width);
             ui.label("Case");
             ui.horizontal(|ui| {
                 ComboBox::from_id_source("Case")

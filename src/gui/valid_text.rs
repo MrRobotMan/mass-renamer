@@ -69,6 +69,10 @@ impl<T: Copy + Display> ValText<T> {
     pub fn get_prev(&self) -> Option<T> {
         self.prev
     }
+
+    pub fn get_text(&self) -> String {
+        self.text.clone()
+    }
 }
 
 impl<T: Display> ValText<T> {

@@ -39,16 +39,9 @@ pub enum Order {
 pub struct FileView<'a> {
     files: &'a mut Vec<FileListing>,
     columns: &'a mut (Columns, Order, Columns),
+    width: f32,
 }
 
-impl<'a> FileView<'a> {
-    pub fn new(
-        files: &'a mut Vec<FileListing>,
-        columns: &'a mut (Columns, Order, Columns),
-    ) -> Self {
-        Self { files, columns }
-    }
-}
 /// Return the datetime as a localized date and time.
 fn datetime_to_string(datetime: &DateTime<Local>) -> String {
     format!("{}", datetime.format("%x %X"))
@@ -78,11 +71,26 @@ fn cmp(rhs: &Path, lhs: &Path) -> Ordering {
     }
 }
 
+impl<'a> FileView<'a> {
+    pub fn new(
+        files: &'a mut Vec<FileListing>,
+        columns: &'a mut (Columns, Order, Columns),
+        width: f32,
+    ) -> Self {
+        Self {
+            files,
+            columns,
+            width,
+        }
+    }
+}
+
 impl<'a> Widget for FileView<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
         Grid::new("Files")
             .striped(true)
             .show(ui, |ui| {
+                ui.set_width(self.width);
                 ui.label("Sel");
                 if ui
                     .selectable_value(&mut self.columns.0, Columns::Name, "Name")

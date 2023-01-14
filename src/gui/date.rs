@@ -1,5 +1,5 @@
 use crate::{DateMode, DatePrefix, DateSuffix, DateType};
-use egui::{Checkbox, ComboBox, Response, Ui, Widget};
+use egui::{Checkbox, ComboBox, Response, TextEdit, Ui, Widget};
 
 #[derive(Default)]
 pub struct DateData {
@@ -63,19 +63,22 @@ impl Format {
 
 pub struct DateView<'a> {
     data: &'a mut DateData,
+    width: f32,
 }
 
 impl<'a> DateView<'a> {
-    pub fn new(data: &'a mut DateData) -> Self {
-        Self { data }
+    pub fn new(data: &'a mut DateData, width: f32) -> Self {
+        Self { data, width }
     }
 }
 
 impl<'a> Widget for DateView<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
         ui.vertical(|ui| {
+            ui.set_width(self.width);
             ui.label("Date");
             ui.horizontal(|ui| {
+                ui.set_width(self.width);
                 ui.label("Mode");
                 ComboBox::from_id_source("Date Mode")
                     .selected_text(match self.data.position {
@@ -98,6 +101,7 @@ impl<'a> Widget for DateView<'a> {
                     });
             });
             ui.horizontal(|ui| {
+                ui.set_width(self.width);
                 ui.label("Type");
                 ComboBox::from_id_source("Date Type")
                     .selected_text(match self.data.date_type {
@@ -116,6 +120,7 @@ impl<'a> Widget for DateView<'a> {
                     });
             });
             ui.horizontal(|ui| {
+                ui.set_width(self.width);
                 ui.label("Format");
                 if ComboBox::from_id_source("Date Fmt")
                     .selected_text(self.data.fmt.value())
@@ -133,6 +138,7 @@ impl<'a> Widget for DateView<'a> {
             });
 
             ui.horizontal(|ui| {
+                ui.set_width(self.width);
                 ui.label("Custom");
                 if ui.text_edit_singleline(&mut self.data.custom).changed()
                     && !self.data.custom.is_empty()
@@ -141,10 +147,11 @@ impl<'a> Widget for DateView<'a> {
                 };
             });
             ui.horizontal(|ui| {
+                ui.set_width(self.width);
                 ui.label("Sep.");
-                ui.text_edit_singleline(&mut self.data.sep);
+                ui.add(TextEdit::singleline(&mut self.data.sep).desired_width(30.0));
                 ui.label("Seg");
-                ui.text_edit_singleline(&mut self.data.seg);
+                ui.add(TextEdit::singleline(&mut self.data.seg).desired_width(30.0));
             });
             ui.checkbox(&mut self.data.full_year, "4 Digit Year");
         })

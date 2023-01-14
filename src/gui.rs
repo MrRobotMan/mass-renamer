@@ -39,7 +39,8 @@ use reg::{RegExData, RegExView};
 use remove::{RemoveData, RemoveView};
 use replace::{ReplaceData, ReplaceView};
 
-const FILES_HEIGHT: f32 = 300.0;
+const FILES_HEIGHT: f32 = 495.0;
+const FILES_WIDTH: f32 = 1200.0;
 const FRAME_RADIUS: f32 = 10.0;
 const FRAME_MARGIN: f32 = 5.0;
 const NUM_WIDTH: f32 = 15.0;
@@ -216,27 +217,36 @@ impl App for Renamer {
                         self.change_dir()
                     };
                 });
-                ScrollArea::vertical()
-                    .max_height(FILES_HEIGHT)
-                    .show(ui, |ui| {
-                        ui.add(FileView::new(&mut self.files, &mut self.columns))
-                    });
+                frame().show(ui, |ui| {
+                    ScrollArea::vertical()
+                        .max_height(FILES_HEIGHT)
+                        .show(ui, |ui| {
+                            ui.add(FileView::new(
+                                &mut self.files,
+                                &mut self.columns,
+                                FILES_WIDTH,
+                            ))
+                        });
+                });
+                ui.add_space(FRAME_MARGIN);
                 ui.horizontal(|ui| {
                     // ui.with_layout(Layout::top_down_justified(Align::Center),
-                    frame().show(ui, |ui| ui.label("Numbering"));
                     ui.vertical(|ui| {
-                        frame().show(ui, |ui| ui.add(RegExView::new(&mut self.reg_exp)));
-                        frame().show(ui, |ui| ui.add(NameView::new(&mut self.name)));
-                        frame().show(ui, |ui| ui.add(FolderView::new(&mut self.folder)));
+                        frame().show(ui, |ui| ui.add(RegExView::new(&mut self.reg_exp, 300.0)));
+                        frame().show(ui, |ui| ui.add(NameView::new(&mut self.name, 300.0)));
+                        frame().show(ui, |ui| ui.add(FolderView::new(&mut self.folder, 200.0)));
                     });
                     ui.vertical(|ui| {
-                        frame().show(ui, |ui| ui.add(ReplaceView::new(&mut self.replace)));
-                        frame().show(ui, |ui| ui.add(CaseView::new(&mut self.case)));
-                        frame().show(ui, |ui| ui.add(ExtensionView::new(&mut self.extension)));
+                        frame().show(ui, |ui| ui.add(ReplaceView::new(&mut self.replace, 200.0)));
+                        frame().show(ui, |ui| ui.add(CaseView::new(&mut self.case, 200.0)));
+                        frame().show(ui, |ui| {
+                            ui.add(ExtensionView::new(&mut self.extension, 200.0))
+                        });
                     });
-                    frame().show(ui, |ui| ui.add(RemoveView::new(&mut self.remove)));
-                    frame().show(ui, |ui| ui.add(AddView::new(&mut self.add)));
-                    frame().show(ui, |ui| ui.add(DateView::new(&mut self.date)));
+                    frame().show(ui, |ui| ui.add(RemoveView::new(&mut self.remove, 200.0)));
+                    frame().show(ui, |ui| ui.add(AddView::new(&mut self.add, 80.0)));
+                    frame().show(ui, |ui| ui.add(DateView::new(&mut self.date, 100.0)));
+                    frame().show(ui, |ui| ui.add(NumberView::new(&mut self.number, 100.0)));
                 });
             })
         });

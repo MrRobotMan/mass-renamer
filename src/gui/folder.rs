@@ -27,17 +27,19 @@ impl Increment for FolderData {
 }
 pub struct FolderView<'a> {
     data: &'a mut FolderData,
+    width: f32,
 }
 
 impl<'a> FolderView<'a> {
-    pub fn new(data: &'a mut FolderData) -> Self {
-        Self { data }
+    pub fn new(data: &'a mut FolderData, width: f32) -> Self {
+        Self { data, width }
     }
 }
 
 impl<'a> Widget for FolderView<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
         ui.vertical(|ui| {
+            ui.set_width(self.width);
             ui.label("Append Folder Name");
             ui.horizontal(|ui| {
                 ComboBox::new("Append File Name", "")

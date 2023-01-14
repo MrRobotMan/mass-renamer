@@ -9,17 +9,19 @@ pub struct ReplaceData {
 
 pub struct ReplaceView<'a> {
     data: &'a mut ReplaceData,
+    width: f32,
 }
 
 impl<'a> ReplaceView<'a> {
-    pub fn new(data: &'a mut ReplaceData) -> Self {
-        Self { data }
+    pub fn new(data: &'a mut ReplaceData, width: f32) -> Self {
+        Self { data, width }
     }
 }
 
 impl<'a> Widget for ReplaceView<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
         ui.vertical(|ui| {
+            ui.set_width(self.width);
             ui.label("Replace");
             ui.horizontal(|ui| {
                 ui.label("Replace: ");

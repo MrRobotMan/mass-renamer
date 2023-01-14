@@ -37,17 +37,19 @@ impl Into<WidgetText> for &NameOpts {
 
 pub struct NameView<'a> {
     data: &'a mut NameData,
+    width: f32,
 }
 
 impl<'a> NameView<'a> {
-    pub fn new(data: &'a mut NameData) -> Self {
-        Self { data }
+    pub fn new(data: &'a mut NameData, width: f32) -> Self {
+        Self { data, width }
     }
 }
 
 impl<'a> Widget for NameView<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
         ui.vertical(|ui| {
+            ui.set_width(self.width);
             ui.label("Name");
             egui::ComboBox::new("Name Options", "")
                 .selected_text(&self.data.value)

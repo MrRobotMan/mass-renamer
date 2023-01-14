@@ -36,17 +36,19 @@ impl ExtOpts {
 
 pub struct ExtensionView<'a> {
     data: &'a mut ExtensionData,
+    width: f32,
 }
 
 impl<'a> ExtensionView<'a> {
-    pub fn new(data: &'a mut ExtensionData) -> Self {
-        Self { data }
+    pub fn new(data: &'a mut ExtensionData, width: f32) -> Self {
+        Self { data, width }
     }
 }
 
 impl<'a> Widget for ExtensionView<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
         ui.vertical(|ui| {
+            ui.set_width(self.width);
             ui.label("Extension");
             ui.horizontal(|ui| {
                 egui::ComboBox::new("Extension", "")

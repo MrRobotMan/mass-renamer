@@ -38,11 +38,11 @@ impl NumberingOptions<'_> {
             NumberFormat::Decimal => format!("{}", self.value),
             NumberFormat::Binary => format!("{:b}", self.value),
             NumberFormat::Octal => format!("{:o}", self.value),
-            NumberFormat::Hex_Upper => format!("{:X}", self.value),
-            NumberFormat::Hex_Lower => format!("{:x}", self.value),
+            NumberFormat::HexUpper => format!("{:X}", self.value),
+            NumberFormat::HexLower => format!("{:x}", self.value),
             f => {
                 let offset = match f {
-                    NumberFormat::ASCII_Lower => 96_u8,
+                    NumberFormat::AsciiLower => 96_u8,
                     _ => 64_u8,
                 };
                 let mut res: Vec<char> = Vec::new();
@@ -71,7 +71,7 @@ impl NumberingOptions<'_> {
 /// `NumberMode::Prefix`,
 /// `NumberMode::Suffix`, or
 /// `NumberMode::Insert(usize)`.
-#[derive(Default)]
+#[derive(Default, PartialEq)]
 pub enum NumberMode {
     #[default]
     Prefix,
@@ -82,22 +82,21 @@ pub enum NumberMode {
 /// Select from
 /// `NumberFormat:Binary`,
 /// `NumberFormat:Decimal`,
-/// `NumberFormat:Hex_Upper`,
-/// `NumberFormat:Hex_Lower`,
+/// `NumberFormat:HexUpper`,
+/// `NumberFormat:HexLower`,
 /// `NumberFormat:Octal`,
-/// `NumberFormat:ASCII_Upper`, or
-/// `NumberFormat:ASCII_Lower`
-#[derive(Default)]
-#[allow(non_camel_case_types)]
+/// `NumberFormat:AsciiUpper`, or
+/// `NumberFormat:AsciiLower`
+#[derive(Default, PartialEq)]
 pub enum NumberFormat {
     Binary,
     #[default]
     Decimal,
-    Hex_Upper,
-    Hex_Lower,
+    HexUpper,
+    HexLower,
     Octal,
-    ASCII_Upper,
-    ASCII_Lower,
+    AsciiUpper,
+    AsciiLower,
 }
 
 #[cfg(test)]
@@ -165,9 +164,9 @@ mod numbering_test {
     }
 
     #[test]
-    fn insert_ascii_upper() {
+    fn insert_asciiupper() {
         let mut file = RenameFile::new(Path::new("TestFile.txt")).unwrap();
-        let format = NumberFormat::ASCII_Upper;
+        let format = NumberFormat::AsciiUpper;
         let value = 50;
         let pad = 0;
         let char = '0';

@@ -71,19 +71,22 @@ impl Default for RemoveData {
 
 pub struct RemoveView<'a> {
     data: &'a mut RemoveData,
+    width: f32,
 }
 
 impl<'a> RemoveView<'a> {
-    pub fn new(data: &'a mut RemoveData) -> Self {
-        Self { data }
+    pub fn new(data: &'a mut RemoveData, width: f32) -> Self {
+        Self { data, width }
     }
 }
 
 impl<'a> Widget for RemoveView<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
         ui.vertical(|ui| {
+            ui.set_width(self.width);
             ui.label("Remove");
             ui.horizontal(|ui| {
+                ui.set_width(self.width);
                 ui.label("First n");
                 if ui
                     .add(TextEdit::singleline(&mut self.data.first_n).desired_width(NUM_WIDTH))
@@ -104,6 +107,7 @@ impl<'a> Widget for RemoveView<'a> {
                 ui.add(Arrows::new("Remove Last N", self.data, "last_n"));
             });
             ui.horizontal(|ui| {
+                ui.set_width(self.width);
                 ui.label("Start");
                 if ui
                     .add(TextEdit::singleline(&mut self.data.start).desired_width(NUM_WIDTH))
@@ -124,12 +128,17 @@ impl<'a> Widget for RemoveView<'a> {
                 ui.add(Arrows::new("End", self.data, "end"));
             });
             ui.horizontal(|ui| {
+                ui.set_width(self.width);
                 ui.label("Chars");
-                ui.text_edit_singleline(&mut self.data.characters);
+                ui.add(
+                    TextEdit::singleline(&mut self.data.characters).desired_width(self.width / 4.0),
+                );
+                // ui.text_edit_singleline(&mut self.data.characters);
                 ui.label("Words");
                 ui.text_edit_singleline(&mut self.data.words);
             });
             ui.horizontal(|ui| {
+                ui.set_width(self.width);
                 ui.label("Crop");
                 ComboBox::from_id_source("crop")
                     .selected_text(if self.data.crop_before {
@@ -144,15 +153,18 @@ impl<'a> Widget for RemoveView<'a> {
                 ui.text_edit_singleline(&mut self.data.crop);
             });
             ui.horizontal(|ui| {
+                ui.set_width(self.width);
                 ui.checkbox(&mut self.data.digits, "Digits");
                 ui.checkbox(&mut self.data.chars, "Chars");
                 ui.checkbox(&mut self.data.ascii_high, "High");
             });
             ui.horizontal(|ui| {
+                ui.set_width(self.width);
                 ui.checkbox(&mut self.data.trim, "Trim");
                 ui.checkbox(&mut self.data.double_space, "Double Space");
             });
             ui.horizontal(|ui| {
+                ui.set_width(self.width);
                 ui.checkbox(&mut self.data.lead_dots, "Lead Dots");
                 ui.checkbox(&mut self.data.symbols, "Symbols");
             });

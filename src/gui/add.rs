@@ -52,17 +52,19 @@ impl Increment for AddData {
 
 pub struct AddView<'a> {
     data: &'a mut AddData,
+    width: f32,
 }
 
 impl<'a> AddView<'a> {
-    pub fn new(data: &'a mut AddData) -> Self {
-        Self { data }
+    pub fn new(data: &'a mut AddData, width: f32) -> Self {
+        Self { data, width }
     }
 }
 
 impl<'a> Widget for AddView<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
         ui.vertical(|ui| {
+            ui.set_width(self.width);
             ui.label("Add");
             ui.horizontal(|ui| {
                 ui.label("Prefix");
@@ -74,7 +76,11 @@ impl<'a> Widget for AddView<'a> {
             });
             ui.horizontal(|ui| {
                 ui.label("at:");
-                ui.text_edit_singleline(&mut self.data.position);
+                if ui.text_edit_singleline(&mut self.data.position).changed()
+                    && !self.data.position.is_valid()
+                {
+                    self.data.position.revert();
+                };
                 ui.add(Arrows::new("position", self.data, ""))
             });
             ui.horizontal(|ui| {

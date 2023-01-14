@@ -24,6 +24,7 @@ impl<'a, I: Increment> Arrows<'a, I> {
 impl<I: Increment> Widget for Arrows<'_, I> {
     fn ui(self, ui: &mut Ui) -> Response {
         ui.vertical(|ui| {
+            ui.set_width(10.0);
             if ui.button("^").clicked() {
                 self.value.increment(true, self.field)
             };
