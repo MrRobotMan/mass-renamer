@@ -64,7 +64,7 @@ impl DateOptions<'_> {
 /// Select from
 /// `DateMode::Prefix` or
 /// `DateMode::Suffix`.
-#[derive(Default)]
+#[derive(Default, PartialEq)]
 pub enum DateMode {
     #[default]
     Prefix,
@@ -78,7 +78,7 @@ pub enum DateMode {
 ///
 /// Note, if an OS does not support `Created` or `Modified` this option will
 /// result in no change to the file name.
-#[derive(Default)]
+#[derive(Default, PartialEq)]
 pub enum DateType {
     #[default]
     Created,
@@ -104,7 +104,9 @@ impl Default for DateFormat<'_> {
 /// - `DatePrefix::DMY` for Day Month Year
 /// - `DatePrefix::MDY` for Month Year Day
 /// - `DatePrefix::YMD` for Year Month Day
+#[derive(Default)]
 pub enum DatePrefix {
+    #[default]
     DMY,
     MDY,
     YMD,
@@ -114,9 +116,9 @@ impl DatePrefix {
     fn get_format(&self, sep: &str, full_year: bool) -> String {
         let y = if full_year { "%Y" } else { "%y" };
         match self {
-            DatePrefix::DMY => format!("%d{sep}%m{sep}{y}"),
-            DatePrefix::MDY => format!("%m{sep}%d{sep}{y}"),
-            DatePrefix::YMD => format!("{y}{sep}%m{sep}%d"),
+            Self::DMY => format!("%d{sep}%m{sep}{y}"),
+            Self::MDY => format!("%m{sep}%d{sep}{y}"),
+            Self::YMD => format!("{y}{sep}%m{sep}%d"),
         }
     }
 }
@@ -132,8 +134,8 @@ pub enum DateSuffix {
 impl DateSuffix {
     fn get_format(&self, sep: &str) -> String {
         match self {
-            DateSuffix::HM => format!("%H{sep}%M{sep}"),
-            DateSuffix::HMS => format!("%H{sep}%M{sep}%S"),
+            Self::HM => format!("%H{sep}%M{sep}"),
+            Self::HMS => format!("%H{sep}%M{sep}%S"),
         }
     }
 }

@@ -45,14 +45,14 @@ const FRAME_MARGIN: f32 = 5.0;
 const NUM_WIDTH: f32 = 15.0;
 
 #[derive(Default)]
-pub struct Renamer<'a> {
+pub struct Renamer {
     cwd: String,
     cwd_path: PathBuf,
     files: Vec<FileListing>,
     columns: (Columns, Order, Columns), // 3rd field is previous
     add: AddData,
     case: CaseData,
-    date: DateData<'a>,
+    date: DateData,
     extension: ExtensionData,
     folder: FolderData,
     name: NameData,
@@ -81,9 +81,9 @@ fn cmp(rhs: &Path, lhs: &Path) -> Ordering {
     }
 }
 
-impl Renamer<'_> {
+impl Renamer {
     //! Called once before the first frame.
-    pub fn new(cc: &CreationContext<'_>) -> Self {
+    pub fn new(cc: &CreationContext) -> Self {
         // This is also where you can customized the look at feel of egui using
         // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
         cc.egui_ctx.set_visuals(Visuals::dark());
@@ -172,7 +172,7 @@ fn frame() -> Frame {
         .rounding(Rounding::same(FRAME_RADIUS))
 }
 
-impl App for Renamer<'_> {
+impl App for Renamer {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
@@ -223,6 +223,7 @@ impl App for Renamer<'_> {
                     });
                 ui.horizontal(|ui| {
                     // ui.with_layout(Layout::top_down_justified(Align::Center),
+                    frame().show(ui, |ui| ui.label("Numbering"));
                     ui.vertical(|ui| {
                         frame().show(ui, |ui| ui.add(RegExView::new(&mut self.reg_exp)));
                         frame().show(ui, |ui| ui.add(NameView::new(&mut self.name)));
@@ -235,8 +236,7 @@ impl App for Renamer<'_> {
                     });
                     frame().show(ui, |ui| ui.add(RemoveView::new(&mut self.remove)));
                     frame().show(ui, |ui| ui.add(AddView::new(&mut self.add)));
-                    frame().show(ui, |ui| ui.label("Auto Date"));
-                    frame().show(ui, |ui| ui.label("Numbering"));
+                    frame().show(ui, |ui| ui.add(DateView::new(&mut self.date)));
                 });
             })
         });
