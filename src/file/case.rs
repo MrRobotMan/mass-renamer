@@ -1,4 +1,4 @@
-use crate::{Process, RenameFile};
+use super::{File, Process};
 use inflector::Inflector;
 
 /// Change the case of the file.
@@ -13,10 +13,11 @@ use inflector::Inflector;
 /// So for example if you entered PDF;doc then any occurrence of pdf (or PDF, Pdf,
 /// etc) would be converted to upper-case, and every occurrence of DOC (or DoC)
 /// would become doc.
-pub struct CaseOptions<'a> {
+#[derive(Default, Debug, Clone)]
+pub struct CaseOptions {
     pub case: Case,
     pub snake: bool,
-    pub exceptions: Option<&'a str>,
+    pub exceptions: Option<String>,
 }
 
 /// Select from
@@ -49,8 +50,8 @@ impl Case {
     }
 }
 
-impl Process for CaseOptions<'_> {
-    fn process(&self, file: &mut RenameFile) {
+impl Process for CaseOptions {
+    fn process(&self, file: &mut File) {
         match self.case {
             Case::Keep => (),
             Case::Lower => {
@@ -66,7 +67,7 @@ impl Process for CaseOptions<'_> {
                 file.stem = file.stem.to_sentence_case();
             }
         };
-        if let Some(exceptions) = self.exceptions {
+        if let Some(exceptions) = &self.exceptions {
             for exception in exceptions.split(';') {
                 let mod_exception = match self.case {
                     Case::Keep => exception.to_owned(),
@@ -90,7 +91,7 @@ mod case_tests {
     use std::path::Path;
     #[test]
     fn test_keep_case() {
-        let mut file = RenameFile::new(Path::new("test file")).unwrap();
+        let mut file = File::new(Path::new("test file")).unwrap();
         let opt = CaseOptions {
             case: Case::Keep,
             snake: false,
@@ -102,7 +103,7 @@ mod case_tests {
 
     #[test]
     fn test_keep_case_snake() {
-        let mut file = RenameFile::new(Path::new("test file")).unwrap();
+        let mut file = File::new(Path::new("test file")).unwrap();
         let opt = CaseOptions {
             case: Case::Keep,
             snake: true,
@@ -114,7 +115,7 @@ mod case_tests {
 
     #[test]
     fn test_lower_case() {
-        let mut file = RenameFile::new(Path::new("TEST FILE")).unwrap();
+        let mut file = File::new(Path::new("TEST FILE")).unwrap();
         let opt = CaseOptions {
             case: Case::Lower,
             snake: false,
@@ -126,7 +127,7 @@ mod case_tests {
 
     #[test]
     fn test_lower_case_snake() {
-        let mut file = RenameFile::new(Path::new("TEST FILE")).unwrap();
+        let mut file = File::new(Path::new("TEST FILE")).unwrap();
         let opt = CaseOptions {
             case: Case::Lower,
             snake: true,
@@ -138,7 +139,7 @@ mod case_tests {
 
     #[test]
     fn test_upper_case() {
-        let mut file = RenameFile::new(Path::new("test file")).unwrap();
+        let mut file = File::new(Path::new("test file")).unwrap();
         let opt = CaseOptions {
             case: Case::Upper,
             snake: false,
@@ -150,7 +151,7 @@ mod case_tests {
 
     #[test]
     fn test_upper_case_snake() {
-        let mut file = RenameFile::new(Path::new("test file")).unwrap();
+        let mut file = File::new(Path::new("test file")).unwrap();
         let opt = CaseOptions {
             case: Case::Upper,
             snake: true,
@@ -162,7 +163,7 @@ mod case_tests {
 
     #[test]
     fn test_title_case() {
-        let mut file = RenameFile::new(Path::new("test file")).unwrap();
+        let mut file = File::new(Path::new("test file")).unwrap();
         let opt = CaseOptions {
             case: Case::Title,
             snake: false,
@@ -174,7 +175,7 @@ mod case_tests {
 
     #[test]
     fn test_title_case_snake() {
-        let mut file = RenameFile::new(Path::new("test file")).unwrap();
+        let mut file = File::new(Path::new("test file")).unwrap();
         let opt = CaseOptions {
             case: Case::Title,
             snake: true,
@@ -186,7 +187,7 @@ mod case_tests {
 
     #[test]
     fn test_sentence_case() {
-        let mut file = RenameFile::new(Path::new("test file")).unwrap();
+        let mut file = File::new(Path::new("test file")).unwrap();
         let opt = CaseOptions {
             case: Case::Sentence,
             snake: false,
@@ -198,7 +199,7 @@ mod case_tests {
 
     #[test]
     fn test_sentence_case_snake() {
-        let mut file = RenameFile::new(Path::new("test file")).unwrap();
+        let mut file = File::new(Path::new("test file")).unwrap();
         let opt = CaseOptions {
             case: Case::Sentence,
             snake: true,
@@ -211,13 +212,13 @@ mod case_tests {
     #[test]
     fn test_exceptions_with_upper() {
         let mut files = (
-            RenameFile::new(Path::new("test file.doc.bak")).unwrap(),
-            RenameFile::new(Path::new("test file.pdf.bak")).unwrap(),
+            File::new(Path::new("test file.doc.bak")).unwrap(),
+            File::new(Path::new("test file.pdf.bak")).unwrap(),
         );
         let opt = CaseOptions {
             case: Case::Upper,
             snake: false,
-            exceptions: Some("doc;PDF"),
+            exceptions: Some("doc;PDF".into()),
         };
         opt.process(&mut files.0);
         opt.process(&mut files.1);

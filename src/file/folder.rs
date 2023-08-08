@@ -1,4 +1,4 @@
-use crate::{Process, RenameFile};
+use super::{File, Process};
 use std::{
     cmp::min,
     env,
@@ -12,14 +12,15 @@ use std::{
 ///
 /// On Windows, if the hierarchy reaches the drive root (i.e. C:\ on windows, \\ on linux)
 /// the ":\" or "\\"characters will be automatically removed.
-pub struct FolderOptions<'a> {
+#[derive(Default, Debug, Clone)]
+pub struct FolderOptions {
     pub mode: FolderMode,
-    pub sep: &'a str,
+    pub sep: String,
     pub levels: i32,
 }
 
-impl Process for FolderOptions<'_> {
-    fn process(&self, file: &mut RenameFile) {
+impl Process for FolderOptions {
+    fn process(&self, file: &mut File) {
         let mut parts = file.original.components().rev();
         parts.next(); // Skip the file itself.
         let components: Vec<_> = parts
@@ -67,7 +68,7 @@ impl Process for FolderOptions<'_> {
 /// Select from
 /// `FolderMode::Prefix` or
 /// `FolderMode::Suffix`.
-#[derive(Default, Debug, PartialEq)]
+#[derive(Default, Debug, PartialEq, Clone)]
 pub enum FolderMode {
     #[default]
     None,
@@ -82,9 +83,9 @@ mod folder_tests {
 
     #[test]
     fn prefix_two_levels() {
-        let mut file = RenameFile::new(Path::new("/some/file/path/to/test file.txt")).unwrap();
+        let mut file = File::new(Path::new("/some/file/path/to/test file.txt")).unwrap();
         let mode = FolderMode::Prefix;
-        let sep = "~";
+        let sep = "~".into();
         let levels = 2;
         let opt = FolderOptions { mode, sep, levels };
         opt.process(&mut file);
@@ -93,10 +94,9 @@ mod folder_tests {
 
     #[test]
     fn suffix_negative_two_levels() {
-        let mut file =
-            RenameFile::new(Path::new(r"\\?\c:\some\file\path\to\test file.txt")).unwrap();
+        let mut file = File::new(Path::new(r"\\?\c:\some\file\path\to\test file.txt")).unwrap();
         let mode = FolderMode::Prefix;
-        let sep = "~";
+        let sep = "~".into();
         let levels = -2;
         let opt = FolderOptions { mode, sep, levels };
         opt.process(&mut file);

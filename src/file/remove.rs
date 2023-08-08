@@ -1,4 +1,4 @@
-use crate::{Process, RenameFile};
+use super::{File, Process};
 
 /// Options for removing parts of the filename.
 /// Remove specific parts of a filename but not file extensions.
@@ -23,14 +23,14 @@ use crate::{Process, RenameFile};
 /// "Hello[ABC] Joe" to just "Hello Joe", as it has removed the two square brackets and
 /// everything between. The wildcard can not be at the start or end of the word.
 /// For that case use crop.
-
-pub struct RemoveOptions<'a> {
+#[derive(Default, Debug, Clone)]
+pub struct RemoveOptions {
     first_n: usize,
     last_n: usize,
     range: (usize, usize),
-    characters: Option<&'a str>,
-    words: Option<&'a str>,
-    crop: Option<(bool, &'a str)>,
+    characters: Option<String>,
+    words: Option<String>,
+    crop: Option<(bool, String)>,
     digits: bool,
     ascii_high: bool,
     trim: bool,
@@ -40,8 +40,8 @@ pub struct RemoveOptions<'a> {
     lead_dots: bool,
 }
 
-impl Process for RemoveOptions<'_> {
-    fn process(&self, file: &mut RenameFile) {
+impl Process for RemoveOptions {
+    fn process(&self, file: &mut File) {
         let file = &mut file.stem;
         if self.first_n + self.last_n > 0 {
             self.first_last(file)
@@ -50,19 +50,19 @@ impl Process for RemoveOptions<'_> {
             self.start_end(file)
         }
 
-        if let Some(characters) = self.characters {
+        if let Some(characters) = &self.characters {
             for chr in characters.chars() {
                 self.remove_char(file, chr);
             }
         }
 
-        if let Some(words) = self.words {
+        if let Some(words) = &self.words {
             for word in words.split(' ') {
                 self.remove_word(file, word);
             }
         }
 
-        if let Some((before, position)) = self.crop {
+        if let Some((before, position)) = &self.crop {
             let pos = file.find(position);
             match (before, pos) {
                 (true, Some(p)) => *file = file[p..].to_owned(),
@@ -111,7 +111,7 @@ impl Process for RemoveOptions<'_> {
     }
 }
 
-impl RemoveOptions<'_> {
+impl RemoveOptions {
     fn first_last(&self, file: &mut String) {
         if self.first_n + self.last_n > file.len() {
             *file = "".to_owned();
@@ -168,8 +168,8 @@ mod remove_tests {
         let first_n = 2;
         let last_n = 2;
         let range = (1, 2);
-        let characters = Some("ft");
-        let words = Some("ile w*h");
+        let characters = Some("ft".into());
+        let words = Some("ile w*h".into());
         let crop = None;
         let digits = true;
         let ascii_high = true;
@@ -178,7 +178,7 @@ mod remove_tests {
         let chars = false;
         let symbols = true;
         let lead_dots = false;
-        let mut file = RenameFile::new(Path::new("some test file  1234withÃ!  testing")).unwrap();
+        let mut file = File::new(Path::new("some test file  1234withÃ!  testing")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -213,7 +213,7 @@ mod remove_tests {
         let chars = false;
         let symbols = false;
         let lead_dots = false;
-        let mut file = RenameFile::new(Path::new("test_file")).unwrap();
+        let mut file = File::new(Path::new("test_file")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -248,7 +248,7 @@ mod remove_tests {
         let chars = false;
         let symbols = false;
         let lead_dots = false;
-        let mut file = RenameFile::new(Path::new("test_file")).unwrap();
+        let mut file = File::new(Path::new("test_file")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -275,7 +275,7 @@ mod remove_tests {
         let range = (0, 0);
         let characters = None;
         let words = None;
-        let crop = Some((true, "to"));
+        let crop = Some((true, "to".into()));
         let digits = false;
         let ascii_high = false;
         let trim = false;
@@ -283,7 +283,7 @@ mod remove_tests {
         let chars = false;
         let symbols = false;
         let lead_dots = true;
-        let mut file = RenameFile::new(Path::new("file to test")).unwrap();
+        let mut file = File::new(Path::new("file to test")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -318,7 +318,7 @@ mod remove_tests {
         let chars = true;
         let symbols = false;
         let lead_dots = true;
-        let mut file = RenameFile::new(Path::new("./.file123")).unwrap();
+        let mut file = File::new(Path::new("./.file123")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -345,7 +345,7 @@ mod remove_tests {
         let range = (0, 0);
         let characters = None;
         let words = None;
-        let crop = Some((false, "file"));
+        let crop = Some((false, "file".into()));
         let digits = false;
         let ascii_high = false;
         let trim = false;
@@ -353,7 +353,7 @@ mod remove_tests {
         let chars = false;
         let symbols = false;
         let lead_dots = true;
-        let mut file = RenameFile::new(Path::new(".file123")).unwrap();
+        let mut file = File::new(Path::new(".file123")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,

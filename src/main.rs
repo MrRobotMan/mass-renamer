@@ -1,40 +1,104 @@
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
-                                                                   // use tracing_subscriber;
+use std::{
+    io::{stdout, Stdout},
+    time::Duration,
+};
 
-fn main() {
-    // Log to stdout (if you run with `RUST_LOG=debug`).
-    // tracing_subscriber::fmt::init();
+use bulk_file_renamer::{get_directory, DirectoryError, Files};
+use crossterm::{
+    event::{self, Event, KeyCode},
+    execute,
+    terminal::{self, EnterAlternateScreen, LeaveAlternateScreen},
+};
+use thiserror::Error;
+use tui::{backend::CrosstermBackend, Terminal};
 
-    let native_options = eframe::NativeOptions {
-        always_on_top: false,
-        maximized: false,
-        decorated: true,
-        fullscreen: false,
-        drag_and_drop_support: true,
-        icon_data: None,
-        initial_window_pos: None,
-        initial_window_size: Some(egui::Vec2::new(1400.0, 800.0)),
-        min_window_size: Some(egui::Vec2::new(1400.0, 800.0)),
-        max_window_size: None,
-        resizable: true,
-        transparent: false,
-        mouse_passthrough: false,
-        vsync: true,
-        multisampling: 0,
-        depth_buffer: 0,
-        stencil_buffer: 0,
-        hardware_acceleration: eframe::HardwareAcceleration::Preferred,
-        renderer: eframe::Renderer::Glow,
-        follow_system_theme: true,
-        default_theme: eframe::Theme::Dark,
-        run_and_return: true,
-        event_loop_builder: None,
-        shader_version: None,
-        centered: true,
-    };
-    eframe::run_native(
-        "Bulk File Renamer",
-        native_options,
-        Box::new(|cc| Box::new(bulk_file_renamer::Renamer::new(cc))),
-    );
+const TICK_RATE: Duration = Duration::from_millis(200);
+
+fn main() -> Result<(), RenamerError> {
+    let terminal = initialize()?;
+
+    let _initial = get_directory(std::env::args().nth(1))?;
+    let mut _files = Files::default();
+    // let mut cur = initial_dir.into();
+
+    loop {
+        if event::poll(TICK_RATE)? {
+            match event::read()? {
+                Event::Key(key) if matches!(key.kind, event::KeyEventKind::Press) => {
+                    match key.code {
+                        KeyCode::Char('q') => break,
+                        KeyCode::Tab => todo!(),
+                        KeyCode::Enter => todo!(),
+                        KeyCode::Up => todo!(),
+                        KeyCode::Down => todo!(),
+                        _ => continue,
+                    }
+                }
+                _ => continue,
+            }
+        }
+    }
+    shutdown(terminal)
+}
+
+fn initialize() -> Result<Terminal<CrosstermBackend<Stdout>>, RenamerError> {
+    terminal::enable_raw_mode()?;
+    let mut stdout = stdout();
+    execute!(stdout, EnterAlternateScreen)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+    terminal.clear()?;
+    Ok(terminal)
+}
+
+fn shutdown(mut term: Terminal<CrosstermBackend<Stdout>>) -> Result<(), RenamerError> {
+    terminal::disable_raw_mode()?;
+    execute!(term.backend_mut(), LeaveAlternateScreen)?;
+    term.show_cursor()?;
+    term.clear()?;
+    Ok(())
+}
+
+/*
+fn disabled() {
+    loop {
+        println!("\n0. ..");
+        for (idx, file) in cur.read_dir().unwrap().enumerate() {
+            println!(
+                "{}. {}",
+                idx + 1,
+                file.unwrap().path().file_name().unwrap().to_string_lossy()
+            );
+        }
+        let selected = get_input();
+        if selected == 0 {
+            files.clear();
+            cur = PathBuf::from(cur.parent().unwrap());
+        } else {
+            match cur.read_dir().unwrap().nth(selected - 1) {
+                None => println!("Invalid entry. Try again"),
+                Some(f) => {
+                    let f = f.unwrap().path();
+                    match f.is_dir() {
+                        true => {
+                            files.clear();
+                            cur = f;
+                        }
+                        false => {
+                            files.add(f);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+*/
+
+#[derive(Debug, Error)]
+enum RenamerError {
+    #[error(transparent)]
+    Directory(#[from] DirectoryError),
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
 }

@@ -1,9 +1,10 @@
-use crate::{Process, RenameFile};
+use super::{File, Process};
 
 /// Options for basic renaming rules.
 /// - `replace` - text to be replaced
 /// - `with` - new text. Note: the text is always replaced with the text as written, including any specific text case.
 /// - `case` - true for case sensitive, false for case-insensitive
+#[derive(Default, Debug)]
 pub struct ReplaceOptions<'a> {
     pub replace: &'a str,
     pub with: &'a str,
@@ -11,7 +12,7 @@ pub struct ReplaceOptions<'a> {
 }
 
 impl Process for ReplaceOptions<'_> {
-    fn process(&self, file: &mut RenameFile) {
+    fn process(&self, file: &mut File) {
         let file = &mut file.stem;
         if self.case {
             *file = file.replace(self.replace, self.with);
@@ -36,7 +37,7 @@ mod match_tests {
     fn no_matching_text_case_sensitive() {
         let replace = "ABC";
         let with = "123";
-        let mut file = RenameFile::new(Path::new("fileabc")).unwrap();
+        let mut file = File::new(Path::new("fileabc")).unwrap();
         let case = true;
         let opt = ReplaceOptions {
             replace,
@@ -50,7 +51,7 @@ mod match_tests {
     fn no_matching_text_case_insensitive() {
         let replace = "qrs";
         let with = "123";
-        let mut file = RenameFile::new(Path::new("fileabc")).unwrap();
+        let mut file = File::new(Path::new("fileabc")).unwrap();
         let case = false;
         let opt = ReplaceOptions {
             replace,
@@ -64,7 +65,7 @@ mod match_tests {
     fn matched_case_sensitive() {
         let replace = "abc";
         let with = "123";
-        let mut file = RenameFile::new(Path::new("fileabc")).unwrap();
+        let mut file = File::new(Path::new("fileabc")).unwrap();
         let case = true;
         let opt = ReplaceOptions {
             replace,
@@ -78,7 +79,7 @@ mod match_tests {
     fn matched_case_insensitive() {
         let replace = "ABC";
         let with = "123";
-        let mut file = RenameFile::new(Path::new("fileabc")).unwrap();
+        let mut file = File::new(Path::new("fileabc")).unwrap();
         let case = false;
         let opt = ReplaceOptions {
             replace,

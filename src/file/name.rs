@@ -1,21 +1,21 @@
-use crate::{Process, RenameFile};
+use super::{File, Process};
 
 /// Select from.
 /// - `NameOptions::Keep` - Do not change the original file name (default).
 /// - `NameOptions::Remove` - Completely erase the file from the selected items. This allows it to be rebuilt using components higher than (2).
 /// - `NameOptions::Fixed` - Specify a new file in the box for all selected items. Only really useful if you're also using the Numbering section.
 /// - `NameOptions::Reverse` - Reverse the name, e.g. 12345.txt becomes 54321.txt.
-#[derive(Default)]
-pub enum NameOptions<'a> {
+#[derive(Default, Debug, Clone)]
+pub enum NameOptions {
     #[default]
     Keep,
     Remove,
-    Fixed(&'a str),
+    Fixed(String),
     Reverse,
 }
 
-impl Process for NameOptions<'_> {
-    fn process(&self, file: &mut RenameFile) {
+impl Process for NameOptions {
+    fn process(&self, file: &mut File) {
         match self {
             NameOptions::Keep => (),
             NameOptions::Remove => file.stem = "".to_owned(),
@@ -31,29 +31,29 @@ mod name_tests {
     use std::path::Path;
     #[test]
     fn keep_name() {
-        let mut file = RenameFile::new(Path::new("file")).unwrap();
+        let mut file = File::new(Path::new("file")).unwrap();
         let opt = NameOptions::Keep;
         opt.process(&mut file);
         assert_eq!(&file.stem, "file");
     }
     #[test]
     fn remove_name() {
-        let mut file = RenameFile::new(Path::new("file")).unwrap();
+        let mut file = File::new(Path::new("file")).unwrap();
         let opt = NameOptions::Remove;
         opt.process(&mut file);
         assert_eq!(&file.stem, "");
     }
     #[test]
     fn fixed_name() {
-        let mut file = RenameFile::new(Path::new("file")).unwrap();
+        let mut file = File::new(Path::new("file")).unwrap();
         let new_name = "renamed_file";
-        let opt = NameOptions::Fixed(&new_name);
+        let opt = NameOptions::Fixed(String::from(new_name));
         opt.process(&mut file);
-        assert_eq!(&file.stem, new_name);
+        assert_eq!(file.stem, new_name);
     }
     #[test]
     fn reverse_name() {
-        let mut file = RenameFile::new(Path::new("file")).unwrap();
+        let mut file = File::new(Path::new("file")).unwrap();
         let opt = NameOptions::Reverse;
         opt.process(&mut file);
         assert_eq!(&file.stem, "elif");

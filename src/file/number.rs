@@ -1,4 +1,4 @@
-use crate::{Process, RenameFile};
+use super::{File, Process};
 use std::fmt::Write;
 
 /// Add sequential numbers to the file.
@@ -9,17 +9,18 @@ use std::fmt::Write;
 /// - `Char` - The character to use for padding. By default, numeric bases will be padded with leading zeros; the a-z and A-Z options will be padded with "a" or "A" as appropriate.
 /// - `Sep`. - A character or characters that you wish to be inserted between the old filename and the number. If you enter the special character ":" (colon) in the Sep. box then this will be replaced with the auto-number. So a separator value of ABC:DEF: would result in ABC1DEF1, ABC2ABC2 etc.
 /// - `Format` - You can choose to append the auto-number in any various bases (binary, decimal, hex (upper and lower), octal), ASCII letters A-Z.
-pub struct NumberingOptions<'a> {
+#[derive(Default, Debug, Clone)]
+pub struct NumberOptions {
     pub mode: NumberMode,
     pub value: u32,
     pub pad: usize,
     pub char: char,
-    pub sep: &'a str,
+    pub sep: String,
     pub format: NumberFormat,
 }
 
-impl Process for NumberingOptions<'_> {
-    fn process(&self, file: &mut RenameFile) {
+impl Process for NumberOptions {
+    fn process(&self, file: &mut File) {
         let val = self.number_value();
         match self.mode {
             NumberMode::Prefix => file.stem.insert_str(0, &format!("{}{}", val, self.sep)),
@@ -32,7 +33,7 @@ impl Process for NumberingOptions<'_> {
     }
 }
 
-impl NumberingOptions<'_> {
+impl NumberOptions {
     fn number_value(&self) -> String {
         let replace = match &self.format {
             NumberFormat::Decimal => format!("{}", self.value),
@@ -71,7 +72,7 @@ impl NumberingOptions<'_> {
 /// `NumberMode::Prefix`,
 /// `NumberMode::Suffix`, or
 /// `NumberMode::Insert(usize)`.
-#[derive(Default, PartialEq)]
+#[derive(Default, PartialEq, Debug, Clone)]
 pub enum NumberMode {
     #[default]
     Prefix,
@@ -87,7 +88,7 @@ pub enum NumberMode {
 /// `NumberFormat:Octal`,
 /// `NumberFormat:AsciiUpper`, or
 /// `NumberFormat:AsciiLower`
-#[derive(Default, PartialEq)]
+#[derive(Default, PartialEq, Debug, Clone)]
 pub enum NumberFormat {
     Binary,
     #[default]
@@ -114,20 +115,20 @@ mod numbering_test {
     #[test]
     fn prefix_decimal_with_padding() {
         let mut files = (0..10)
-            .map(|_| RenameFile::new(Path::new("TestFile.txt")).unwrap())
-            .collect::<Vec<RenameFile>>();
+            .map(|_| File::new(Path::new("TestFile.txt")).unwrap())
+            .collect::<Vec<File>>();
         let pad = 2;
         let char = '0';
         let sep = "--";
         for (value, file) in files.iter_mut().enumerate() {
             let format = NumberFormat::Decimal;
             let mode = NumberMode::Prefix;
-            let opt = NumberingOptions {
+            let opt = NumberOptions {
                 mode,
                 value: (&value + 1) as u32,
                 pad,
                 char,
-                sep,
+                sep: String::from(sep),
                 format,
             };
             opt.process(file);
@@ -144,14 +145,14 @@ mod numbering_test {
 
     #[test]
     fn suffix_binary_no_padding() {
-        let mut file = RenameFile::new(Path::new("TestFile.txt")).unwrap();
+        let mut file = File::new(Path::new("TestFile.txt")).unwrap();
         let format = NumberFormat::Binary;
         let value = 5;
         let pad = 0;
         let char = '0';
-        let sep = ".";
+        let sep = ".".into();
         let mode = NumberMode::Suffix;
-        let opt = NumberingOptions {
+        let opt = NumberOptions {
             mode,
             value,
             pad,
@@ -165,14 +166,14 @@ mod numbering_test {
 
     #[test]
     fn insert_asciiupper() {
-        let mut file = RenameFile::new(Path::new("TestFile.txt")).unwrap();
+        let mut file = File::new(Path::new("TestFile.txt")).unwrap();
         let format = NumberFormat::AsciiUpper;
         let value = 50;
         let pad = 0;
         let char = '0';
-        let sep = "_";
+        let sep = "_".into();
         let mode = NumberMode::Insert(4);
-        let opt = NumberingOptions {
+        let opt = NumberOptions {
             mode,
             value,
             pad,
