@@ -1,6 +1,7 @@
-use super::{File, Process};
+use super::{File, OptionBuilder, Process};
+use egui::{Response, Ui, Widget};
 use inflector::Inflector;
-use std::fmt::Write;
+use std::{fmt::Write, slice::Iter};
 
 /// Select from
 /// - `ExtensionOptions::Keep` to not change case (default)
@@ -10,7 +11,7 @@ use std::fmt::Write;
 /// - `ExtensionOptions::New(&'a str)` to convert to a new extension
 /// - `ExtensionOptions::Extra(&'a str)` to add a new extension
 /// - `ExtensionOptions::Remove` to remove the extension
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub enum ExtensionOptions {
     #[default]
     Keep,
@@ -51,6 +52,72 @@ impl Process for ExtensionOptions {
     }
 }
 
+impl ExtensionOptions {
+    fn iter() -> Iter<'static, ExtensionOptions> {
+        static OPTIONS: [ExtensionOptions; 7] = [
+            ExtensionOptions::Keep,
+            ExtensionOptions::Lower,
+            ExtensionOptions::Upper,
+            ExtensionOptions::Title,
+            ExtensionOptions::New(String::new()),
+            ExtensionOptions::Extra(String::new()),
+            ExtensionOptions::Remove,
+        ];
+        OPTIONS.iter()
+    }
+}
+
+#[derive(Default)]
+pub struct ExtensionView {
+    options: ExtensionOptions,
+    value: String,
+    width: f32,
+}
+
+impl ExtensionView {
+    pub fn new(width: f32) -> Self {
+        Self {
+            width,
+            ..Default::default()
+        }
+    }
+}
+
+impl OptionBuilder for ExtensionView {
+    type Processor = ExtensionOptions;
+
+    fn build(&self) -> ExtensionOptions {
+        match self.options {
+            ExtensionOptions::New(_) => ExtensionOptions::New(self.value.clone()),
+            ExtensionOptions::Extra(_) => ExtensionOptions::Extra(self.value.clone()),
+            _ => self.options.clone(),
+        }
+    }
+}
+
+impl Widget for &mut ExtensionView {
+    fn ui(self, ui: &mut Ui) -> Response {
+        ui.vertical(|ui| {
+            ui.set_width(self.width);
+            ui.label("Extension");
+            ui.horizontal(|ui| {
+                egui::ComboBox::new("Extension", "")
+                    .selected_text(format!("{:?}", &self.options))
+                    .show_ui(ui, |ui| {
+                        for opt in ExtensionOptions::iter() {
+                            ui.selectable_value(
+                                &mut self.options,
+                                opt.clone(),
+                                format!("{:?}", opt),
+                            );
+                        }
+                    });
+                ui.text_edit_singleline(&mut self.value);
+            });
+        })
+        .response
+    }
+}
 #[cfg(test)]
 mod extension_tests {
     use super::*;

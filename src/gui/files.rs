@@ -7,11 +7,11 @@ use std::{
 use chrono::{DateTime, Local};
 use egui::{Grid, Response, Ui, Widget};
 
-use crate::RenameFile;
+use crate::File;
 
 pub struct FileListing {
     pub name: PathBuf,
-    pub renamed: RenameFile,
+    pub renamed: File,
     pub extension: Option<String>,
     pub size: Option<u64>,
     pub modified: Option<DateTime<Local>>,

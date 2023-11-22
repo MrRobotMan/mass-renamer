@@ -1,6 +1,7 @@
+use egui::{ComboBox, Response, TextEdit, Ui, Widget};
 use std::{error::Error, fmt::Write, path::Path, time::SystemTime};
 
-use super::{File, Process};
+use super::{File, OptionBuilder, Process};
 use chrono::{DateTime, Local};
 
 /// Use the prefix or suffix `Mode` to modify the filename with a date format.
@@ -11,12 +12,13 @@ use chrono::{DateTime, Local};
 /// of the default 2 (except for custom dates).
 ///
 /// You also have the option to specify your own custom date formats using
-/// [chrono::format::strftime](https://docs.rs/chrono/0.4.20/chrono/format/strftime/index.html) specifiers.
+/// [chrono::format::strftime](https://docs.rs/chrono/0.4.31/chrono/format/strftime/index.html) specifiers.
 #[derive(Default, Debug, Clone)]
 pub struct DateOptions {
     date_mode: DateMode,
     date_type: DateType,
     fmt: DateFormat,
+    custom_fmt: String,
     sep: String,
     seg: String,
     full_year: bool,
@@ -34,7 +36,7 @@ impl Process for DateOptions {
                     }
                     fmt
                 }
-                DateFormat::Custom(fmt) => (*fmt).to_owned(),
+                DateFormat::Custom => self.custom_fmt.clone(),
             };
             match self.date_mode {
                 DateMode::Prefix => file
@@ -44,6 +46,7 @@ impl Process for DateOptions {
                     write!(file.stem, "{}{}", self.sep, datetime.format(&format))
                         .expect("Unexpected error appending to string.");
                 }
+                DateMode::None => {}
             }
         }
     }
@@ -63,13 +66,14 @@ impl DateOptions {
 }
 
 /// Select from
-/// `DateMode::Prefix` or
+/// `DateMode::Prefix`,
 /// `DateMode::Suffix`.
 #[derive(Default, PartialEq, Debug, Clone)]
 pub enum DateMode {
-    #[default]
     Prefix,
     Suffix,
+    #[default]
+    None,
 }
 
 /// Select from
@@ -89,11 +93,11 @@ pub enum DateType {
 
 /// Select from
 /// - `DateFormat::Std(DatePrefix, Option<DateSuffix>)` to use the standard options
-/// - `DateFormat::Custom(&str)` to use a custom `strftime` format
-#[derive(Debug, Clone)]
+/// - `DateFormat::Custom` to use a custom `strftime` format
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DateFormat {
     Std((DatePrefix, Option<DateSuffix>)),
-    Custom(String),
+    Custom,
 }
 
 impl Default for DateFormat {
@@ -102,11 +106,45 @@ impl Default for DateFormat {
     }
 }
 
+impl DateFormat {
+    fn format(&self) -> &str {
+        match self {
+            Self::Std((DatePrefix::Dmy, None)) => "DMY",
+            Self::Std((DatePrefix::Mdy, None)) => "MDY",
+            Self::Std((DatePrefix::Ymd, None)) => "YMD",
+            Self::Std((DatePrefix::Dmy, Some(DateSuffix::Hm))) => "DMY HM",
+            Self::Std((DatePrefix::Mdy, Some(DateSuffix::Hm))) => "MDY HM",
+            Self::Std((DatePrefix::Ymd, Some(DateSuffix::Hm))) => "YMD HM",
+            Self::Std((DatePrefix::Dmy, Some(DateSuffix::Hms))) => "DMY HMS",
+            Self::Std((DatePrefix::Mdy, Some(DateSuffix::Hms))) => "MDY HMS",
+            Self::Std((DatePrefix::Ymd, Some(DateSuffix::Hms))) => "YMD HMS",
+            Self::Custom => "Custom",
+        }
+    }
+
+    fn iter() -> impl Iterator<Item = DateFormat> {
+        [
+            Self::Std((DatePrefix::Dmy, None)),
+            Self::Std((DatePrefix::Mdy, None)),
+            Self::Std((DatePrefix::Ymd, None)),
+            Self::Std((DatePrefix::Dmy, Some(DateSuffix::Hm))),
+            Self::Std((DatePrefix::Mdy, Some(DateSuffix::Hm))),
+            Self::Std((DatePrefix::Ymd, Some(DateSuffix::Hm))),
+            Self::Std((DatePrefix::Dmy, Some(DateSuffix::Hms))),
+            Self::Std((DatePrefix::Mdy, Some(DateSuffix::Hms))),
+            Self::Std((DatePrefix::Ymd, Some(DateSuffix::Hms))),
+            Self::Custom,
+        ]
+        .iter()
+        .copied()
+    }
+}
+
 /// Select from
 /// - `DatePrefix::DMY` for Day Month Year
 /// - `DatePrefix::MDY` for Month Year Day
 /// - `DatePrefix::YMD` for Year Month Day
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DatePrefix {
     #[default]
     Dmy,
@@ -128,7 +166,7 @@ impl DatePrefix {
 /// Select from
 /// - `DateSuffix::HM` for Hour Minute
 /// - `DateSuffix::HMS` for Hour Minute Second
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DateSuffix {
     Hm,
     Hms,
@@ -140,6 +178,108 @@ impl DateSuffix {
             Self::Hm => format!("%H{sep}%M{sep}"),
             Self::Hms => format!("%H{sep}%M{sep}%S"),
         }
+    }
+}
+
+#[derive(Default)]
+pub struct DateView {
+    data: DateOptions,
+    width: f32,
+}
+
+impl DateView {
+    pub fn new(width: f32) -> Self {
+        Self {
+            width,
+            ..Default::default()
+        }
+    }
+}
+
+impl OptionBuilder for DateView {
+    type Processor = DateOptions;
+
+    fn build(&self) -> DateOptions {
+        self.data.clone()
+    }
+}
+
+impl Widget for &mut DateView {
+    fn ui(self, ui: &mut Ui) -> Response {
+        ui.vertical(|ui| {
+            ui.set_width(self.width);
+            ui.label("Date");
+            ui.horizontal(|ui| {
+                ui.set_width(self.width);
+                ui.label("Mode");
+                ComboBox::from_id_source("Date Mode")
+                    .selected_text(match self.data.date_mode {
+                        DateMode::Prefix => "Prefix",
+                        DateMode::Suffix => "Suffix",
+                        DateMode::None => "None",
+                    })
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(&mut self.data.date_mode, DateMode::None, "None");
+                        ui.selectable_value(&mut self.data.date_mode, DateMode::Prefix, "Prefix");
+                        ui.selectable_value(&mut self.data.date_mode, DateMode::Suffix, "Suffix");
+                    });
+            });
+            ui.horizontal(|ui| {
+                ui.set_width(self.width);
+                ui.label("Type");
+                ComboBox::from_id_source("Date Type")
+                    .selected_text(match self.data.date_type {
+                        DateType::Created => "Created",
+                        DateType::Modified => "Modified",
+                        DateType::Current => "Now",
+                    })
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(&mut self.data.date_type, DateType::Created, "Created");
+                        ui.selectable_value(
+                            &mut self.data.date_type,
+                            DateType::Modified,
+                            "Modified",
+                        );
+                        ui.selectable_value(&mut self.data.date_type, DateType::Current, "Now");
+                    });
+            });
+            ui.horizontal(|ui| {
+                ui.set_width(self.width);
+                ui.label("Format");
+                if ComboBox::from_id_source("Date Fmt")
+                    .selected_text(self.data.fmt.format())
+                    .show_ui(ui, |ui| {
+                        for opt in DateFormat::iter() {
+                            ui.selectable_value(&mut self.data.fmt, opt, opt.format());
+                        }
+                    })
+                    .response
+                    .changed()
+                    && self.data.fmt != DateFormat::Custom
+                {
+                    self.data.custom_fmt = String::new();
+                };
+            });
+
+            ui.horizontal(|ui| {
+                ui.set_width(self.width);
+                ui.label("Custom");
+                if ui.text_edit_singleline(&mut self.data.custom_fmt).changed()
+                    && !self.data.custom_fmt.is_empty()
+                {
+                    self.data.fmt = DateFormat::Custom;
+                };
+            });
+            ui.horizontal(|ui| {
+                ui.set_width(self.width);
+                ui.label("Sep.");
+                ui.add(TextEdit::singleline(&mut self.data.sep).desired_width(30.0));
+                ui.label("Seg");
+                ui.add(TextEdit::singleline(&mut self.data.seg).desired_width(30.0));
+            });
+            ui.checkbox(&mut self.data.full_year, "4 Digit Year");
+        })
+        .response
     }
 }
 
@@ -156,6 +296,7 @@ mod date_tests {
             let date_mode = DateMode::Prefix;
             let date_type = DateType::Modified;
             let fmt = DateFormat::Std((DatePrefix::Dmy, None));
+            let custom_fmt = String::new();
             let sep = "-".into();
             let seg = "_".into();
             let full_year = true;
@@ -163,6 +304,7 @@ mod date_tests {
                 date_mode,
                 date_type,
                 fmt,
+                custom_fmt,
                 sep,
                 seg,
                 full_year,
@@ -182,6 +324,7 @@ mod date_tests {
             let date_mode = DateMode::Suffix;
             let date_type = DateType::Created;
             let fmt = DateFormat::Std((DatePrefix::Dmy, Some(DateSuffix::Hms)));
+            let custom_fmt = String::new();
             let sep = "".into();
             let seg = "_".into();
             let full_year = false;
@@ -189,6 +332,7 @@ mod date_tests {
                 date_mode,
                 date_type,
                 fmt,
+                custom_fmt,
                 sep,
                 seg,
                 full_year,
@@ -205,7 +349,8 @@ mod date_tests {
             let mut file = File::new(Path::new("test file.txt")).unwrap();
             let date_mode = DateMode::Prefix;
             let date_type = DateType::Current;
-            let fmt = DateFormat::Custom("%v++".into());
+            let fmt = DateFormat::Custom;
+            let custom_fmt = String::from("%v++");
             let sep = "~".into();
             let seg = "_".into();
             let full_year = true;
@@ -213,6 +358,7 @@ mod date_tests {
                 date_mode,
                 date_type,
                 fmt,
+                custom_fmt,
                 sep,
                 seg,
                 full_year,

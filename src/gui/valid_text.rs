@@ -80,6 +80,12 @@ impl<T: Display> ValText<T> {
         self.text = val.to_string();
         self.val = Some(val);
     }
+
+    pub fn clear(&mut self) {
+        self.text = String::new();
+        self.val = None;
+        self.prev = None;
+    }
 }
 
 impl<T: FromStr + Default> Default for ValText<T> {

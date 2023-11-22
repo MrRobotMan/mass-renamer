@@ -4,46 +4,46 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::*;
-use eframe::{self, App, CreationContext};
-use egui::{
-    self, menu, style::Margin, Align, CentralPanel, Color32, Context, Frame, Key, Layout, RichText,
-    Rounding, ScrollArea, Stroke, TextEdit, TopBottomPanel, Visuals, WidgetText,
+use eframe::{
+    egui::{
+        menu, Align, CentralPanel, Color32, Context, Frame, Key, Layout, Margin, Rounding,
+        ScrollArea, Stroke, TextEdit, TopBottomPanel, Visuals,
+    },
+    run_native, App, CreationContext, NativeOptions,
 };
-use home;
-use rfd;
 
-mod add;
-mod case;
-mod date;
-mod extension;
+use crate::{
+    file::{
+        add::AddView, case::CaseView, date::DateView, extension::ExtensionView, folder::FolderView,
+        name::NameView, number::NumberView, reg::RegexView, remove::RemoveView,
+        replace::ReplaceView,
+    },
+    File,
+};
+
 mod files;
-mod folder;
 mod increment_decrement;
-mod name;
-mod number;
-mod reg;
-mod remove;
-mod replace;
 mod valid_text;
 
-use add::{AddData, AddView};
-use case::{CaseData, CaseView};
-use date::{DateData, DateView};
-use extension::{ExtensionData, ExtensionView};
-use files::{Columns, FileListing, FileView, Order};
-use folder::{FolderData, FolderView};
-use name::{NameData, NameView};
-use number::{NumberData, NumberView};
-use reg::{RegExData, RegExView};
-use remove::{RemoveData, RemoveView};
-use replace::{ReplaceData, ReplaceView};
+use files::*;
+pub use increment_decrement::{Arrows, Incrementer};
+pub use valid_text::ValText;
 
+const FRAME_MARGIN: f32 = 5.0;
+const FRAME_RADIUS: f32 = 10.0;
 const FILES_HEIGHT: f32 = 495.0;
 const FILES_WIDTH: f32 = 1200.0;
-const FRAME_RADIUS: f32 = 10.0;
-const FRAME_MARGIN: f32 = 5.0;
-const NUM_WIDTH: f32 = 15.0;
+pub const NUM_WIDTH: f32 = 15.0;
+const COL_WIDTH: f32 = 450.0;
+
+pub fn run() -> eframe::Result<()> {
+    let native_options = NativeOptions::default();
+    run_native(
+        "Bulk Renamer",
+        native_options,
+        Box::new(|cc| Box::new(Renamer::new(cc))),
+    )
+}
 
 #[derive(Default)]
 pub struct Renamer {
@@ -51,26 +51,16 @@ pub struct Renamer {
     cwd_path: PathBuf,
     files: Vec<FileListing>,
     columns: (Columns, Order, Columns), // 3rd field is previous
-    add: AddData,
-    case: CaseData,
-    date: DateData,
-    extension: ExtensionData,
-    folder: FolderData,
-    name: NameData,
-    number: NumberData,
-    reg_exp: RegExData,
-    remove: RemoveData,
-    replace: ReplaceData,
-}
-
-#[allow(clippy::from_over_into)]
-impl Into<WidgetText> for &RenameFile {
-    fn into(self) -> WidgetText {
-        WidgetText::RichText(RichText::new(match &self.extension {
-            None => self.stem.clone(),
-            Some(ext) => format!("{}.{}", &self.stem, ext),
-        }))
-    }
+    add: AddView,
+    case: CaseView,
+    date: DateView,
+    extension: ExtensionView,
+    folder: FolderView,
+    name: NameView,
+    number: NumberView,
+    reg_exp: RegexView,
+    remove: RemoveView,
+    replace: ReplaceView,
 }
 
 /// Custom ordering for files. Directories at the start or end.
@@ -88,7 +78,19 @@ impl Renamer {
         // This is also where you can customized the look at feel of egui using
         // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
         cc.egui_ctx.set_visuals(Visuals::dark());
-        let mut app: Renamer = Default::default();
+        let mut app = Renamer {
+            reg_exp: RegexView::new(COL_WIDTH),
+            name: NameView::new(COL_WIDTH),
+            folder: FolderView::new(COL_WIDTH),
+            replace: ReplaceView::new(COL_WIDTH),
+            case: CaseView::new(COL_WIDTH / 2.0),
+            extension: ExtensionView::new(COL_WIDTH / 2.0),
+            remove: RemoveView::new(COL_WIDTH / 2.0),
+            add: AddView::new(COL_WIDTH / 2.0),
+            date: DateView::new(COL_WIDTH / 2.0),
+            number: NumberView::new(COL_WIDTH / 2.0),
+            ..Default::default()
+        };
         let cwd_path = match home::home_dir() {
             Some(dir) => dir,
             None => PathBuf::default(),
@@ -119,7 +121,7 @@ impl Renamer {
                 let extension = name
                     .extension()
                     .map(|ext| ext.to_string_lossy().to_string());
-                let renamed = RenameFile::new(&file.path());
+                let renamed = File::try_from(&file.path());
                 let mut size = None;
                 let mut modified = None;
                 let mut created = None;
@@ -138,7 +140,7 @@ impl Renamer {
                         created = Some(dt.into());
                     };
                 }
-                if let Some(renamed) = renamed {
+                if let Ok(renamed) = renamed {
                     file_listing.push(FileListing {
                         name,
                         renamed,
@@ -213,40 +215,42 @@ impl App for Renamer {
                     };
                     let response =
                         ui.add_sized(ui.available_size(), TextEdit::singleline(&mut self.cwd));
-                    if response.lost_focus() && ui.input().key_pressed(Key::Enter) {
+                    if response.lost_focus() && ui.input(|inp| inp.key_pressed(Key::Enter)) {
                         self.change_dir()
                     };
                 });
-                frame().show(ui, |ui| {
-                    ScrollArea::vertical()
-                        .max_height(FILES_HEIGHT)
-                        .show(ui, |ui| {
-                            ui.add(FileView::new(
-                                &mut self.files,
-                                &mut self.columns,
-                                FILES_WIDTH,
-                            ))
-                        });
-                });
-                ui.add_space(FRAME_MARGIN);
                 ui.horizontal(|ui| {
                     // ui.with_layout(Layout::top_down_justified(Align::Center),
                     ui.vertical(|ui| {
-                        frame().show(ui, |ui| ui.add(RegExView::new(&mut self.reg_exp, 300.0)));
-                        frame().show(ui, |ui| ui.add(NameView::new(&mut self.name, 300.0)));
-                        frame().show(ui, |ui| ui.add(FolderView::new(&mut self.folder, 200.0)));
-                    });
-                    ui.vertical(|ui| {
-                        frame().show(ui, |ui| ui.add(ReplaceView::new(&mut self.replace, 200.0)));
-                        frame().show(ui, |ui| ui.add(CaseView::new(&mut self.case, 200.0)));
-                        frame().show(ui, |ui| {
-                            ui.add(ExtensionView::new(&mut self.extension, 200.0))
+                        frame().show(ui, |ui| ui.add(&mut self.reg_exp));
+                        frame().show(ui, |ui| ui.add(&mut self.name));
+                        frame().show(ui, |ui| ui.add(&mut self.folder));
+                        frame().show(ui, |ui| ui.add(&mut self.replace));
+                        ui.horizontal(|ui| {
+                            frame().show(ui, |ui| ui.add(&mut self.case));
+                            frame().show(ui, |ui| ui.add(&mut self.extension));
+                        });
+                        ui.horizontal(|ui| {
+                            frame().show(ui, |ui| ui.add(&mut self.remove));
+                            frame().show(ui, |ui| ui.add(&mut self.number));
+                        });
+                        ui.horizontal(|ui| {
+                            frame().show(ui, |ui| ui.add(&mut self.date));
+                            frame().show(ui, |ui| ui.add(&mut self.add));
                         });
                     });
-                    frame().show(ui, |ui| ui.add(RemoveView::new(&mut self.remove, 200.0)));
-                    frame().show(ui, |ui| ui.add(AddView::new(&mut self.add, 80.0)));
-                    frame().show(ui, |ui| ui.add(DateView::new(&mut self.date, 100.0)));
-                    frame().show(ui, |ui| ui.add(NumberView::new(&mut self.number, 100.0)));
+                    ui.add_space(FRAME_MARGIN);
+                    frame().show(ui, |ui| {
+                        ScrollArea::vertical()
+                            .max_height(FILES_HEIGHT)
+                            .show(ui, |ui| {
+                                ui.add(FileView::new(
+                                    &mut self.files,
+                                    &mut self.columns,
+                                    FILES_WIDTH,
+                                ))
+                            });
+                    });
                 });
             })
         });

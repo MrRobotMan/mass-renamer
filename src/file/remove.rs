@@ -1,4 +1,6 @@
-use super::{File, Process};
+use super::{File, OptionBuilder, Process};
+use crate::gui::{Arrows, Incrementer, ValText, NUM_WIDTH};
+use egui::{ComboBox, Response, TextEdit, Ui, Widget};
 
 /// Options for removing parts of the filename.
 /// Remove specific parts of a filename but not file extensions.
@@ -23,14 +25,14 @@ use super::{File, Process};
 /// "Hello[ABC] Joe" to just "Hello Joe", as it has removed the two square brackets and
 /// everything between. The wildcard can not be at the start or end of the word.
 /// For that case use crop.
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct RemoveOptions {
     first_n: usize,
     last_n: usize,
     range: (usize, usize),
-    characters: Option<String>,
-    words: Option<String>,
-    crop: Option<(bool, String)>,
+    characters: String,
+    words: String,
+    crop: (bool, String),
     digits: bool,
     ascii_high: bool,
     trim: bool,
@@ -38,6 +40,26 @@ pub struct RemoveOptions {
     chars: bool,
     symbols: bool,
     lead_dots: bool,
+}
+
+impl Default for RemoveOptions {
+    fn default() -> Self {
+        Self {
+            first_n: Default::default(),
+            last_n: Default::default(),
+            range: Default::default(),
+            characters: Default::default(),
+            words: Default::default(),
+            crop: (true, String::new()),
+            digits: Default::default(),
+            ascii_high: Default::default(),
+            trim: Default::default(),
+            double_space: Default::default(),
+            chars: Default::default(),
+            symbols: Default::default(),
+            lead_dots: Default::default(),
+        }
+    }
 }
 
 impl Process for RemoveOptions {
@@ -50,19 +72,20 @@ impl Process for RemoveOptions {
             self.start_end(file)
         }
 
-        if let Some(characters) = &self.characters {
-            for chr in characters.chars() {
+        if !self.characters.is_empty() {
+            for chr in self.characters.chars() {
                 self.remove_char(file, chr);
             }
         }
 
-        if let Some(words) = &self.words {
-            for word in words.split(' ') {
+        if !self.words.is_empty() {
+            for word in self.words.split(' ') {
                 self.remove_word(file, word);
             }
         }
 
-        if let Some((before, position)) = &self.crop {
+        if !self.crop.1.is_empty() {
+            let (before, position) = &self.crop;
             let pos = file.find(position);
             match (before, pos) {
                 (true, Some(p)) => *file = file[p..].to_owned(),
@@ -158,6 +181,158 @@ impl RemoveOptions {
     }
 }
 
+#[derive(Default)]
+pub struct RemoveView {
+    options: RemoveOptions,
+    first_n: ValText<usize>,
+    last_n: ValText<usize>,
+    start: ValText<usize>,
+    end: ValText<usize>,
+    width: f32,
+}
+
+impl RemoveView {
+    pub fn new(width: f32) -> Self {
+        Self {
+            width,
+            ..Default::default()
+        }
+    }
+}
+
+impl OptionBuilder for RemoveView {
+    type Processor = RemoveOptions;
+
+    fn build(&self) -> RemoveOptions {
+        let mut options = self.options.clone();
+        options.first_n = self.first_n.get_val().unwrap_or(0);
+        options.last_n = self.last_n.get_val().unwrap_or(0);
+        options.range = (
+            self.start.get_val().unwrap_or(0),
+            self.end.get_val().unwrap_or(0),
+        );
+
+        options
+    }
+}
+impl Incrementer for &mut RemoveView {
+    fn increment(&mut self, field: &str) {
+        let val = match field {
+            "first_n" => &mut self.first_n,
+            "last_n" => &mut self.last_n,
+            "start" => &mut self.start,
+            "end" => &mut self.end,
+            _ => panic!("Unknown field"),
+        };
+        val.set_val(val.get_val().unwrap_or(0) + 1);
+    }
+
+    fn decrement(&mut self, field: &str) {
+        let val = match field {
+            "first_n" => &mut self.first_n,
+            "last_n" => &mut self.last_n,
+            "start" => &mut self.start,
+            "end" => &mut self.end,
+            _ => panic!("Unknown field"),
+        };
+        val.set_val(val.get_val().unwrap_or(0).saturating_sub(1));
+    }
+}
+
+impl Widget for &mut RemoveView {
+    fn ui(mut self, ui: &mut Ui) -> Response {
+        ui.vertical(|ui| {
+            ui.set_width(self.width);
+            ui.label("Remove");
+            ui.horizontal(|ui| {
+                ui.set_width(self.width);
+                ui.label("First n");
+                if ui
+                    .add(TextEdit::singleline(&mut self.first_n).desired_width(NUM_WIDTH))
+                    .changed()
+                    && !self.first_n.is_valid()
+                {
+                    self.first_n.revert();
+                };
+                ui.add(Arrows::new("Remove First N", &mut self, "first_n"));
+                ui.label("Last n");
+                if ui
+                    .add(TextEdit::singleline(&mut self.last_n).desired_width(NUM_WIDTH))
+                    .changed()
+                    && !self.last_n.is_valid()
+                {
+                    self.last_n.revert();
+                };
+                ui.add(Arrows::new("Remove Last N", &mut self, "last_n"));
+            });
+            ui.horizontal(|ui| {
+                ui.set_width(self.width);
+                ui.label("Start");
+                if ui
+                    .add(TextEdit::singleline(&mut self.start).desired_width(NUM_WIDTH))
+                    .changed()
+                    && !self.start.is_valid()
+                {
+                    self.start.revert();
+                };
+                ui.add(Arrows::new("Start", &mut self, "start"));
+                ui.label("End");
+                if ui
+                    .add(TextEdit::singleline(&mut self.end).desired_width(NUM_WIDTH))
+                    .changed()
+                    && !self.end.is_valid()
+                {
+                    self.end.revert();
+                };
+                ui.add(Arrows::new("End", &mut self, "end"));
+            });
+            ui.horizontal(|ui| {
+                ui.set_width(self.width);
+                ui.label("Chars");
+                ui.add(
+                    TextEdit::singleline(&mut self.options.characters)
+                        .desired_width(self.width / 4.0),
+                );
+                // ui.text_edit_singleline(&mut self.options.characters);
+                ui.label("Words");
+                ui.text_edit_singleline(&mut self.options.words);
+            });
+            ui.horizontal(|ui| {
+                ui.set_width(self.width);
+                ui.label("Crop");
+                ComboBox::from_id_source("crop")
+                    .selected_text(if self.options.crop.0 {
+                        "Before"
+                    } else {
+                        "After"
+                    })
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(&mut self.options.crop.0, true, "Before");
+                        ui.selectable_value(&mut self.options.crop.0, false, "After");
+                    });
+                ui.text_edit_singleline(&mut self.options.crop.1);
+            });
+            ui.horizontal(|ui| {
+                ui.set_width(self.width);
+                ui.checkbox(&mut self.options.digits, "Digits");
+                ui.checkbox(&mut self.options.chars, "Chars");
+                ui.checkbox(&mut self.options.ascii_high, "High");
+            });
+            ui.horizontal(|ui| {
+                ui.set_width(self.width);
+                ui.checkbox(&mut self.options.trim, "Trim");
+                ui.checkbox(&mut self.options.double_space, "Double Space");
+            });
+            ui.horizontal(|ui| {
+                ui.set_width(self.width);
+                ui.checkbox(&mut self.options.lead_dots, "Lead Dots");
+                ui.checkbox(&mut self.options.symbols, "Symbols");
+            });
+        })
+        .response
+    }
+}
+
 #[cfg(test)]
 mod remove_tests {
     use super::*;
@@ -168,9 +343,9 @@ mod remove_tests {
         let first_n = 2;
         let last_n = 2;
         let range = (1, 2);
-        let characters = Some("ft".into());
-        let words = Some("ile w*h".into());
-        let crop = None;
+        let characters = "ft".into();
+        let words = "ile w*h".into();
+        let crop = (true, "".into());
         let digits = true;
         let ascii_high = true;
         let trim = true;
@@ -203,9 +378,9 @@ mod remove_tests {
         let first_n = 6;
         let last_n = 4;
         let range = (0, 0);
-        let characters = None;
-        let words = None;
-        let crop = None;
+        let characters = "".into();
+        let words = "".into();
+        let crop = (true, "".into());
         let digits = false;
         let ascii_high = false;
         let trim = false;
@@ -238,9 +413,9 @@ mod remove_tests {
         let first_n = 60;
         let last_n = 4;
         let range = (0, 0);
-        let characters = None;
-        let words = None;
-        let crop = None;
+        let characters = "".into();
+        let words = "".into();
+        let crop = (true, "".into());
         let digits = false;
         let ascii_high = false;
         let trim = false;
@@ -273,9 +448,9 @@ mod remove_tests {
         let first_n = 0;
         let last_n = 0;
         let range = (0, 0);
-        let characters = None;
-        let words = None;
-        let crop = Some((true, "to".into()));
+        let characters = "".into();
+        let words = "".into();
+        let crop = (true, "to".into());
         let digits = false;
         let ascii_high = false;
         let trim = false;
@@ -308,9 +483,9 @@ mod remove_tests {
         let first_n = 0;
         let last_n = 0;
         let range = (0, 0);
-        let characters = None;
-        let words = None;
-        let crop = None;
+        let characters = "".into();
+        let words = "".into();
+        let crop = (true, "".into());
         let digits = false;
         let ascii_high = false;
         let trim = false;
@@ -343,9 +518,9 @@ mod remove_tests {
         let first_n = 0;
         let last_n = 0;
         let range = (0, 0);
-        let characters = None;
-        let words = None;
-        let crop = Some((false, "file".into()));
+        let characters = "".into();
+        let words = "".into();
+        let crop = (false, "file".into());
         let digits = false;
         let ascii_high = false;
         let trim = false;

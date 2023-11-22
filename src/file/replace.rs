@@ -1,21 +1,22 @@
-use super::{File, Process};
+use super::{File, OptionBuilder, Process};
+use egui::{Response, Ui, Widget};
 
 /// Options for basic renaming rules.
 /// - `replace` - text to be replaced
 /// - `with` - new text. Note: the text is always replaced with the text as written, including any specific text case.
 /// - `case` - true for case sensitive, false for case-insensitive
-#[derive(Default, Debug)]
-pub struct ReplaceOptions<'a> {
-    pub replace: &'a str,
-    pub with: &'a str,
+#[derive(Default, Debug, Clone)]
+pub struct ReplaceOptions {
+    pub replace: String,
+    pub with: String,
     pub case: bool,
 }
 
-impl Process for ReplaceOptions<'_> {
+impl Process for ReplaceOptions {
     fn process(&self, file: &mut File) {
         let file = &mut file.stem;
         if self.case {
-            *file = file.replace(self.replace, self.with);
+            *file = file.replace(&self.replace, &self.with);
         } else {
             let start = file.to_lowercase().find(&self.replace.to_lowercase());
             let span = self.replace.len();
@@ -23,9 +24,50 @@ impl Process for ReplaceOptions<'_> {
                 for _ in idx..(idx + span) {
                     file.remove(idx);
                 }
-                file.insert_str(idx, self.with);
+                file.insert_str(idx, &self.with);
             };
         }
+    }
+}
+
+#[derive(Default)]
+pub struct ReplaceView {
+    options: ReplaceOptions,
+    width: f32,
+}
+
+impl ReplaceView {
+    pub fn new(width: f32) -> Self {
+        Self {
+            width,
+            ..Default::default()
+        }
+    }
+}
+
+impl OptionBuilder for ReplaceView {
+    type Processor = ReplaceOptions;
+    fn build(&self) -> ReplaceOptions {
+        self.options.clone()
+    }
+}
+
+impl Widget for &mut ReplaceView {
+    fn ui(self, ui: &mut Ui) -> Response {
+        ui.vertical(|ui| {
+            ui.set_width(self.width);
+            ui.label("Replace");
+            ui.horizontal(|ui| {
+                ui.label("Replace: ");
+                ui.text_edit_singleline(&mut self.options.replace);
+            });
+            ui.horizontal(|ui| {
+                ui.label("With: ");
+                ui.text_edit_singleline(&mut self.options.with);
+            });
+            ui.checkbox(&mut self.options.case, "Match Case")
+        })
+        .response
     }
 }
 
@@ -35,8 +77,8 @@ mod match_tests {
     use std::path::Path;
     #[test]
     fn no_matching_text_case_sensitive() {
-        let replace = "ABC";
-        let with = "123";
+        let replace = "ABC".into();
+        let with = "123".into();
         let mut file = File::new(Path::new("fileabc")).unwrap();
         let case = true;
         let opt = ReplaceOptions {
@@ -49,8 +91,8 @@ mod match_tests {
     }
     #[test]
     fn no_matching_text_case_insensitive() {
-        let replace = "qrs";
-        let with = "123";
+        let replace = "qrs".into();
+        let with = "123".into();
         let mut file = File::new(Path::new("fileabc")).unwrap();
         let case = false;
         let opt = ReplaceOptions {
@@ -63,8 +105,8 @@ mod match_tests {
     }
     #[test]
     fn matched_case_sensitive() {
-        let replace = "abc";
-        let with = "123";
+        let replace = "abc".into();
+        let with = "123".into();
         let mut file = File::new(Path::new("fileabc")).unwrap();
         let case = true;
         let opt = ReplaceOptions {
@@ -77,8 +119,8 @@ mod match_tests {
     }
     #[test]
     fn matched_case_insensitive() {
-        let replace = "ABC";
-        let with = "123";
+        let replace = "ABC".into();
+        let with = "123".into();
         let mut file = File::new(Path::new("fileabc")).unwrap();
         let case = false;
         let opt = ReplaceOptions {

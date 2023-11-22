@@ -1,89 +1,51 @@
-use std::{
-    env,
-    fs::canonicalize,
-    io::{stdin, stdout, Write},
-    path::PathBuf,
-};
+use std::{ffi::OsStr, path::PathBuf};
 
 use thiserror::Error;
-// pub mod gui;
-// pub use gui::Renamer;
+pub mod directory;
 pub mod file;
+pub mod gui;
 
-use file::File;
-use std::ffi::OsStr;
+pub use directory::Directory;
+pub use file::File;
 
 #[derive(Debug, Default)]
-pub struct Files {
+pub struct Selected {
     selected: Vec<File>,
 }
 
-impl Files {
+impl Selected {
     pub fn clear(&mut self) {
         self.selected.clear()
     }
 
     pub fn add(&mut self, file: PathBuf) {
-        if let Some(file) = File::new(file.as_path()) {
+        if let Ok(file) = File::try_from(file.as_path()) {
             self.selected.push(file)
         }
     }
 }
 
-/// Get the user's input as a usize.
-pub fn get_input() -> usize {
-    loop {
-        let mut s = String::new();
-        let _ = stdout().flush();
-        if stdin().read_line(&mut s).is_err() {
-            println!("Error reading input, try again.")
-        };
-        match s.trim().parse::<usize>() {
-            Ok(size) => return size,
-            Err(_) => println!("Enter only numbers."),
-        }
-    }
-}
-
-/// Get the full path of a directory falling back to the home directory
-/// if nothing is provided. If the provided path is a file, the file's parent
-/// is returned.
-pub fn get_directory(path: Option<String>) -> Result<PathBuf, DirectoryError> {
-    if let Some(arg) = path {
-        let p = canonicalize(arg)?;
-        if p.is_file() {
-            Ok(p.parent().unwrap().into())
-        } else {
-            Ok(p)
-        }
-    } else {
-        match env::current_dir() {
-            Ok(dir) => Ok(dir),
-            Err(_) => {
-                let d = home::home_dir();
-                match d {
-                    Some(path) => Ok(path),
-                    None => Err(DirectoryError::NoHome),
-                }
-            }
-        }
-    }
-}
-
 #[derive(Debug, Error)]
-pub enum DirectoryError {
-    #[error("{source}")]
-    Io {
-        #[from]
-        source: std::io::Error,
-    },
-    #[error("No home directory could be found")]
-    NoHome,
+pub enum RenamerError {
+    #[error(transparent)]
+    Directory(#[from] directory::DirectoryError),
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+    #[error(transparent)]
+    Egui(#[from] eframe::Error),
 }
 
+#[derive(Debug)]
+enum PathString {
+    Valid(String),
+    Invalid(String),
+}
 /// Convert a Path to a mutable string
-fn generate_path_as_string(part: Option<&OsStr>) -> Option<String> {
-    part.map(|s| s.to_string_lossy().into_owned())
+fn generate_path_as_string(part: Option<&OsStr>) -> Option<PathString> {
+    part.map(|path| match path.to_str() {
+        Some(s) => PathString::Valid(s.into()),
+        None => PathString::Invalid(path.to_string_lossy().into_owned()),
+    })
 }
 
 #[cfg(test)]

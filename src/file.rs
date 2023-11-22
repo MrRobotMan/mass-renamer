@@ -1,24 +1,27 @@
 use std::{
     cmp::Ordering,
     fmt::Debug,
+    fs, io,
     path::{Path, PathBuf},
 };
 
-mod add;
-mod case;
-mod date;
-mod extension;
-mod folder;
-mod name;
-mod number;
-mod reg;
-mod remove;
-mod replace;
+pub mod add;
+pub mod case;
+pub mod date;
+pub mod extension;
+pub mod folder;
+pub mod name;
+pub mod number;
+pub mod reg;
+pub mod remove;
+pub mod replace;
 
-use crate::generate_path_as_string;
-pub use add::AddOptions;
+use crate::{generate_path_as_string, PathString};
+use add::AddOptions;
 pub use case::{Case, CaseOptions};
+use chrono::{DateTime, Local};
 pub use date::{DateFormat, DateMode, DateOptions, DatePrefix, DateSuffix, DateType};
+use egui::{RichText, WidgetText};
 pub use extension::ExtensionOptions;
 pub use folder::{FolderMode, FolderOptions};
 pub use name::NameOptions;
@@ -26,10 +29,22 @@ pub use number::{NumberFormat, NumberMode, NumberOptions};
 pub use reg::RegexOptions;
 pub use remove::RemoveOptions;
 pub use replace::ReplaceOptions;
+use thiserror::Error;
+
+pub trait Process {
+    fn process(&self, file: &mut File);
+}
+
+pub trait OptionBuilder {
+    type Processor: Process;
+
+    fn build(&self) -> Self::Processor;
+}
 
 #[derive(Debug, Default)]
 pub struct File {
     stem: String,
+    valid_original: bool,
     extension: Option<String>,
     original: PathBuf,
     add: Option<AddOptions>,
@@ -45,20 +60,92 @@ pub struct File {
 }
 
 impl File {
-    pub fn new(path: &Path) -> Option<Self> {
-        // if !path.is_file() {
-        //     return None;
-        // }
-        let extension = generate_path_as_string(path.extension());
-        let stem = generate_path_as_string(path.file_stem())?;
-        Some(Self {
-            stem,
-            extension,
-            original: path.to_owned(),
-            ..Default::default()
-        })
+    /// Create a new File object from a Path.
+    /// No checking is performed to validate that the Path exists or is a file.
+    /// To perform this check use [File::try_from<&Path>], [File::try_from<&PathBuf>], or [File::try_from<PathBuf>]
+    pub fn new(path: &Path) -> Result<Self, FileError> {
+        let extension = {
+            generate_path_as_string(path.extension()).map(|e| match e {
+                PathString::Valid(s) => s,
+                PathString::Invalid(s) => s,
+            })
+        };
+        match generate_path_as_string(path.file_stem()) {
+            Some(stem) => {
+                let (stem, valid_original) = match stem {
+                    PathString::Valid(s) => (s, true),
+                    PathString::Invalid(s) => (s, false),
+                };
+                Ok(Self {
+                    stem,
+                    valid_original,
+                    extension,
+                    original: path.to_owned(),
+                    ..Default::default()
+                })
+            }
+            None => Err(FileError::BadStem),
+        }
     }
+}
 
+impl TryFrom<&Path> for File {
+    type Error = FileError;
+
+    fn try_from(path: &Path) -> Result<Self, FileError> {
+        if !path.exists() {
+            return Err(FileError::NotExists);
+        }
+        let extension = {
+            generate_path_as_string(path.extension()).map(|e| match e {
+                PathString::Valid(s) => s,
+                PathString::Invalid(s) => s,
+            })
+        };
+        match generate_path_as_string(path.file_stem()) {
+            Some(stem) => {
+                let (stem, valid_original) = match stem {
+                    PathString::Valid(s) => (s, true),
+                    PathString::Invalid(s) => (s, false),
+                };
+                Ok(Self {
+                    stem,
+                    valid_original,
+                    extension,
+                    original: path.to_owned(),
+                    ..Default::default()
+                })
+            }
+            None => Err(FileError::BadStem),
+        }
+    }
+}
+
+impl TryFrom<PathBuf> for File {
+    type Error = FileError;
+
+    fn try_from(value: PathBuf) -> Result<Self, FileError> {
+        value.as_path().try_into()
+    }
+}
+
+impl TryFrom<&PathBuf> for File {
+    type Error = FileError;
+
+    fn try_from(value: &PathBuf) -> Result<Self, FileError> {
+        value.as_path().try_into()
+    }
+}
+impl From<&File> for WidgetText {
+    fn from(value: &File) -> Self {
+        Self::RichText(RichText::new(match &value.extension {
+            None => value.stem.clone(),
+            Some(ext) => format!("{}.{}", value.stem, ext),
+        }))
+    }
+}
+
+impl File {
     /// Tool to rename a single file.
     /// Takes the `&path` and various options (processed in order) to return a `PathBuf`
     /// used to rename the file.
@@ -81,12 +168,12 @@ impl File {
     /// # use bulk_file_renamer::file::{NameOptions, Case, CaseOptions, File, Process, Options};
     /// let file = Path::new("file.txt");
     /// let name = NameOptions::Fixed("new_name".into());
-    /// let case = CaseOptions{case: Case::Upper, snake: false, exceptions: Some("n".into())};
+    /// let case = CaseOptions{case: Case::Upper, snake: false, exceptions: "n".into()};
     /// let mut rename = File::new(file).unwrap().with_option(Options::Name(name)).with_option(Options::Case(case));
-    /// let new_name = rename.rename();
+    /// let new_name = rename.preview();
     /// assert_eq!(new_name, PathBuf::from("nEW_nAME.txt"));
     /// ```
-    pub fn rename(&mut self) -> PathBuf {
+    pub fn preview(&mut self) -> PathBuf {
         let mut opts: Vec<Box<dyn Process>> = vec![];
         if let Some(opt) = &self.regex {
             opts.push(Box::new(opt.clone()));
@@ -132,6 +219,20 @@ impl File {
         }
     }
 
+    /// Rename the file. Can not be undone.
+    pub fn rename(mut self) -> Result<(), FileError> {
+        let new_name = &self.preview();
+        fs::rename(&self.original, new_name)?;
+        Ok(())
+    }
+
+    /// Revert the previewed changes to a file.
+    pub fn revert(&mut self) {
+        let temp: &File = &self.original.clone().try_into().unwrap();
+        self.stem = temp.stem.clone();
+        self.extension = temp.extension.clone();
+    }
+
     pub fn with_option(mut self, option: Options) -> Self {
         use Options::*;
         match option {
@@ -147,6 +248,52 @@ impl File {
         }
         self
     }
+
+    // Return the information on a file.
+    pub fn info(&self) -> (Filename, Extension, Size, DateModified, DateCreated) {
+        let mut size = None;
+        let mut modified = None;
+        let mut created = None;
+        if let Ok(data) = self.original.metadata() {
+            if self.original.is_file() {
+                size = Some(data.len())
+            };
+            if let Ok(dt) = data.modified() {
+                modified = Some(dt.into())
+            };
+            if let Ok(dt) = data.created() {
+                created = Some(dt.into())
+            };
+        };
+        (
+            &self.stem,
+            self.extension.as_deref(),
+            size,
+            modified,
+            created,
+        )
+    }
+
+    // Check if the original file was valid UTF-8
+    pub fn is_valid(&self) -> bool {
+        self.valid_original
+    }
+}
+
+pub type Filename<'a> = &'a str;
+pub type Extension<'a> = Option<&'a str>;
+pub type Size = Option<u64>;
+pub type DateCreated = Option<DateTime<Local>>;
+pub type DateModified = Option<DateTime<Local>>;
+
+#[derive(Debug, Error)]
+pub enum FileError {
+    #[error("File does not exist.")]
+    NotExists,
+    #[error("File does not have a stem.")]
+    BadStem,
+    #[error(transparent)]
+    Io(#[from] io::Error),
 }
 
 #[derive(Debug)]
@@ -206,10 +353,6 @@ impl PartialOrd for File {
     }
 }
 
-pub trait Process {
-    fn process(&self, file: &mut File);
-}
-
 #[cfg(test)]
 mod file_tests {
     use super::*;
@@ -224,7 +367,7 @@ mod file_tests {
             extension: false,
         };
         let mut rename = File::new(file).unwrap().with_option(Options::Regex(opt));
-        let result = rename.rename();
+        let result = rename.preview();
         assert_eq!(result, expected)
     }
 
@@ -234,7 +377,7 @@ mod file_tests {
         let expected = PathBuf::from("new_name.txt");
         let name = NameOptions::Fixed("new_name".into());
         let mut rename = File::new(file).unwrap().with_option(Options::Name(name));
-        let new_name = rename.rename();
+        let new_name = rename.preview();
         assert_eq!(new_name, expected)
     }
 }

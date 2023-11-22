@@ -1,17 +1,18 @@
 use egui::{self, Id, Response, Ui, Widget};
 
-pub trait Increment {
-    fn increment(&mut self, increment: bool, field: &str);
+pub trait Incrementer {
+    fn increment(&mut self, field: &str);
+    fn decrement(&mut self, field: &str);
 }
 
 /// A set of increment decrement arrows stacked vertically.
-pub struct Arrows<'a, I: Increment> {
+pub struct Arrows<'a, I: Incrementer> {
     pub id: Id,
     pub value: &'a mut I,
     pub field: &'a str,
 }
 
-impl<'a, I: Increment> Arrows<'a, I> {
+impl<'a, I: Incrementer> Arrows<'a, I> {
     pub fn new(id: &str, value: &'a mut I, field: &'a str) -> Self {
         Self {
             id: Id::new(id),
@@ -21,15 +22,15 @@ impl<'a, I: Increment> Arrows<'a, I> {
     }
 }
 
-impl<I: Increment> Widget for Arrows<'_, I> {
+impl<I: Incrementer> Widget for Arrows<'_, I> {
     fn ui(self, ui: &mut Ui) -> Response {
         ui.vertical(|ui| {
             ui.set_width(10.0);
             if ui.button("^").clicked() {
-                self.value.increment(true, self.field)
+                self.value.increment(self.field)
             };
             if ui.button("v").clicked() {
-                self.value.increment(false, self.field)
+                self.value.decrement(self.field)
             }
         })
         .response
