@@ -489,20 +489,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bulk_file_renamer"
-version = "0.1.0"
-dependencies = [
- "Inflector",
- "chrono",
- "eframe",
- "egui",
- "home",
- "regex",
- "rfd",
- "thiserror",
-]
-
-[[package]]
 name = "bumpalo"
 version = "3.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1553,6 +1539,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62bb907fe88d54d8d9ce32a3cceab4218ed2f6b7d35617cafe9adf84e43919cb"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "mass_renamer"
+version = "0.1.0"
+dependencies = [
+ "Inflector",
+ "chrono",
+ "eframe",
+ "egui",
+ "home",
+ "regex",
+ "rfd",
+ "thiserror",
 ]
 
 [[package]]
