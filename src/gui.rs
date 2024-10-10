@@ -1,43 +1,39 @@
-use std::{
-    cmp::Ordering,
-    fs,
-    path::{Path, PathBuf},
-};
+use std::path::PathBuf;
 
 use eframe::{
     egui::{
-        menu, Align, CentralPanel, Color32, Context, Frame, Key, Layout, Margin, Rounding,
-        ScrollArea, Stroke, TextEdit, TopBottomPanel, Visuals,
+        menu, Align, CentralPanel, Color32, Context, Frame, Key, Layout, Margin, Rounding, Stroke,
+        TextEdit, TopBottomPanel, Visuals,
     },
-    run_native, App, CreationContext, NativeOptions,
+    run_native, App, CreationContext, NativeOptions, Theme,
+};
+use egui::ViewportCommand;
+
+use crate::file::{
+    add::AddView, case::CaseView, date::DateView, directory::DirectoryView,
+    extension::ExtensionView, folder::FolderView, name::NameView, number::NumberView,
+    reg::RegexView, remove::RemoveView, replace::ReplaceView,
 };
 
-use crate::{
-    file::{
-        add::AddView, case::CaseView, date::DateView, extension::ExtensionView, folder::FolderView,
-        name::NameView, number::NumberView, reg::RegexView, remove::RemoveView,
-        replace::ReplaceView,
-    },
-    File,
-};
-
-mod files;
 mod increment_decrement;
 mod valid_text;
 
-use files::*;
 pub use increment_decrement::{Arrows, Incrementer};
 pub use valid_text::ValText;
 
 const FRAME_MARGIN: f32 = 5.0;
 const FRAME_RADIUS: f32 = 10.0;
-const FILES_HEIGHT: f32 = 495.0;
-const FILES_WIDTH: f32 = 1200.0;
+// const FILES_WIDTH: f32 = 1200.0;
 pub const NUM_WIDTH: f32 = 15.0;
 const COL_WIDTH: f32 = 450.0;
 
 pub fn run() -> eframe::Result<()> {
-    let native_options = NativeOptions::default();
+    let native_options = NativeOptions {
+        centered: true,
+        follow_system_theme: true,
+        default_theme: Theme::Dark,
+        ..Default::default()
+    };
     run_native(
         "Bulk Renamer",
         native_options,
@@ -49,8 +45,7 @@ pub fn run() -> eframe::Result<()> {
 pub struct Renamer {
     cwd: String,
     cwd_path: PathBuf,
-    files: Vec<FileListing>,
-    columns: (Columns, Order, Columns), // 3rd field is previous
+    files: DirectoryView,
     add: AddView,
     case: CaseView,
     date: DateView,
@@ -63,22 +58,20 @@ pub struct Renamer {
     replace: ReplaceView,
 }
 
-/// Custom ordering for files. Directories at the start or end.
-fn cmp(rhs: &Path, lhs: &Path) -> Ordering {
-    match (rhs.is_dir(), lhs.is_dir()) {
-        (true, false) => Ordering::Less,
-        (false, true) => Ordering::Greater,
-        _ => rhs.cmp(lhs),
-    }
-}
-
 impl Renamer {
     //! Called once before the first frame.
     pub fn new(cc: &CreationContext) -> Self {
         // This is also where you can customized the look at feel of egui using
         // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
         cc.egui_ctx.set_visuals(Visuals::dark());
-        let mut app = Renamer {
+        let cwd_path = home::home_dir().unwrap_or_default();
+        let files = DirectoryView::new(&cwd_path).unwrap();
+        let cwd = cwd_path.display().to_string();
+
+        Self {
+            cwd_path,
+            cwd,
+            files,
             reg_exp: RegexView::new(COL_WIDTH),
             name: NameView::new(COL_WIDTH),
             folder: FolderView::new(COL_WIDTH),
@@ -89,82 +82,74 @@ impl Renamer {
             add: AddView::new(COL_WIDTH / 2.0),
             date: DateView::new(COL_WIDTH / 2.0),
             number: NumberView::new(COL_WIDTH / 2.0),
-            ..Default::default()
-        };
-        let cwd_path = match home::home_dir() {
-            Some(dir) => dir,
-            None => PathBuf::default(),
-        };
-        app.cwd_path = cwd_path.clone();
-        app.cwd = cwd_path.display().to_string();
-        app.file_list();
-        app
+        }
     }
+
     fn change_dir(&mut self) {
-        self.cwd_path = PathBuf::from(&self.cwd);
-        self.file_list();
+        self.files = DirectoryView::new(&self.cwd).unwrap();
     }
 
     fn up_one(&mut self) {
         if let Some(dir) = self.cwd_path.parent() {
             self.cwd_path = PathBuf::from(dir);
             self.cwd = self.cwd_path.display().to_string();
-            self.file_list();
+            self.files = DirectoryView::new(&self.cwd).unwrap();
         };
     }
 
-    fn file_list(&mut self) {
-        if let Ok(dir) = self.cwd_path.read_dir() {
-            let mut file_listing = Vec::new();
-            for file in dir.flatten() {
-                let name = file.path();
-                let extension = name
-                    .extension()
-                    .map(|ext| ext.to_string_lossy().to_string());
-                let renamed = File::try_from(&file.path());
-                let mut size = None;
-                let mut modified = None;
-                let mut created = None;
-                if let Ok(meta) = fs::metadata(file.path()) {
-                    #[cfg(windows)]
-                    if format!("{:?}", meta.file_type()).contains("attributes: 38") {
-                        continue; // Remove system hidden files (.blf, .regtrans-ms, etc)
-                    }
-                    if name.is_file() {
-                        size = Some(meta.len())
-                    };
-                    if let Ok(dt) = meta.modified() {
-                        modified = Some(dt.into());
-                    };
-                    if let Ok(dt) = meta.created() {
-                        created = Some(dt.into());
-                    };
-                }
-                if let Ok(renamed) = renamed {
-                    file_listing.push(FileListing {
-                        name,
-                        renamed,
-                        extension,
-                        size,
-                        modified,
-                        created,
-                        selected: false,
-                    });
-                }
-            }
-            file_listing.sort_unstable_by(|lhs, rhs| cmp(&lhs.name, &rhs.name));
-            self.files = file_listing;
-        }
-    }
+    // fn file_list(&mut self) {
+    //     if let Ok(dir) = self.cwd_path.read_dir() {
+    //         let mut file_listing = Vec::new();
+    //         for file in dir.flatten() {
+    //             let name = file.path();
+    //             let extension = name
+    //                 .extension()
+    //                 .map(|ext| ext.display());
+    //             let renamed = File::try_from(&file.path());
+    //             let mut size = None;
+    //             let mut modified = None;
+    //             let mut created = None;
+    //             if let Ok(meta) = fs::metadata(file.path()) {
+    //                 #[cfg(windows)]
+    //                 if format!("{:?}", meta.file_type()).contains("attributes: 38") {
+    //                     continue; // Remove system hidden files (.blf, .regtrans-ms, etc)
+    //                 }
+    //                 if name.is_file() {
+    //                     size = Some(meta.len())
+    //                 };
+    //                 if let Ok(dt) = meta.modified() {
+    //                     modified = Some(dt.into());
+    //                 };
+    //                 if let Ok(dt) = meta.created() {
+    //                     created = Some(dt.into());
+    //                 };
+    //             }
+    //             if let Ok(renamed) = renamed {
+    //                 file_listing.push(FileListing {
+    //                     name,
+    //                     renamed,
+    //                     extension,
+    //                     size,
+    //                     modified,
+    //                     created,
+    //                     selected: false,
+    //                 });
+    //             }
+    //         }
+    //         file_listing.sort_unstable_by(|lhs, rhs| cmp(&lhs.name, &rhs.name));
+    //         self.files = file_listing;
+    //     }
+    // }
 
     fn _process_selected(&mut self) {
-        for (_cnt, file) in self.files.iter().enumerate() {
-            if file.selected {
-                let mut _orig = &file.name;
-                let mut _renamed = &file.renamed;
-                // self.add.make_options().process(&mut renamed);
-            }
-        }
+        todo!()
+        // for (_cnt, (selected, _file)) in self.files.files().enumerate() {
+        // if *selected {
+        // let mut _orig = file.name;
+        // let mut _renamed = file.renamed;
+        // self.add.make_options().process(&mut renamed);
+        // }
+        // }
     }
 }
 
@@ -176,16 +161,13 @@ fn frame() -> Frame {
 }
 
 impl App for Renamer {
-    /// Called each time the UI needs repainting, which may be many times per second.
-    /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
-        // let Self { label, value } = self;
-
         TopBottomPanel::top("top_panel").show(ctx, |ui| {
+            // Menu bar.
             menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Quit").clicked() {
-                        _frame.close();
+                        ctx.send_viewport_cmd(ViewportCommand::Close)
                     }
                 });
             });
@@ -220,7 +202,6 @@ impl App for Renamer {
                     };
                 });
                 ui.horizontal(|ui| {
-                    // ui.with_layout(Layout::top_down_justified(Align::Center),
                     ui.vertical(|ui| {
                         frame().show(ui, |ui| ui.add(&mut self.reg_exp));
                         frame().show(ui, |ui| ui.add(&mut self.name));
@@ -240,19 +221,23 @@ impl App for Renamer {
                         });
                     });
                     ui.add_space(FRAME_MARGIN);
-                    frame().show(ui, |ui| {
-                        ScrollArea::vertical()
-                            .max_height(FILES_HEIGHT)
-                            .show(ui, |ui| {
-                                ui.add(FileView::new(
-                                    &mut self.files,
-                                    &mut self.columns,
-                                    FILES_WIDTH,
-                                ))
-                            });
-                    });
+                    frame().show(ui, |ui| ui.add(&mut self.files));
+                    // frame().show(ui, |ui| {
+                    //     ScrollArea::vertical().show(ui, |ui| {
+                    //         ui.vertical(|ui| {
+                    //             ui.add(FileView::new(
+                    //                 &mut self.files,
+                    //                 &mut self.columns,
+                    //                 FILES_WIDTH,
+                    //             ))
+                    //         });
+                    //     });
+                    // });
                 });
-            })
+            });
         });
+
+        // Set the window size
+        ctx.send_viewport_cmd(ViewportCommand::InnerSize(ctx.used_size()));
     }
 }

@@ -1,11 +1,9 @@
 use std::{ffi::OsStr, path::PathBuf};
 
 use thiserror::Error;
-pub mod directory;
 pub mod file;
 pub mod gui;
 
-pub use directory::Directory;
 pub use file::File;
 
 #[derive(Debug, Default)]
@@ -28,7 +26,7 @@ impl Selected {
 #[derive(Debug, Error)]
 pub enum RenamerError {
     #[error(transparent)]
-    Directory(#[from] directory::DirectoryError),
+    Directory(#[from] file::directory::DirectoryError),
     #[error(transparent)]
     Io(#[from] std::io::Error),
     #[error(transparent)]

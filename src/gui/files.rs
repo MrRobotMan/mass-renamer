@@ -1,11 +1,13 @@
 use std::{
     borrow::Cow,
     cmp::Ordering,
+    fmt::Display,
     path::{Path, PathBuf},
 };
 
 use chrono::{DateTime, Local};
 use egui::{Grid, Response, Ui, Widget};
+use strum::{EnumCount, EnumIter};
 
 use crate::File;
 
@@ -19,7 +21,7 @@ pub struct FileListing {
     pub selected: bool,
 }
 
-#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, EnumIter, EnumCount)]
 pub enum Columns {
     #[default]
     Name,
@@ -29,6 +31,20 @@ pub enum Columns {
     Created,
     Modified,
 }
+
+impl Display for Columns {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Columns::Name => "Name",
+            Columns::NewName => "New Name",
+            Columns::Extension => "Ext",
+            Columns::Size => "Type",
+            Columns::Created => "Created",
+            Columns::Modified => "Modified",
+        })
+    }
+}
+
 #[derive(Debug, Default)]
 pub enum Order {
     #[default]
@@ -85,6 +101,7 @@ impl<'a> FileView<'a> {
     }
 }
 
+// TODO: Change to table!
 impl<'a> Widget for FileView<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
         Grid::new("Files")

@@ -8,6 +8,7 @@ use std::{
 pub mod add;
 pub mod case;
 pub mod date;
+pub mod directory;
 pub mod extension;
 pub mod folder;
 pub mod name;
@@ -41,12 +42,40 @@ pub trait OptionBuilder {
     fn build(&self) -> Self::Processor;
 }
 
+/// Tool to rename a single file.
+/// Takes the `&path` and various options (processed in order) to return a `PathBuf`
+/// used to rename the file.
+/// Options are
+///    -  1 RegEx
+///    -  2 Name
+///    -  3 Replace
+///    -  4 Case
+///    -  5 Remove
+///    -  6 Add
+///    -  7 Auto Date
+///    -  8 Append Folder Name
+///    -  9 Numbering
+///    - 10 Extension
+///
+/// # Example
+///
+/// ```
+/// # use std::path::{Path, PathBuf};
+/// # use mass_renamer::file::{NameOptions, Case, CaseOptions, File, Process, Options};
+/// let file = Path::new("file.txt");
+/// let name = NameOptions::Fixed("new_name".into());
+/// let case = CaseOptions{case: Case::Upper, snake: false, exceptions: "n".into()};
+/// let mut rename = File::new(file).unwrap().with_option(Options::Name(name)).with_option(Options::Case(case));
+/// let new_name = rename.preview();
+/// assert_eq!(new_name, PathBuf::from("nEW_nAME.txt"));
+/// ```
 #[derive(Debug, Default)]
 pub struct File {
     stem: String,
+    renamed: String,
+    original: PathBuf,
     valid_original: bool,
     extension: Option<String>,
-    original: PathBuf,
     add: Option<AddOptions>,
     case: Option<CaseOptions>,
     date: Option<DateOptions>,
@@ -57,6 +86,7 @@ pub struct File {
     regex: Option<RegexOptions>,
     remove: Option<RemoveOptions>,
     replace: Option<RegexOptions>,
+    is_dir: bool,
 }
 
 impl File {
@@ -87,92 +117,7 @@ impl File {
             None => Err(FileError::BadStem),
         }
     }
-}
 
-impl TryFrom<&Path> for File {
-    type Error = FileError;
-
-    fn try_from(path: &Path) -> Result<Self, FileError> {
-        if !path.exists() {
-            return Err(FileError::NotExists);
-        }
-        let extension = {
-            generate_path_as_string(path.extension()).map(|e| match e {
-                PathString::Valid(s) => s,
-                PathString::Invalid(s) => s,
-            })
-        };
-        match generate_path_as_string(path.file_stem()) {
-            Some(stem) => {
-                let (stem, valid_original) = match stem {
-                    PathString::Valid(s) => (s, true),
-                    PathString::Invalid(s) => (s, false),
-                };
-                Ok(Self {
-                    stem,
-                    valid_original,
-                    extension,
-                    original: path.to_owned(),
-                    ..Default::default()
-                })
-            }
-            None => Err(FileError::BadStem),
-        }
-    }
-}
-
-impl TryFrom<PathBuf> for File {
-    type Error = FileError;
-
-    fn try_from(value: PathBuf) -> Result<Self, FileError> {
-        value.as_path().try_into()
-    }
-}
-
-impl TryFrom<&PathBuf> for File {
-    type Error = FileError;
-
-    fn try_from(value: &PathBuf) -> Result<Self, FileError> {
-        value.as_path().try_into()
-    }
-}
-impl From<&File> for WidgetText {
-    fn from(value: &File) -> Self {
-        Self::RichText(RichText::new(match &value.extension {
-            None => value.stem.clone(),
-            Some(ext) => format!("{}.{}", value.stem, ext),
-        }))
-    }
-}
-
-impl File {
-    /// Tool to rename a single file.
-    /// Takes the `&path` and various options (processed in order) to return a `PathBuf`
-    /// used to rename the file.
-    /// Options are
-    ///    -  1 RegEx
-    ///    -  2 Name
-    ///    -  3 Replace
-    ///    -  4 Case
-    ///    -  5 Remove
-    ///    -  6 Add
-    ///    -  7 Auto Date
-    ///    -  8 Append Folder Name
-    ///    -  9 Numbering
-    ///    - 10 Extension
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use std::path::{Path, PathBuf};
-    /// # use bulk_file_renamer::file::{NameOptions, Case, CaseOptions, File, Process, Options};
-    /// let file = Path::new("file.txt");
-    /// let name = NameOptions::Fixed("new_name".into());
-    /// let case = CaseOptions{case: Case::Upper, snake: false, exceptions: "n".into()};
-    /// let mut rename = File::new(file).unwrap().with_option(Options::Name(name)).with_option(Options::Case(case));
-    /// let new_name = rename.preview();
-    /// assert_eq!(new_name, PathBuf::from("nEW_nAME.txt"));
-    /// ```
     pub fn preview(&mut self) -> PathBuf {
         let mut opts: Vec<Box<dyn Process>> = vec![];
         if let Some(opt) = &self.regex {
@@ -213,10 +158,12 @@ impl File {
             Some(p) => PathBuf::from(p),
         };
         new_name.push(Path::new(&self.stem));
-        match &self.extension {
+        new_name = match &self.extension {
             None => new_name,
             Some(e) => new_name.with_extension(e),
-        }
+        };
+        self.renamed = new_name.to_str().unwrap_or("NON-UTF NAME").to_string();
+        new_name
     }
 
     /// Rename the file. Can not be undone.
@@ -250,7 +197,16 @@ impl File {
     }
 
     // Return the information on a file.
-    pub fn info(&self) -> (Filename, Extension, Size, DateModified, DateCreated) {
+    pub fn info(
+        &self,
+    ) -> (
+        Filename,
+        Filename,
+        Extension,
+        Size,
+        DateModified,
+        DateCreated,
+    ) {
         let mut size = None;
         let mut modified = None;
         let mut created = None;
@@ -267,6 +223,7 @@ impl File {
         };
         (
             &self.stem,
+            &self.renamed,
             self.extension.as_deref(),
             size,
             modified,
@@ -279,6 +236,65 @@ impl File {
         self.valid_original
     }
 }
+
+impl TryFrom<&Path> for File {
+    type Error = FileError;
+
+    fn try_from(path: &Path) -> Result<Self, FileError> {
+        if !path.exists() {
+            return Err(FileError::NotExists);
+        }
+        let extension = {
+            generate_path_as_string(path.extension()).map(|e| match e {
+                PathString::Valid(s) => s,
+                PathString::Invalid(s) => s,
+            })
+        };
+        match generate_path_as_string(path.file_stem()) {
+            Some(stem) => {
+                let (stem, valid_original) = match stem {
+                    PathString::Valid(s) => (s, true),
+                    PathString::Invalid(s) => (s, false),
+                };
+                Ok(Self {
+                    stem,
+                    valid_original,
+                    extension,
+                    original: path.to_owned(),
+                    is_dir: path.is_dir(),
+                    ..Default::default()
+                })
+            }
+            None => Err(FileError::BadStem),
+        }
+    }
+}
+
+impl TryFrom<PathBuf> for File {
+    type Error = FileError;
+
+    fn try_from(value: PathBuf) -> Result<Self, FileError> {
+        value.as_path().try_into()
+    }
+}
+
+impl TryFrom<&PathBuf> for File {
+    type Error = FileError;
+
+    fn try_from(value: &PathBuf) -> Result<Self, FileError> {
+        value.as_path().try_into()
+    }
+}
+impl From<&File> for WidgetText {
+    fn from(value: &File) -> Self {
+        Self::RichText(RichText::new(match &value.extension {
+            None => value.stem.clone(),
+            Some(ext) => format!("{}.{}", value.stem, ext),
+        }))
+    }
+}
+
+impl File {}
 
 pub type Filename<'a> = &'a str;
 pub type Extension<'a> = Option<&'a str>;
