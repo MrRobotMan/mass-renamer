@@ -1,4 +1,4 @@
-use crate::{file::FileError, File};
+use crate::file::{File, FileError};
 use chrono::{DateTime, Local};
 use egui::{Response, Sense, Ui, Widget};
 use egui_extras::{Column, TableBuilder};

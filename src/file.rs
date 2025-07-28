@@ -17,26 +17,26 @@ pub mod reg;
 pub mod remove;
 pub mod replace;
 
-use crate::{generate_path_as_string, PathString};
+use crate::app::{generate_path_as_string, PathString};
 use add::AddOptions;
-pub use case::{Case, CaseOptions};
+pub use case::CaseOptions;
 use chrono::{DateTime, Local};
-pub use date::{DateFormat, DateMode, DateOptions, DatePrefix, DateSuffix, DateType};
+pub use date::DateOptions;
 use egui::{RichText, WidgetText};
 pub use extension::ExtensionOptions;
-pub use folder::{FolderMode, FolderOptions};
+pub use folder::FolderOptions;
 pub use name::NameOptions;
-pub use number::{NumberFormat, NumberMode, NumberOptions};
+pub use number::NumberOptions;
 pub use reg::RegexOptions;
 pub use remove::RemoveOptions;
-pub use replace::ReplaceOptions;
 use thiserror::Error;
 
 pub trait Process {
     fn process(&self, file: &mut File);
 }
 
-pub trait OptionBuilder {
+#[allow(dead_code)]
+trait OptionBuilder {
     type Processor: Process;
 
     fn build(&self) -> Self::Processor;
