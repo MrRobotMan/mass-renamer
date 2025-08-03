@@ -175,7 +175,7 @@ pub enum DateSuffix {
 impl DateSuffix {
     fn get_format(&self, sep: &str) -> String {
         match self {
-            Self::Hm => format!("%H{sep}%M{sep}"),
+            Self::Hm => format!("%H{sep}%M"),
             Self::Hms => format!("%H{sep}%M{sep}%S"),
         }
     }
@@ -319,11 +319,11 @@ mod date_tests {
     #[test]
     fn suffix_date_created_no_separator() {
         crate::tester::run_test(&vec!["test file.txt"], || {
-            let date = format!("{}", chrono::Local::now().format("%d_%m_%y_%H_%M_%S"));
+            let date = format!("{}", chrono::Local::now().format("%d_%m_%y_%H_%M"));
             let mut file = File::new(Path::new("test file.txt")).unwrap();
             let date_mode = DateMode::Suffix;
             let date_type = DateType::Created;
-            let fmt = DateFormat::Std((DatePrefix::Dmy, Some(DateSuffix::Hms)));
+            let fmt = DateFormat::Std((DatePrefix::Dmy, Some(DateSuffix::Hm)));
             let custom_fmt = String::new();
             let sep = "".into();
             let seg = "_".into();
