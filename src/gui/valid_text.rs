@@ -66,7 +66,7 @@ impl<T: Copy + Display> ValText<T> {
         }
     }
 
-    pub fn get_prev(&self) -> Option<T> {
+    pub fn _get_prev(&self) -> Option<T> {
         self.prev
     }
 
@@ -81,7 +81,7 @@ impl<T: Display> ValText<T> {
         self.val = Some(val);
     }
 
-    pub fn clear(&mut self) {
+    pub fn _clear(&mut self) {
         self.text = String::new();
         self.val = None;
         self.prev = None;

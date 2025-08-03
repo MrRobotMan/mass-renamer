@@ -7,7 +7,7 @@ pub trait Incrementer {
 
 /// A set of increment decrement arrows stacked vertically.
 pub struct Arrows<'a, I: Incrementer> {
-    pub id: Id,
+    pub _id: Id,
     pub value: &'a mut I,
     pub field: &'a str,
 }
@@ -15,7 +15,7 @@ pub struct Arrows<'a, I: Incrementer> {
 impl<'a, I: Incrementer> Arrows<'a, I> {
     pub fn new(id: &str, value: &'a mut I, field: &'a str) -> Self {
         Self {
-            id: Id::new(id),
+            _id: Id::new(id),
             value,
             field,
         }

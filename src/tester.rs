@@ -1,15 +1,18 @@
 use std::{fs, panic};
-#[allow(unused_must_use)]
 pub(crate) fn run_test<T>(files: &Vec<&str>, test: T)
 where
     T: FnOnce() + panic::UnwindSafe,
 {
     for file in files {
-        fs::File::create(file);
+        if fs::File::create(file).is_err() {
+            return;
+        };
     }
     let result = panic::catch_unwind(test);
     for file in files {
-        fs::remove_file(file);
+        if fs::remove_file(file).is_err() {
+            println!("Could not delete {file:?}");
+        };
     }
     assert!(result.is_ok())
 }

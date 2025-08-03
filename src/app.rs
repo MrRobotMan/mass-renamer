@@ -1,7 +1,6 @@
 use std::{ffi::OsStr, path::PathBuf};
 
 use crate::file::{self, File};
-use iced;
 use thiserror::Error;
 
 #[derive(Debug, Default)]
@@ -14,7 +13,7 @@ impl Selected {
         self.selected.clear()
     }
 
-    pub fn add(&mut self, file: PathBuf) {
+    pub fn _add(&mut self, file: PathBuf) {
         if let Ok(file) = File::try_from(file.as_path()) {
             self.selected.push(file)
         }

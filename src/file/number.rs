@@ -61,9 +61,8 @@ impl NumberOptions {
             }
         };
         if self.pad > replace.len() {
-            let mut val = std::iter::repeat(self.char)
-                .take(self.pad - replace.len())
-                .collect::<String>();
+            let mut val =
+                std::iter::repeat_n(self.char, self.pad - replace.len()).collect::<String>();
             val.push_str(&replace);
             val
         } else {
