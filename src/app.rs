@@ -1,11 +1,11 @@
 use std::{ffi::OsStr, path::PathBuf};
 
-use crate::file::{self, File};
+use crate::renamer::{self, Renamer};
 use thiserror::Error;
 
 #[derive(Debug, Default)]
 pub struct Selected {
-    selected: Vec<File>,
+    selected: Vec<Renamer>,
 }
 
 impl Selected {
@@ -14,7 +14,7 @@ impl Selected {
     }
 
     pub fn _add(&mut self, file: PathBuf) {
-        if let Ok(file) = File::try_from(file.as_path()) {
+        if let Ok(file) = Renamer::try_from(file.as_path()) {
             self.selected.push(file)
         }
     }
@@ -23,7 +23,7 @@ impl Selected {
 #[derive(Debug, Error)]
 pub enum RenamerError {
     #[error(transparent)]
-    Directory(#[from] file::directory::DirectoryError),
+    Directory(#[from] renamer::directory::DirectoryError),
     #[error(transparent)]
     Io(#[from] std::io::Error),
     #[error(transparent)]

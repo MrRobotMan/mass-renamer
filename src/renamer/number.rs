@@ -2,7 +2,7 @@ use egui::{ComboBox, Response, TextEdit, Ui, Widget};
 
 use crate::gui::{Arrows, Incrementer, ValText, NUM_WIDTH};
 
-use super::{File, OptionBuilder, Process};
+use super::{OptionBuilder, Process, Renamer};
 use std::fmt::Write;
 
 /// Add sequential numbers to the file.
@@ -24,7 +24,7 @@ pub struct NumberOptions {
 }
 
 impl Process for NumberOptions {
-    fn process(&self, file: &mut File) {
+    fn process(&self, file: &mut Renamer) {
         let val = self.number_value();
         match self.mode {
             NumberMode::Prefix => file.stem.insert_str(0, &format!("{}{}", val, self.sep)),
@@ -339,8 +339,8 @@ mod numbering_test {
     #[test]
     fn prefix_decimal_with_padding() {
         let mut files = (0..10)
-            .map(|_| File::new(Path::new("TestFile.txt")).unwrap())
-            .collect::<Vec<File>>();
+            .map(|_| Renamer::new(Path::new("TestFile.txt")).unwrap())
+            .collect::<Vec<Renamer>>();
         let pad = 2;
         let char = '0';
         let sep = "--";
@@ -369,7 +369,7 @@ mod numbering_test {
 
     #[test]
     fn suffix_binary_no_padding() {
-        let mut file = File::new(Path::new("TestFile.txt")).unwrap();
+        let mut file = Renamer::new(Path::new("TestFile.txt")).unwrap();
         let format = NumberFormat::Binary;
         let value = 5;
         let pad = 0;
@@ -390,7 +390,7 @@ mod numbering_test {
 
     #[test]
     fn insert_asciiupper() {
-        let mut file = File::new(Path::new("TestFile.txt")).unwrap();
+        let mut file = Renamer::new(Path::new("TestFile.txt")).unwrap();
         let format = NumberFormat::AsciiUpper;
         let value = 50;
         let pad = 0;

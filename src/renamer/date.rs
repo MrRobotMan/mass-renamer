@@ -1,7 +1,7 @@
 use egui::{ComboBox, Response, TextEdit, Ui, Widget};
-use std::{error::Error, fmt::Write, path::Path, time::SystemTime};
+use std::{error::Error, path::Path, time::SystemTime};
 
-use super::{File, OptionBuilder, Process};
+use super::{OptionBuilder, Process, Renamer};
 use chrono::{DateTime, Local};
 
 /// Use the prefix or suffix `Mode` to modify the filename with a date format.
@@ -25,7 +25,7 @@ pub struct DateOptions {
 }
 
 impl Process for DateOptions {
-    fn process(&self, file: &mut File) {
+    fn process(&self, file: &mut Renamer) {
         if let Ok(datetime) = self.get_date(&file.original) {
             let format = match &self.fmt {
                 DateFormat::Std((prefix, suffix)) => {
@@ -43,8 +43,8 @@ impl Process for DateOptions {
                     .stem
                     .insert_str(0, &format!("{}{}", datetime.format(&format), self.sep)),
                 DateMode::Suffix => {
-                    write!(file.stem, "{}{}", self.sep, datetime.format(&format))
-                        .expect("Unexpected error appending to string.");
+                    file.stem
+                        .push_str(&format!("{}{}", self.sep, datetime.format(&format)));
                 }
                 DateMode::None => {}
             }
@@ -292,7 +292,7 @@ mod date_tests {
     #[test]
     fn prefix_date_modified_hyphen_separator_full_year() {
         run_test(&vec!["test file.txt"], || {
-            let mut file = File::new(Path::new("test file.txt")).unwrap();
+            let mut file = Renamer::new(Path::new("test file.txt")).unwrap();
             let date_mode = DateMode::Prefix;
             let date_type = DateType::Modified;
             let fmt = DateFormat::Std((DatePrefix::Dmy, None));
@@ -318,9 +318,8 @@ mod date_tests {
 
     #[test]
     fn suffix_date_created_no_separator() {
-        crate::tester::run_test(&vec!["test file.txt"], || {
-            let date = format!("{}", chrono::Local::now().format("%d_%m_%y_%H_%M"));
-            let mut file = File::new(Path::new("test file.txt")).unwrap();
+        run_test(&vec!["test file.txt"], || {
+            let mut file = Renamer::new(Path::new("test file.txt")).unwrap();
             let date_mode = DateMode::Suffix;
             let date_type = DateType::Created;
             let fmt = DateFormat::Std((DatePrefix::Dmy, Some(DateSuffix::Hm)));
@@ -337,8 +336,9 @@ mod date_tests {
                 seg,
                 full_year,
             };
-            let expected = format!("test file{date}");
             opt.process(&mut file);
+            let date = format!("{}", chrono::Local::now().format("%d_%m_%y_%H_%M"));
+            let expected = format!("test file{date}");
             assert_eq!(file.stem, expected);
         })
     }
@@ -346,7 +346,7 @@ mod date_tests {
     #[test]
     fn prefix_date_current_custom_format() {
         crate::tester::run_test(&vec!["test file.txt"], || {
-            let mut file = File::new(Path::new("test file.txt")).unwrap();
+            let mut file = Renamer::new(Path::new("test file.txt")).unwrap();
             let date_mode = DateMode::Prefix;
             let date_type = DateType::Current;
             let fmt = DateFormat::Custom;

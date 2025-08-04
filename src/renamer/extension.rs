@@ -1,4 +1,4 @@
-use super::{File, OptionBuilder, Process};
+use super::{Renamer, OptionBuilder, Process};
 use egui::{Response, Ui, Widget};
 use inflector::Inflector;
 use std::{fmt::Write, slice::Iter};
@@ -24,7 +24,7 @@ pub enum ExtensionOptions {
 }
 
 impl Process for ExtensionOptions {
-    fn process(&self, file: &mut File) {
+    fn process(&self, file: &mut Renamer) {
         match (self, &mut file.extension) {
             (ExtensionOptions::Lower, Some(ext)) => {
                 file.extension = Some(ext.to_lowercase());
@@ -124,7 +124,7 @@ mod extension_tests {
     use std::path::Path;
     #[test]
     fn test_keep_case() {
-        let mut file = File::new(Path::new("test file.txt")).unwrap();
+        let mut file = Renamer::new(Path::new("test file.txt")).unwrap();
         let opt = ExtensionOptions::Keep;
         opt.process(&mut file);
         assert_eq!(file.extension, Some(String::from("txt")));
@@ -132,7 +132,7 @@ mod extension_tests {
 
     #[test]
     fn test_lower_case() {
-        let mut file = File::new(Path::new("test file.TXT")).unwrap();
+        let mut file = Renamer::new(Path::new("test file.TXT")).unwrap();
         let opt = ExtensionOptions::Lower;
         opt.process(&mut file);
         assert_eq!(file.extension, Some(String::from("txt")));
@@ -140,7 +140,7 @@ mod extension_tests {
 
     #[test]
     fn test_upper_case() {
-        let mut file = File::new(Path::new("test file.txt")).unwrap();
+        let mut file = Renamer::new(Path::new("test file.txt")).unwrap();
         let opt = ExtensionOptions::Upper;
         opt.process(&mut file);
         assert_eq!(file.extension, Some(String::from("TXT")));
@@ -148,7 +148,7 @@ mod extension_tests {
 
     #[test]
     fn test_title_case() {
-        let mut file = File::new(Path::new("test file.txt")).unwrap();
+        let mut file = Renamer::new(Path::new("test file.txt")).unwrap();
         let opt = ExtensionOptions::Title;
         opt.process(&mut file);
         assert_eq!(file.extension, Some(String::from("Txt")));
@@ -156,7 +156,7 @@ mod extension_tests {
 
     #[test]
     fn test_new_case() {
-        let mut file = File::new(Path::new("test file.txt")).unwrap();
+        let mut file = Renamer::new(Path::new("test file.txt")).unwrap();
         let opt = ExtensionOptions::New("csv".into());
         opt.process(&mut file);
         assert_eq!(file.extension, Some(String::from("csv")));
@@ -164,7 +164,7 @@ mod extension_tests {
 
     #[test]
     fn test_extra_case_with_existing() {
-        let mut file = File::new(Path::new("test file.txt")).unwrap();
+        let mut file = Renamer::new(Path::new("test file.txt")).unwrap();
         let opt = ExtensionOptions::Extra("bak".into());
         opt.process(&mut file);
         assert_eq!(file.extension, Some(String::from("txt.bak")));
@@ -172,7 +172,7 @@ mod extension_tests {
 
     #[test]
     fn test_extra_case_without_existing() {
-        let mut file = File::new(Path::new("test file")).unwrap();
+        let mut file = Renamer::new(Path::new("test file")).unwrap();
         let opt = ExtensionOptions::Extra("bak".into());
         opt.process(&mut file);
         assert_eq!(file.extension, Some(String::from("bak")));
@@ -180,7 +180,7 @@ mod extension_tests {
 
     #[test]
     fn test_remove() {
-        let mut file = File::new(Path::new("test file")).unwrap();
+        let mut file = Renamer::new(Path::new("test file")).unwrap();
         let opt = ExtensionOptions::Remove;
         opt.process(&mut file);
         assert_eq!(file.extension, None);

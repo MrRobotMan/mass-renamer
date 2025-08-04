@@ -1,4 +1,4 @@
-use super::{File, OptionBuilder, Process};
+use super::{Renamer, OptionBuilder, Process};
 use crate::gui::{Arrows, Incrementer, ValText, NUM_WIDTH};
 use egui::{ComboBox, Response, TextEdit, Ui, Widget};
 use std::{
@@ -22,7 +22,7 @@ pub struct FolderOptions {
 }
 
 impl Process for FolderOptions {
-    fn process(&self, file: &mut File) {
+    fn process(&self, file: &mut Renamer) {
         let mut parts = file.original.components().rev();
         parts.next(); // Skip the file itself.
         let components: Vec<_> = parts
@@ -154,7 +154,7 @@ mod folder_tests {
 
     #[test]
     fn prefix_two_levels() {
-        let mut file = File::new(Path::new("/some/file/path/to/test file.txt")).unwrap();
+        let mut file = Renamer::new(Path::new("/some/file/path/to/test file.txt")).unwrap();
         let mode = FolderMode::Prefix;
         let sep = "~".into();
         let levels = 2;
@@ -165,7 +165,7 @@ mod folder_tests {
 
     #[test]
     fn suffix_negative_two_levels() {
-        let mut file = File::new(Path::new(r"\\?\c:\some\file\path\to\test file.txt")).unwrap();
+        let mut file = Renamer::new(Path::new(r"\\?\c:\some\file\path\to\test file.txt")).unwrap();
         let mode = FolderMode::Prefix;
         let sep = "~".into();
         let levels = -2;

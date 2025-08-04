@@ -5,13 +5,13 @@ where
 {
     for file in files {
         if fs::File::create(file).is_err() {
-            return;
+            print!("Could not create {file}");
         };
     }
     let result = panic::catch_unwind(test);
     for file in files {
         if fs::remove_file(file).is_err() {
-            println!("Could not delete {file:?}");
+            println!("Could not delete {file}");
         };
     }
     assert!(result.is_ok())

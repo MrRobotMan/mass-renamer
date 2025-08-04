@@ -1,6 +1,6 @@
 use egui::{Response, Ui, Widget};
 
-use super::{File, OptionBuilder, Process};
+use super::{Renamer, OptionBuilder, Process};
 use crate::gui::{Arrows, Incrementer, ValText};
 
 /// Add a fixed `Prefix` or`Suffix` to the filename,
@@ -17,7 +17,7 @@ pub struct AddOptions {
 }
 
 impl Process for AddOptions {
-    fn process(&self, file: &mut File) {
+    fn process(&self, file: &mut Renamer) {
         let file = &mut file.stem;
         if let Some(prefix) = &self.prefix {
             file.insert_str(0, prefix);
@@ -163,7 +163,7 @@ mod add_tests {
             suffix,
             word_space,
         };
-        let mut rename = File::new(file).unwrap();
+        let mut rename = Renamer::new(file).unwrap();
         opt.process(&mut rename);
         assert_eq!(
             rename.stem,
@@ -181,7 +181,7 @@ mod add_tests {
             suffix: None,
             word_space: false,
         };
-        let mut rename = File::new(file).unwrap();
+        let mut rename = Renamer::new(file).unwrap();
         opt.process(&mut rename);
         assert_eq!(rename.stem, "Some Test Fil!e".to_owned());
     }
@@ -196,7 +196,7 @@ mod add_tests {
             suffix: None,
             word_space: false,
         };
-        let mut rename = File::new(file).unwrap();
+        let mut rename = Renamer::new(file).unwrap();
         opt.process(&mut rename);
         assert_eq!(rename.stem, "Some Test File!".to_owned());
     }
@@ -211,7 +211,7 @@ mod add_tests {
             suffix: None,
             word_space: false,
         };
-        let mut rename = File::new(file).unwrap();
+        let mut rename = Renamer::new(file).unwrap();
         opt.process(&mut rename);
         assert_eq!(rename.stem, "!Some Test File".to_owned());
     }

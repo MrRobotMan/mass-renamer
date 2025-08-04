@@ -1,4 +1,4 @@
-use crate::file::{File, FileError};
+use crate::renamer::{Renamer, FileError};
 use chrono::{DateTime, Local};
 use egui::{Response, Sense, Ui, Widget};
 use egui_extras::{Column, TableBuilder};
@@ -13,7 +13,7 @@ use thiserror::Error;
 
 #[derive(Default)]
 pub struct Directory {
-    files: Vec<(File, bool)>, // file and if it's slated to be changed
+    files: Vec<(Renamer, bool)>, // file and if it's slated to be changed
 }
 
 impl Directory {

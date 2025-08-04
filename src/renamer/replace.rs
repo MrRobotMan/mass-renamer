@@ -1,4 +1,4 @@
-use super::{File, OptionBuilder, Process};
+use super::{Renamer, OptionBuilder, Process};
 use egui::{Response, Ui, Widget};
 
 /// Options for basic renaming rules.
@@ -13,7 +13,7 @@ pub struct ReplaceOptions {
 }
 
 impl Process for ReplaceOptions {
-    fn process(&self, file: &mut File) {
+    fn process(&self, file: &mut Renamer) {
         let file = &mut file.stem;
         if self.case {
             *file = file.replace(&self.replace, &self.with);
@@ -79,7 +79,7 @@ mod match_tests {
     fn no_matching_text_case_sensitive() {
         let replace = "ABC".into();
         let with = "123".into();
-        let mut file = File::new(Path::new("fileabc")).unwrap();
+        let mut file = Renamer::new(Path::new("fileabc")).unwrap();
         let case = true;
         let opt = ReplaceOptions {
             replace,
@@ -93,7 +93,7 @@ mod match_tests {
     fn no_matching_text_case_insensitive() {
         let replace = "qrs".into();
         let with = "123".into();
-        let mut file = File::new(Path::new("fileabc")).unwrap();
+        let mut file = Renamer::new(Path::new("fileabc")).unwrap();
         let case = false;
         let opt = ReplaceOptions {
             replace,
@@ -107,7 +107,7 @@ mod match_tests {
     fn matched_case_sensitive() {
         let replace = "abc".into();
         let with = "123".into();
-        let mut file = File::new(Path::new("fileabc")).unwrap();
+        let mut file = Renamer::new(Path::new("fileabc")).unwrap();
         let case = true;
         let opt = ReplaceOptions {
             replace,
@@ -121,7 +121,7 @@ mod match_tests {
     fn matched_case_insensitive() {
         let replace = "ABC".into();
         let with = "123".into();
-        let mut file = File::new(Path::new("fileabc")).unwrap();
+        let mut file = Renamer::new(Path::new("fileabc")).unwrap();
         let case = false;
         let opt = ReplaceOptions {
             replace,

@@ -1,4 +1,4 @@
-use super::{File, OptionBuilder, Process};
+use super::{Renamer, OptionBuilder, Process};
 use regex::Regex;
 
 use egui::{Response, Ui, Widget};
@@ -14,7 +14,7 @@ pub struct RegexOptions {
 }
 
 impl Process for RegexOptions {
-    fn process(&self, file: &mut File) {
+    fn process(&self, file: &mut Renamer) {
         if let Ok(exp) = Regex::new(&self.exp) {
             match (self.extension, &file.extension) {
                 (false, _) | (_, None) => {
@@ -94,7 +94,7 @@ mod regex_tests {
             rep,
             extension: true,
         };
-        let mut rename = File::new(file).unwrap();
+        let mut rename = Renamer::new(file).unwrap();
         opt.process(&mut rename);
         assert_eq!(
             (rename.stem, rename.extension),
@@ -111,7 +111,7 @@ mod regex_tests {
             rep,
             extension: false,
         };
-        let mut rename = File::new(file).unwrap();
+        let mut rename = Renamer::new(file).unwrap();
         opt.process(&mut rename);
         assert_eq!(
             (rename.stem, rename.extension),
@@ -128,7 +128,7 @@ mod regex_tests {
             rep,
             extension: false,
         };
-        let mut rename = File::new(file).unwrap();
+        let mut rename = Renamer::new(file).unwrap();
         opt.process(&mut rename);
         assert_eq!(
             (rename.stem, rename.extension),

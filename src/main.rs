@@ -1,9 +1,4 @@
-mod app;
-mod file;
-mod gui;
-use file::directory::get_initial_directory;
-#[cfg(test)]
-mod tester;
+use mass_renamer::{app, get_initial_directory, gui};
 
 fn main() -> Result<(), app::RenamerError> {
     let _initial = get_initial_directory(std::env::args().nth(1))?;

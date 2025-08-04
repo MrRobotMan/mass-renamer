@@ -1,4 +1,4 @@
-use super::{File, OptionBuilder, Process};
+use super::{OptionBuilder, Process, Renamer};
 use crate::gui::{Arrows, Incrementer, ValText, NUM_WIDTH};
 use egui::{ComboBox, Response, TextEdit, Ui, Widget};
 
@@ -21,8 +21,8 @@ use egui::{ComboBox, Response, TextEdit, Ui, Widget};
 ///
 /// Note: When you use the `words` option, you have the ability of specifying a special
 /// value using the wildcard (*). This will remove the specified string, and any
-/// characters occupied by the wildcard. So for example, specifying [*] would convert
-/// "Hello[ABC] Joe" to just "Hello Joe", as it has removed the two square brackets and
+/// characters occupied by the wildcard. So for example, specifying \[*\] would convert
+/// "Hello\[ABC\] Joe" to just "Hello Joe", as it has removed the two square brackets and
 /// everything between. The wildcard can not be at the start or end of the word.
 /// For that case use crop.
 #[derive(Debug, Clone)]
@@ -63,7 +63,7 @@ impl Default for RemoveOptions {
 }
 
 impl Process for RemoveOptions {
-    fn process(&self, file: &mut File) {
+    fn process(&self, file: &mut Renamer) {
         let file = &mut file.stem;
         if self.first_n + self.last_n > 0 {
             self.first_last(file)
@@ -353,7 +353,7 @@ mod remove_tests {
         let chars = false;
         let symbols = true;
         let lead_dots = false;
-        let mut file = File::new(Path::new("some test file  1234withÃ!  testing")).unwrap();
+        let mut file = Renamer::new(Path::new("some test file  1234withÃ!  testing")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -388,7 +388,7 @@ mod remove_tests {
         let chars = false;
         let symbols = false;
         let lead_dots = false;
-        let mut file = File::new(Path::new("test_file")).unwrap();
+        let mut file = Renamer::new(Path::new("test_file")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -423,7 +423,7 @@ mod remove_tests {
         let chars = false;
         let symbols = false;
         let lead_dots = false;
-        let mut file = File::new(Path::new("test_file")).unwrap();
+        let mut file = Renamer::new(Path::new("test_file")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -458,7 +458,7 @@ mod remove_tests {
         let chars = false;
         let symbols = false;
         let lead_dots = true;
-        let mut file = File::new(Path::new("file to test")).unwrap();
+        let mut file = Renamer::new(Path::new("file to test")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -493,7 +493,7 @@ mod remove_tests {
         let chars = true;
         let symbols = false;
         let lead_dots = true;
-        let mut file = File::new(Path::new("./.file123")).unwrap();
+        let mut file = Renamer::new(Path::new("./.file123")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,
@@ -528,7 +528,7 @@ mod remove_tests {
         let chars = false;
         let symbols = false;
         let lead_dots = true;
-        let mut file = File::new(Path::new(".file123")).unwrap();
+        let mut file = Renamer::new(Path::new(".file123")).unwrap();
         let opt = RemoveOptions {
             first_n,
             last_n,

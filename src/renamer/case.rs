@@ -1,4 +1,4 @@
-use super::{File, OptionBuilder, Process};
+use super::{Renamer, OptionBuilder, Process};
 use egui::{ComboBox, Response, Ui, Widget};
 use inflector::Inflector;
 
@@ -52,7 +52,7 @@ impl Case {
 }
 
 impl Process for CaseOptions {
-    fn process(&self, file: &mut File) {
+    fn process(&self, file: &mut Renamer) {
         match self.case {
             Case::Keep => (),
             Case::Lower => {
@@ -138,7 +138,7 @@ mod case_tests {
     use std::path::Path;
     #[test]
     fn test_keep_case() {
-        let mut file = File::new(Path::new("test file")).unwrap();
+        let mut file = Renamer::new(Path::new("test file")).unwrap();
         let opt = CaseOptions {
             case: Case::Keep,
             snake: false,
@@ -150,7 +150,7 @@ mod case_tests {
 
     #[test]
     fn test_keep_case_snake() {
-        let mut file = File::new(Path::new("test file")).unwrap();
+        let mut file = Renamer::new(Path::new("test file")).unwrap();
         let opt = CaseOptions {
             case: Case::Keep,
             snake: true,
@@ -162,7 +162,7 @@ mod case_tests {
 
     #[test]
     fn test_lower_case() {
-        let mut file = File::new(Path::new("TEST FILE")).unwrap();
+        let mut file = Renamer::new(Path::new("TEST FILE")).unwrap();
         let opt = CaseOptions {
             case: Case::Lower,
             snake: false,
@@ -174,7 +174,7 @@ mod case_tests {
 
     #[test]
     fn test_lower_case_snake() {
-        let mut file = File::new(Path::new("TEST FILE")).unwrap();
+        let mut file = Renamer::new(Path::new("TEST FILE")).unwrap();
         let opt = CaseOptions {
             case: Case::Lower,
             snake: true,
@@ -186,7 +186,7 @@ mod case_tests {
 
     #[test]
     fn test_upper_case() {
-        let mut file = File::new(Path::new("test file")).unwrap();
+        let mut file = Renamer::new(Path::new("test file")).unwrap();
         let opt = CaseOptions {
             case: Case::Upper,
             snake: false,
@@ -198,7 +198,7 @@ mod case_tests {
 
     #[test]
     fn test_upper_case_snake() {
-        let mut file = File::new(Path::new("test file")).unwrap();
+        let mut file = Renamer::new(Path::new("test file")).unwrap();
         let opt = CaseOptions {
             case: Case::Upper,
             snake: true,
@@ -210,7 +210,7 @@ mod case_tests {
 
     #[test]
     fn test_title_case() {
-        let mut file = File::new(Path::new("test file")).unwrap();
+        let mut file = Renamer::new(Path::new("test file")).unwrap();
         let opt = CaseOptions {
             case: Case::Title,
             snake: false,
@@ -222,7 +222,7 @@ mod case_tests {
 
     #[test]
     fn test_title_case_snake() {
-        let mut file = File::new(Path::new("test file")).unwrap();
+        let mut file = Renamer::new(Path::new("test file")).unwrap();
         let opt = CaseOptions {
             case: Case::Title,
             snake: true,
@@ -234,7 +234,7 @@ mod case_tests {
 
     #[test]
     fn test_sentence_case() {
-        let mut file = File::new(Path::new("test file")).unwrap();
+        let mut file = Renamer::new(Path::new("test file")).unwrap();
         let opt = CaseOptions {
             case: Case::Sentence,
             snake: false,
@@ -246,7 +246,7 @@ mod case_tests {
 
     #[test]
     fn test_sentence_case_snake() {
-        let mut file = File::new(Path::new("test file")).unwrap();
+        let mut file = Renamer::new(Path::new("test file")).unwrap();
         let opt = CaseOptions {
             case: Case::Sentence,
             snake: true,
@@ -259,8 +259,8 @@ mod case_tests {
     #[test]
     fn test_exceptions_with_upper() {
         let mut files = (
-            File::new(Path::new("test file.doc.bak")).unwrap(),
-            File::new(Path::new("test file.pdf.bak")).unwrap(),
+            Renamer::new(Path::new("test file.doc.bak")).unwrap(),
+            Renamer::new(Path::new("test file.pdf.bak")).unwrap(),
         );
         let opt = CaseOptions {
             case: Case::Upper,

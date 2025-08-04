@@ -9,7 +9,7 @@ use eframe::{
 };
 use egui::ViewportCommand;
 
-use crate::file::{
+use crate::renamer::{
     add::AddView, case::CaseView, date::DateView, directory::DirectoryView,
     extension::ExtensionView, folder::FolderView, name::NameView, number::NumberView,
     reg::RegexView, remove::RemoveView, replace::ReplaceView,

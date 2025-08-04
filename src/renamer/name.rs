@@ -1,6 +1,6 @@
 use std::slice::Iter;
 
-use super::{File, OptionBuilder, Process};
+use super::{OptionBuilder, Process, Renamer};
 use egui::{Response, RichText, Ui, Widget, WidgetText};
 
 /// Select from.
@@ -18,7 +18,7 @@ pub enum NameOptions {
 }
 
 impl Process for NameOptions {
-    fn process(&self, file: &mut File) {
+    fn process(&self, file: &mut Renamer) {
         match self {
             NameOptions::Keep => (),
             NameOptions::Remove => file.stem = "".to_owned(),
@@ -101,21 +101,21 @@ mod name_tests {
     use std::path::Path;
     #[test]
     fn keep_name() {
-        let mut file = File::new(Path::new("file")).unwrap();
+        let mut file = Renamer::new(Path::new("file")).unwrap();
         let opt = NameOptions::Keep;
         opt.process(&mut file);
         assert_eq!(&file.stem, "file");
     }
     #[test]
     fn remove_name() {
-        let mut file = File::new(Path::new("file")).unwrap();
+        let mut file = Renamer::new(Path::new("file")).unwrap();
         let opt = NameOptions::Remove;
         opt.process(&mut file);
         assert_eq!(&file.stem, "");
     }
     #[test]
     fn fixed_name() {
-        let mut file = File::new(Path::new("file")).unwrap();
+        let mut file = Renamer::new(Path::new("file")).unwrap();
         let new_name = "renamed_file";
         let opt = NameOptions::Fixed(String::from(new_name));
         opt.process(&mut file);
@@ -123,7 +123,7 @@ mod name_tests {
     }
     #[test]
     fn reverse_name() {
-        let mut file = File::new(Path::new("file")).unwrap();
+        let mut file = Renamer::new(Path::new("file")).unwrap();
         let opt = NameOptions::Reverse;
         opt.process(&mut file);
         assert_eq!(&file.stem, "elif");

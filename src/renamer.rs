@@ -19,7 +19,7 @@ pub mod replace;
 
 use crate::app::{generate_path_as_string, PathString};
 use add::AddOptions;
-pub use case::CaseOptions;
+pub use case::{Case, CaseOptions};
 use chrono::{DateTime, Local};
 pub use date::DateOptions;
 use egui::{RichText, WidgetText};
@@ -32,7 +32,7 @@ pub use remove::RemoveOptions;
 use thiserror::Error;
 
 pub trait Process {
-    fn process(&self, file: &mut File);
+    fn process(&self, file: &mut Renamer);
 }
 
 #[allow(dead_code)]
@@ -61,16 +61,16 @@ trait OptionBuilder {
 ///
 /// ```
 /// # use std::path::{Path, PathBuf};
-/// # use mass_renamer::file::{NameOptions, Case, CaseOptions, File, Process, Options};
+/// # use mass_renamer::renamer::{NameOptions, Case, CaseOptions, Renamer, Process, Options};
 /// let file = Path::new("file.txt");
 /// let name = NameOptions::Fixed("new_name".into());
 /// let case = CaseOptions{case: Case::Upper, snake: false, exceptions: "n".into()};
-/// let mut rename = File::new(file).unwrap().with_option(Options::Name(name)).with_option(Options::Case(case));
+/// let mut rename = Renamer::new(file).unwrap().with_option(Options::Name(name)).with_option(Options::Case(case));
 /// let new_name = rename.preview();
 /// assert_eq!(new_name, PathBuf::from("nEW_nAME.txt"));
 /// ```
 #[derive(Debug, Default)]
-pub struct File {
+pub struct Renamer {
     stem: String,
     renamed: String,
     original: PathBuf,
@@ -89,10 +89,10 @@ pub struct File {
     is_dir: bool,
 }
 
-impl File {
+impl Renamer {
     /// Create a new File object from a Path.
     /// No checking is performed to validate that the Path exists or is a file.
-    /// To perform this check use [File::try_from<&Path>], [File::try_from<&PathBuf>], or [File::try_from<PathBuf>]
+    /// To perform this check use [Renamer::try_from<&Path>], [Renamer::try_from<&PathBuf>], or `[Renamer::try_from<PathBuf>]`
     pub fn new(path: &Path) -> Result<Self, FileError> {
         let extension = {
             generate_path_as_string(path.extension()).map(|e| match e {
@@ -175,7 +175,7 @@ impl File {
 
     /// Revert the previewed changes to a file.
     pub fn revert(&mut self) {
-        let temp: &File = &self.original.clone().try_into().unwrap();
+        let temp: &Renamer = &self.original.clone().try_into().unwrap();
         self.stem = temp.stem.clone();
         self.extension = temp.extension.clone();
     }
@@ -237,7 +237,7 @@ impl File {
     }
 }
 
-impl TryFrom<&Path> for File {
+impl TryFrom<&Path> for Renamer {
     type Error = FileError;
 
     fn try_from(path: &Path) -> Result<Self, FileError> {
@@ -270,7 +270,7 @@ impl TryFrom<&Path> for File {
     }
 }
 
-impl TryFrom<PathBuf> for File {
+impl TryFrom<PathBuf> for Renamer {
     type Error = FileError;
 
     fn try_from(value: PathBuf) -> Result<Self, FileError> {
@@ -278,15 +278,15 @@ impl TryFrom<PathBuf> for File {
     }
 }
 
-impl TryFrom<&PathBuf> for File {
+impl TryFrom<&PathBuf> for Renamer {
     type Error = FileError;
 
     fn try_from(value: &PathBuf) -> Result<Self, FileError> {
         value.as_path().try_into()
     }
 }
-impl From<&File> for WidgetText {
-    fn from(value: &File) -> Self {
+impl From<&Renamer> for WidgetText {
+    fn from(value: &Renamer) -> Self {
         Self::RichText(RichText::new(match &value.extension {
             None => value.stem.clone(),
             Some(ext) => format!("{}.{}", value.stem, ext),
@@ -294,7 +294,7 @@ impl From<&File> for WidgetText {
     }
 }
 
-impl File {}
+impl Renamer {}
 
 pub type Filename<'a> = &'a str;
 pub type Extension<'a> = Option<&'a str>;
@@ -325,7 +325,7 @@ pub enum Options {
     Extension(ExtensionOptions),
 }
 
-impl Ord for File {
+impl Ord for Renamer {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self.original.is_dir(), other.original.is_dir()) {
             (true, true) => self.stem.cmp(&other.stem),
@@ -355,15 +355,15 @@ impl Ord for File {
     }
 }
 
-impl PartialEq for File {
+impl PartialEq for Renamer {
     fn eq(&self, other: &Self) -> bool {
         self.original == other.original
     }
 }
 
-impl Eq for File {}
+impl Eq for Renamer {}
 
-impl PartialOrd for File {
+impl PartialOrd for Renamer {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
@@ -382,7 +382,7 @@ mod file_tests {
             rep: "ABC".into(),
             extension: false,
         };
-        let mut rename = File::new(file).unwrap().with_option(Options::Regex(opt));
+        let mut rename = Renamer::new(file).unwrap().with_option(Options::Regex(opt));
         let result = rename.preview();
         assert_eq!(result, expected)
     }
@@ -392,7 +392,7 @@ mod file_tests {
         let file = Path::new("file.txt");
         let expected = PathBuf::from("new_name.txt");
         let name = NameOptions::Fixed("new_name".into());
-        let mut rename = File::new(file).unwrap().with_option(Options::Name(name));
+        let mut rename = Renamer::new(file).unwrap().with_option(Options::Name(name));
         let new_name = rename.preview();
         assert_eq!(new_name, expected)
     }
