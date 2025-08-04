@@ -9,10 +9,13 @@ use eframe::{
 };
 use egui::ViewportCommand;
 
-use crate::renamer::{
-    add::AddView, case::CaseView, date::DateView, directory::DirectoryView,
-    extension::ExtensionView, folder::FolderView, name::NameView, number::NumberView,
-    reg::RegexView, remove::RemoveView, replace::ReplaceView,
+use crate::{
+    renamer::{
+        add::AddView, case::CaseView, date::DateView, extension::ExtensionView, folder::FolderView,
+        name::NameView, number::NumberView, reg::RegexView, remove::RemoveView,
+        replace::ReplaceView,
+    },
+    DirectoryView,
 };
 
 mod increment_decrement;

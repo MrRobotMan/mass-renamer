@@ -1,4 +1,4 @@
-use super::{Renamer, OptionBuilder, Process};
+use super::{OptionBuilder, Process, Renamer};
 use regex::Regex;
 
 use egui::{Response, Ui, Widget};

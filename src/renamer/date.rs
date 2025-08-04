@@ -15,13 +15,12 @@ use chrono::{DateTime, Local};
 /// [chrono::format::strftime](https://docs.rs/chrono/0.4.31/chrono/format/strftime/index.html) specifiers.
 #[derive(Default, Debug, Clone)]
 pub struct DateOptions {
-    date_mode: DateMode,
-    date_type: DateType,
-    fmt: DateFormat,
-    custom_fmt: String,
-    sep: String,
-    seg: String,
-    full_year: bool,
+    pub(super) date_mode: DateMode,
+    pub(super) date_type: DateType,
+    pub(super) fmt: DateFormat,
+    pub(super) sep: String,
+    pub(super) seg: String,
+    pub(super) full_year: bool,
 }
 
 impl Process for DateOptions {
@@ -36,7 +35,7 @@ impl Process for DateOptions {
                     }
                     fmt
                 }
-                DateFormat::Custom => self.custom_fmt.clone(),
+                DateFormat::Custom(fmt) => fmt.clone(),
             };
             match self.date_mode {
                 DateMode::Prefix => file
@@ -94,10 +93,10 @@ pub enum DateType {
 /// Select from
 /// - `DateFormat::Std(DatePrefix, Option<DateSuffix>)` to use the standard options
 /// - `DateFormat::Custom` to use a custom `strftime` format
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DateFormat {
     Std((DatePrefix, Option<DateSuffix>)),
-    Custom,
+    Custom(String),
 }
 
 impl Default for DateFormat {
@@ -118,27 +117,27 @@ impl DateFormat {
             Self::Std((DatePrefix::Dmy, Some(DateSuffix::Hms))) => "DMY HMS",
             Self::Std((DatePrefix::Mdy, Some(DateSuffix::Hms))) => "MDY HMS",
             Self::Std((DatePrefix::Ymd, Some(DateSuffix::Hms))) => "YMD HMS",
-            Self::Custom => "Custom",
+            Self::Custom(fmt) => fmt,
         }
     }
 
     fn iter() -> impl Iterator<Item = DateFormat> {
-        [
-            Self::Std((DatePrefix::Dmy, None)),
-            Self::Std((DatePrefix::Mdy, None)),
-            Self::Std((DatePrefix::Ymd, None)),
-            Self::Std((DatePrefix::Dmy, Some(DateSuffix::Hm))),
-            Self::Std((DatePrefix::Mdy, Some(DateSuffix::Hm))),
-            Self::Std((DatePrefix::Ymd, Some(DateSuffix::Hm))),
-            Self::Std((DatePrefix::Dmy, Some(DateSuffix::Hms))),
-            Self::Std((DatePrefix::Mdy, Some(DateSuffix::Hms))),
-            Self::Std((DatePrefix::Ymd, Some(DateSuffix::Hms))),
-            Self::Custom,
-        ]
-        .iter()
-        .copied()
+        OPTIONS.iter().cloned()
     }
 }
+
+static OPTIONS: [DateFormat; 10] = [
+    DateFormat::Std((DatePrefix::Dmy, None)),
+    DateFormat::Std((DatePrefix::Mdy, None)),
+    DateFormat::Std((DatePrefix::Ymd, None)),
+    DateFormat::Std((DatePrefix::Dmy, Some(DateSuffix::Hm))),
+    DateFormat::Std((DatePrefix::Mdy, Some(DateSuffix::Hm))),
+    DateFormat::Std((DatePrefix::Ymd, Some(DateSuffix::Hm))),
+    DateFormat::Std((DatePrefix::Dmy, Some(DateSuffix::Hms))),
+    DateFormat::Std((DatePrefix::Mdy, Some(DateSuffix::Hms))),
+    DateFormat::Std((DatePrefix::Ymd, Some(DateSuffix::Hms))),
+    DateFormat::Custom(String::new()),
+];
 
 /// Select from
 /// - `DatePrefix::DMY` for Day Month Year
@@ -184,6 +183,7 @@ impl DateSuffix {
 #[derive(Default)]
 pub struct DateView {
     data: DateOptions,
+    custom_fmt: String,
     width: f32,
 }
 
@@ -250,24 +250,24 @@ impl Widget for &mut DateView {
                     .selected_text(self.data.fmt.format())
                     .show_ui(ui, |ui| {
                         for opt in DateFormat::iter() {
-                            ui.selectable_value(&mut self.data.fmt, opt, opt.format());
+                            ui.selectable_value(&mut self.data.fmt, opt.clone(), opt.format());
                         }
                     })
                     .response
                     .changed()
-                    && self.data.fmt != DateFormat::Custom
+                    && !matches!(self.data.fmt, DateFormat::Custom(_))
                 {
-                    self.data.custom_fmt = String::new();
+                    self.custom_fmt = String::new();
                 };
             });
 
             ui.horizontal(|ui| {
                 ui.set_width(self.width);
                 ui.label("Custom");
-                if ui.text_edit_singleline(&mut self.data.custom_fmt).changed()
-                    && !self.data.custom_fmt.is_empty()
+                if ui.text_edit_singleline(&mut self.custom_fmt).changed()
+                    && !self.custom_fmt.is_empty()
                 {
-                    self.data.fmt = DateFormat::Custom;
+                    self.data.fmt = DateFormat::Custom(self.custom_fmt.clone());
                 };
             });
             ui.horizontal(|ui| {
@@ -296,7 +296,6 @@ mod date_tests {
             let date_mode = DateMode::Prefix;
             let date_type = DateType::Modified;
             let fmt = DateFormat::Std((DatePrefix::Dmy, None));
-            let custom_fmt = String::new();
             let sep = "-".into();
             let seg = "_".into();
             let full_year = true;
@@ -304,7 +303,6 @@ mod date_tests {
                 date_mode,
                 date_type,
                 fmt,
-                custom_fmt,
                 sep,
                 seg,
                 full_year,
@@ -323,7 +321,6 @@ mod date_tests {
             let date_mode = DateMode::Suffix;
             let date_type = DateType::Created;
             let fmt = DateFormat::Std((DatePrefix::Dmy, Some(DateSuffix::Hm)));
-            let custom_fmt = String::new();
             let sep = "".into();
             let seg = "_".into();
             let full_year = false;
@@ -331,7 +328,6 @@ mod date_tests {
                 date_mode,
                 date_type,
                 fmt,
-                custom_fmt,
                 sep,
                 seg,
                 full_year,
@@ -349,8 +345,7 @@ mod date_tests {
             let mut file = Renamer::new(Path::new("test file.txt")).unwrap();
             let date_mode = DateMode::Prefix;
             let date_type = DateType::Current;
-            let fmt = DateFormat::Custom;
-            let custom_fmt = String::from("%v++");
+            let fmt = DateFormat::Custom(String::from("%v++"));
             let sep = "~".into();
             let seg = "_".into();
             let full_year = true;
@@ -358,7 +353,6 @@ mod date_tests {
                 date_mode,
                 date_type,
                 fmt,
-                custom_fmt,
                 sep,
                 seg,
                 full_year,

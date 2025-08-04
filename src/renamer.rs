@@ -8,13 +8,13 @@ use std::{
 pub mod add;
 pub mod case;
 pub mod date;
-pub mod directory;
 pub mod extension;
 pub mod folder;
 pub mod name;
 pub mod number;
 pub mod reg;
 pub mod remove;
+pub mod renamer_builder;
 pub mod replace;
 
 use crate::app::{generate_path_as_string, PathString};
@@ -72,10 +72,10 @@ trait OptionBuilder {
 #[derive(Debug, Default)]
 pub struct Renamer {
     stem: String,
-    renamed: String,
-    original: PathBuf,
+    pub(crate) renamed: String,
+    pub(crate) original: PathBuf,
     valid_original: bool,
-    extension: Option<String>,
+    pub(crate) extension: Option<String>,
     add: Option<AddOptions>,
     case: Option<CaseOptions>,
     date: Option<DateOptions>,
@@ -86,7 +86,7 @@ pub struct Renamer {
     regex: Option<RegexOptions>,
     remove: Option<RemoveOptions>,
     replace: Option<RegexOptions>,
-    is_dir: bool,
+    pub(crate) is_dir: bool,
 }
 
 impl Renamer {

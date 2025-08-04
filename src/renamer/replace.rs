@@ -1,4 +1,4 @@
-use super::{Renamer, OptionBuilder, Process};
+use super::{OptionBuilder, Process, Renamer};
 use egui::{Response, Ui, Widget};
 
 /// Options for basic renaming rules.

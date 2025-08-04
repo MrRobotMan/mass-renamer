@@ -1,6 +1,6 @@
 use std::{ffi::OsStr, path::PathBuf};
 
-use crate::renamer::{self, Renamer};
+use crate::renamer::Renamer;
 use thiserror::Error;
 
 #[derive(Debug, Default)]
@@ -23,7 +23,7 @@ impl Selected {
 #[derive(Debug, Error)]
 pub enum RenamerError {
     #[error(transparent)]
-    Directory(#[from] renamer::directory::DirectoryError),
+    Directory(#[from] crate::DirectoryError),
     #[error(transparent)]
     Io(#[from] std::io::Error),
     #[error(transparent)]

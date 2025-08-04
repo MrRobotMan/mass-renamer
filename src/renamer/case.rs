@@ -1,4 +1,4 @@
-use super::{Renamer, OptionBuilder, Process};
+use super::{OptionBuilder, Process, Renamer};
 use egui::{ComboBox, Response, Ui, Widget};
 use inflector::Inflector;
 

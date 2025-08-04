@@ -1,7 +1,7 @@
-pub mod gui;
-
 pub mod app;
+mod directory;
+pub mod gui;
 pub mod renamer;
-pub use renamer::directory::get_initial_directory;
+pub use directory::*;
 #[cfg(test)]
 mod tester;
