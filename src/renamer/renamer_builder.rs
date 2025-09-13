@@ -7,6 +7,18 @@ pub struct RenamerBuilder {
 }
 
 impl RenamerBuilder {
+    pub fn new_unchecked(path: &Path) -> Self {
+        Self {
+            renamer: Renamer::new(path).unwrap(),
+        }
+    }
+
+    pub fn new(path: &Path) -> Result<Self, FileError> {
+        Ok(Self {
+            renamer: Renamer::new(path)?,
+        })
+    }
+
     pub fn build(self) -> Renamer {
         self.renamer
     }

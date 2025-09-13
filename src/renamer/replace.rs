@@ -18,14 +18,13 @@ impl Process for ReplaceOptions {
         if self.case_sensative {
             *file = file.replace(&self.replace, &self.with);
         } else {
-            let start = file.to_lowercase().find(&self.replace.to_lowercase());
-            let span = self.replace.len();
-            if let Some(idx) = start {
-                for _ in idx..(idx + span) {
-                    file.remove(idx);
+            while let Some(start) = file.to_lowercase().find(&self.replace.to_lowercase()) {
+                let span = self.replace.len();
+                for _ in start..(start + span) {
+                    file.remove(start);
                 }
-                file.insert_str(idx, &self.with);
-            };
+                file.insert_str(start, &self.with);
+            }
         }
     }
 }
@@ -75,20 +74,22 @@ impl Widget for &mut ReplaceView {
 mod match_tests {
     use super::*;
     use std::path::Path;
+
     #[test]
     fn no_matching_text_case_sensitive() {
         let replace = "ABC".into();
         let with = "123".into();
         let mut file = Renamer::new(Path::new("fileabc")).unwrap();
-        let case = true;
+        let case_sensative = true;
         let opt = ReplaceOptions {
             replace,
             with,
-            case_sensative: case,
+            case_sensative,
         };
         opt.process(&mut file);
         assert_eq!(file.stem, String::from("fileabc"))
     }
+
     #[test]
     fn no_matching_text_case_insensitive() {
         let replace = "qrs".into();
@@ -103,6 +104,7 @@ mod match_tests {
         opt.process(&mut file);
         assert_eq!(file.stem, String::from("fileabc"))
     }
+
     #[test]
     fn matched_case_sensitive() {
         let replace = "abc".into();
@@ -117,6 +119,7 @@ mod match_tests {
         opt.process(&mut file);
         assert_eq!(file.stem, String::from("file123"))
     }
+
     #[test]
     fn matched_case_insensitive() {
         let replace = "ABC".into();
@@ -130,5 +133,20 @@ mod match_tests {
         };
         opt.process(&mut file);
         assert_eq!(file.stem, String::from("file123"))
+    }
+
+    #[test]
+    fn test_multiple() {
+        let replace = "-".into();
+        let with = "_".into();
+        let case_sensative = false;
+        let mut file = Renamer::new(Path::new("12-34-56")).unwrap();
+        let opt = ReplaceOptions {
+            replace,
+            with,
+            case_sensative,
+        };
+        opt.process(&mut file);
+        assert_eq!(file.stem, String::from("12_34_56"))
     }
 }

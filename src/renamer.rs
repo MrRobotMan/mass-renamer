@@ -370,6 +370,8 @@ impl PartialOrd for Renamer {
 
 #[cfg(test)]
 mod file_tests {
+    use crate::renamer::renamer_builder::RenamerBuilder;
+
     use super::*;
 
     #[test]
@@ -394,5 +396,20 @@ mod file_tests {
         let mut rename = Renamer::new(file).unwrap().with_option(Options::Name(name));
         let new_name = rename.preview();
         assert_eq!(new_name, expected)
+    }
+
+    #[test]
+    fn test_renamed_midway_through() {
+        let file = Path::new("file_with_a_name.txt");
+        let file2 = Path::new("file_with_a_name2.txt");
+        let _ = fs::File::create(file);
+        let _ = fs::rename(file, file2);
+        let mut renamer = RenamerBuilder::new_unchecked(file)
+            .with_replace("_".into(), "-".into(), false)
+            .build();
+        assert_eq!(Path::new("file-with-a-name.txt"), renamer.preview());
+        assert!(matches!(renamer.rename(), Err(FileError::Io(_))));
+        let _ = fs::remove_file(file2);
+        let _ = fs::remove_file("file-with-a-name.txt");
     }
 }
