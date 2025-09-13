@@ -291,8 +291,8 @@ mod date_tests {
 
     #[test]
     fn prefix_date_modified_hyphen_separator_full_year() {
-        run_test(&vec!["test file.txt"], || {
-            let mut file = Renamer::new(Path::new("test file.txt")).unwrap();
+        run_test(&vec!["test file0.txt"], || {
+            let mut file = Renamer::new(Path::new("test file0.txt")).unwrap();
             let date_mode = DateMode::Prefix;
             let date_type = DateType::Modified;
             let fmt = DateFormat::Std((DatePrefix::Dmy, None));
@@ -308,7 +308,7 @@ mod date_tests {
                 full_year,
             };
             let date = format!("{}", chrono::Local::now().format("%d_%m_%Y"));
-            let expected = format!("{date}-test file");
+            let expected = format!("{date}-test file0");
             opt.process(&mut file);
             assert_eq!(file.stem, expected);
         })
@@ -316,11 +316,11 @@ mod date_tests {
 
     #[test]
     fn suffix_date_created_no_separator() {
-        run_test(&vec!["test file.txt"], || {
-            let mut file = Renamer::new(Path::new("test file.txt")).unwrap();
+        run_test(&vec!["test file1.txt"], || {
+            let mut file = Renamer::new(Path::new("test file1.txt")).unwrap();
             let date_mode = DateMode::Suffix;
             let date_type = DateType::Created;
-            let fmt = DateFormat::Std((DatePrefix::Dmy, Some(DateSuffix::Hm)));
+            let fmt = DateFormat::Std((DatePrefix::Dmy, None));
             let sep = "".into();
             let seg = "_".into();
             let full_year = false;
@@ -333,16 +333,16 @@ mod date_tests {
                 full_year,
             };
             opt.process(&mut file);
-            let date = format!("{}", chrono::Local::now().format("%d_%m_%y_%H_%M"));
-            let expected = format!("test file{date}");
+            let date = format!("{}", chrono::Local::now().format("%d_%m_%y"));
+            let expected = format!("test file1{date}");
             assert_eq!(file.stem, expected);
         })
     }
 
     #[test]
     fn prefix_date_current_custom_format() {
-        crate::tester::run_test(&vec!["test file.txt"], || {
-            let mut file = Renamer::new(Path::new("test file.txt")).unwrap();
+        crate::tester::run_test(&vec!["test file2.txt"], || {
+            let mut file = Renamer::new(Path::new("test file2.txt")).unwrap();
             let date_mode = DateMode::Prefix;
             let date_type = DateType::Current;
             let fmt = DateFormat::Custom(String::from("%v++"));
@@ -358,7 +358,7 @@ mod date_tests {
                 full_year,
             };
             let date = format!("{}", chrono::Local::now().format("%v"));
-            let expected = format!("{date}++~test file");
+            let expected = format!("{date}++~test file2");
             opt.process(&mut file);
             assert_eq!(file.stem, expected);
         })

@@ -1,21 +1,22 @@
 use std::path::PathBuf;
 
 use eframe::{
+    App, CreationContext, NativeOptions, Theme,
     egui::{
-        menu, Align, CentralPanel, Color32, Context, Frame, Key, Layout, Margin, Rounding, Stroke,
-        TextEdit, TopBottomPanel, Visuals,
+        Align, CentralPanel, Color32, Context, Frame, Key, Layout, Margin, Rounding, Stroke,
+        TextEdit, TopBottomPanel, Visuals, menu,
     },
-    run_native, App, CreationContext, NativeOptions, Theme,
+    run_native,
 };
 use egui::ViewportCommand;
 
 use crate::{
+    DirectoryView,
     renamer::{
         add::AddView, case::CaseView, date::DateView, extension::ExtensionView, folder::FolderView,
         name::NameView, number::NumberView, reg::RegexView, remove::RemoveView,
         replace::ReplaceView,
     },
-    DirectoryView,
 };
 
 mod increment_decrement;

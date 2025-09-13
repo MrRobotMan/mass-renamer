@@ -1,5 +1,5 @@
 use super::{OptionBuilder, Process, Renamer};
-use crate::gui::{Arrows, Incrementer, ValText, NUM_WIDTH};
+use crate::gui::{Arrows, Incrementer, NUM_WIDTH, ValText};
 use egui::{ComboBox, Response, TextEdit, Ui, Widget};
 use std::{
     cmp::min,

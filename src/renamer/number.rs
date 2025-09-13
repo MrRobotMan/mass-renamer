@@ -1,6 +1,6 @@
 use egui::{ComboBox, Response, TextEdit, Ui, Widget};
 
-use crate::gui::{Arrows, Incrementer, ValText, NUM_WIDTH};
+use crate::gui::{Arrows, Incrementer, NUM_WIDTH, ValText};
 
 use super::{OptionBuilder, Process, Renamer};
 use std::fmt::Write;

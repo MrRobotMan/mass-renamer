@@ -17,7 +17,7 @@ pub mod remove;
 pub mod renamer_builder;
 pub mod replace;
 
-use crate::app::{generate_path_as_string, PathString};
+use crate::app::{PathString, generate_path_as_string};
 use add::AddOptions;
 pub use case::{Case, CaseOptions};
 use chrono::{DateTime, Local};
