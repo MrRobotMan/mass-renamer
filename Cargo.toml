@@ -7,14 +7,14 @@ license = "MIT OR Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-Inflector = "0.11.4"
-chrono = "0.4.31"
+Inflector = "0.11"
+chrono = "0.4"
 eframe = "0.27"
 egui = "0.27"
 egui_extras = "0.27"
-home = "0.5.9"
-regex = "1.10.2"
-rfd = "0.12.1"
-thiserror = "2.0.12"
-strum = {version = "0.26", features = ["derive"]}
-iced = "0.13.1"
+home = "0.5"
+regex = "1.10"
+rfd = "0.15"
+thiserror = "2.0"
+strum = {version = "0.27", features = ["derive"]}
+iced = "0.13"
