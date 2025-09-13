@@ -27,19 +27,19 @@ use egui::{ComboBox, Response, TextEdit, Ui, Widget};
 /// For that case use crop.
 #[derive(Debug, Clone)]
 pub struct RemoveOptions {
-    first_n: usize,
-    last_n: usize,
-    range: (usize, usize),
-    characters: String,
-    words: String,
-    crop: (bool, String),
-    digits: bool,
-    ascii_high: bool,
-    trim: bool,
-    double_space: bool,
-    chars: bool,
-    symbols: bool,
-    lead_dots: bool,
+    pub first_n: usize,
+    pub last_n: usize,
+    pub range: (usize, usize),
+    pub characters: String,
+    pub words: String,
+    pub crop: (bool, String),
+    pub digits: bool,
+    pub ascii_high: bool,
+    pub trim: bool,
+    pub double_space: bool,
+    pub chars: bool,
+    pub symbols: bool,
+    pub lead_dots: bool,
 }
 
 impl Default for RemoveOptions {

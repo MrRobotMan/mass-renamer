@@ -29,6 +29,7 @@ pub use name::NameOptions;
 pub use number::NumberOptions;
 pub use reg::RegexOptions;
 pub use remove::RemoveOptions;
+pub use replace::ReplaceOptions;
 use thiserror::Error;
 
 pub trait Process {
@@ -85,7 +86,7 @@ pub struct Renamer {
     number: Option<NumberOptions>,
     regex: Option<RegexOptions>,
     remove: Option<RemoveOptions>,
-    replace: Option<RegexOptions>,
+    replace: Option<ReplaceOptions>,
     pub(crate) is_dir: bool,
 }
 
@@ -242,7 +243,7 @@ impl TryFrom<&Path> for Renamer {
 
     fn try_from(path: &Path) -> Result<Self, FileError> {
         if !path.exists() {
-            return Err(FileError::NotExists);
+            return Err(FileError::NotFound);
         }
         let extension = {
             generate_path_as_string(path.extension()).map(|e| match e {
@@ -294,8 +295,6 @@ impl From<&Renamer> for WidgetText {
     }
 }
 
-impl Renamer {}
-
 pub type Filename<'a> = &'a str;
 pub type Extension<'a> = Option<&'a str>;
 pub type Size = Option<u64>;
@@ -305,7 +304,7 @@ pub type DateModified = Option<DateTime<Local>>;
 #[derive(Debug, Error)]
 pub enum FileError {
     #[error("File does not exist.")]
-    NotExists,
+    NotFound,
     #[error("File does not have a stem.")]
     BadStem,
     #[error(transparent)]

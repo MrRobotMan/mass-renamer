@@ -9,13 +9,13 @@ use egui::{Response, Ui, Widget};
 pub struct ReplaceOptions {
     pub replace: String,
     pub with: String,
-    pub case: bool,
+    pub case_sensative: bool,
 }
 
 impl Process for ReplaceOptions {
     fn process(&self, file: &mut Renamer) {
         let file = &mut file.stem;
-        if self.case {
+        if self.case_sensative {
             *file = file.replace(&self.replace, &self.with);
         } else {
             let start = file.to_lowercase().find(&self.replace.to_lowercase());
@@ -65,7 +65,7 @@ impl Widget for &mut ReplaceView {
                 ui.label("With: ");
                 ui.text_edit_singleline(&mut self.options.with);
             });
-            ui.checkbox(&mut self.options.case, "Match Case")
+            ui.checkbox(&mut self.options.case_sensative, "Match Case")
         })
         .response
     }
@@ -84,7 +84,7 @@ mod match_tests {
         let opt = ReplaceOptions {
             replace,
             with,
-            case,
+            case_sensative: case,
         };
         opt.process(&mut file);
         assert_eq!(file.stem, String::from("fileabc"))
@@ -98,7 +98,7 @@ mod match_tests {
         let opt = ReplaceOptions {
             replace,
             with,
-            case,
+            case_sensative: case,
         };
         opt.process(&mut file);
         assert_eq!(file.stem, String::from("fileabc"))
@@ -112,7 +112,7 @@ mod match_tests {
         let opt = ReplaceOptions {
             replace,
             with,
-            case,
+            case_sensative: case,
         };
         opt.process(&mut file);
         assert_eq!(file.stem, String::from("file123"))
@@ -126,7 +126,7 @@ mod match_tests {
         let opt = ReplaceOptions {
             replace,
             with,
-            case,
+            case_sensative: case,
         };
         opt.process(&mut file);
         assert_eq!(file.stem, String::from("file123"))

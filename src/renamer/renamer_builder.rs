@@ -62,50 +62,109 @@ impl RenamerBuilder {
         }
     }
 
-    pub fn with_extension(mut self, option: ExtensionOptions) -> Self {
-        self.renamer.ext = Some(option);
+    pub fn with_extension(mut self, ext: ExtensionOptions) -> Self {
+        self.renamer.ext = Some(ext);
         Self {
             renamer: self.renamer,
         }
     }
 
-    pub fn with_folder(mut self, option: FolderOptions) -> Self {
-        self.renamer.folder = Some(option);
+    pub fn with_folder(mut self, mode: folder::FolderMode, sep: String, levels: i32) -> Self {
+        self.renamer.folder = Some(FolderOptions { mode, sep, levels });
         Self {
             renamer: self.renamer,
         }
     }
 
-    pub fn with_name(mut self, option: NameOptions) -> Self {
-        self.renamer.name = Some(option);
+    pub fn with_name(mut self, name: NameOptions) -> Self {
+        self.renamer.name = Some(name);
         Self {
             renamer: self.renamer,
         }
     }
 
-    pub fn with_number(mut self, option: NumberOptions) -> Self {
-        self.renamer.number = Some(option);
+    pub fn with_number(
+        mut self,
+        mode: number::NumberMode,
+        value: u32,
+        pad: usize,
+        char: char,
+        sep: String,
+        format: number::NumberFormat,
+    ) -> Self {
+        self.renamer.number = Some(NumberOptions {
+            mode,
+            value,
+            pad,
+            char,
+            sep,
+            format,
+        });
         Self {
             renamer: self.renamer,
         }
     }
 
-    pub fn with_reg(mut self, option: RegexOptions) -> Self {
-        self.renamer.regex = Some(option);
+    pub fn with_reg(mut self, exp: String, rep: String, extension: bool) -> Self {
+        self.renamer.regex = Some(RegexOptions {
+            exp,
+            rep,
+            extension,
+        });
         Self {
             renamer: self.renamer,
         }
     }
 
-    pub fn with_remove(mut self, option: RemoveOptions) -> Self {
-        self.renamer.remove = Some(option);
+    /// ranges: [first_n, last_n, range_start, range_end]
+    /// toggles: [digits, ascii_high, trim, double_space, chars, symbols, lead_dots]
+    /// crop: Before (true) or after (false) string
+    pub fn with_remove(
+        mut self,
+        ranges: [usize; 4],
+        characters: String,
+        words: String,
+        crop: (bool, String),
+        toggles: [bool; 7],
+    ) -> Self {
+        let [
+            digits,
+            ascii_high,
+            trim,
+            double_space,
+            chars,
+            symbols,
+            lead_dots,
+        ] = toggles;
+        let first_n = ranges[0];
+        let last_n = ranges[1];
+        let range = (ranges[2], ranges[3]);
+        self.renamer.remove = Some(RemoveOptions {
+            first_n,
+            last_n,
+            range,
+            characters,
+            words,
+            crop,
+            digits,
+            ascii_high,
+            trim,
+            double_space,
+            chars,
+            symbols,
+            lead_dots,
+        });
         Self {
             renamer: self.renamer,
         }
     }
 
-    pub fn with_replace(mut self, option: RegexOptions) -> Self {
-        self.renamer.replace = Some(option);
+    pub fn with_replace(mut self, replace: String, with: String, case_sensative: bool) -> Self {
+        self.renamer.replace = Some(ReplaceOptions {
+            replace,
+            with,
+            case_sensative,
+        });
         Self {
             renamer: self.renamer,
         }
