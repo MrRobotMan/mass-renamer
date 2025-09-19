@@ -1,7 +1,7 @@
 use egui::{Response, Ui, Widget};
 
 use super::{OptionBuilder, Process, Renamer};
-use crate::gui::{Arrows, Incrementer, ValText};
+// use crate::gui::{Arrows, Incrementer, ValText};
 
 /// Add a fixed `Prefix` or`Suffix` to the filename,
 /// or `Insert` text at a specific location (0 indexed, negative to index from the end).
@@ -56,6 +56,7 @@ impl Process for AddOptions {
     }
 }
 
+/*
 #[derive(Default)]
 pub struct AddView {
     prefix: String,
@@ -144,6 +145,7 @@ impl Widget for &mut AddView {
         .response
     }
 }
+*/
 
 #[cfg(test)]
 mod add_tests {

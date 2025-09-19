@@ -1,5 +1,5 @@
 use super::{OptionBuilder, Process, Renamer};
-use crate::gui::{Arrows, Incrementer, NUM_WIDTH, ValText};
+// use crate::gui::{Arrows, Incrementer, NUM_WIDTH, ValText};
 use egui::{ComboBox, Response, TextEdit, Ui, Widget};
 use std::{
     cmp::min,
@@ -78,6 +78,7 @@ pub enum FolderMode {
     Suffix,
 }
 
+/*
 #[derive(Default)]
 pub struct FolderView {
     mode: FolderMode,
@@ -147,6 +148,8 @@ impl Widget for &mut FolderView {
         .response
     }
 }
+*/
+
 #[cfg(test)]
 mod folder_tests {
     use super::*;

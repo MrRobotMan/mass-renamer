@@ -1,6 +1,6 @@
 use std::{ffi::OsStr, path::PathBuf};
 
-use crate::renamer::Renamer;
+use crate::renamer::{FileError, Renamer};
 use thiserror::Error;
 
 #[derive(Debug, Default)]
@@ -13,10 +13,9 @@ impl Selected {
         self.selected.clear()
     }
 
-    pub fn _add(&mut self, file: PathBuf) {
-        if let Ok(file) = Renamer::try_from(file.as_path()) {
-            self.selected.push(file)
-        }
+    pub fn add(&mut self, file: PathBuf) -> Result<(), FileError> {
+        self.selected.push(Renamer::try_from(file.as_path())?);
+        Ok(())
     }
 }
 
@@ -28,6 +27,10 @@ pub enum RenamerError {
     Io(#[from] std::io::Error),
     #[error(transparent)]
     Egui(#[from] eframe::Error),
+    #[error(transparent)]
+    Iced(#[from] iced::Error),
+    #[error(transparent)]
+    File(#[from] crate::renamer::FileError),
 }
 
 #[derive(Debug)]

@@ -1,6 +1,6 @@
 use egui::{ComboBox, Response, TextEdit, Ui, Widget};
 
-use crate::gui::{Arrows, Incrementer, NUM_WIDTH, ValText};
+// use crate::gui::{Arrows, Incrementer, NUM_WIDTH, ValText};
 
 use super::{OptionBuilder, Process, Renamer};
 use std::fmt::Write;
@@ -103,6 +103,7 @@ pub enum NumberFormat {
     AsciiLower,
 }
 
+/*
 #[derive(Default)]
 pub struct NumberView {
     mode: NumberMode,
@@ -323,6 +324,7 @@ impl Widget for &mut NumberView {
         .response
     }
 }
+*/
 
 #[cfg(test)]
 mod numbering_test {

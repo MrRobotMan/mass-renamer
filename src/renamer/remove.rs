@@ -1,5 +1,5 @@
 use super::{OptionBuilder, Process, Renamer};
-use crate::gui::{Arrows, Incrementer, NUM_WIDTH, ValText};
+// use crate::gui::{Arrows, Incrementer, NUM_WIDTH, ValText};
 use egui::{ComboBox, Response, TextEdit, Ui, Widget};
 
 /// Options for removing parts of the filename.
@@ -181,6 +181,7 @@ impl RemoveOptions {
     }
 }
 
+/*
 #[derive(Default)]
 pub struct RemoveView {
     options: RemoveOptions,
@@ -332,6 +333,7 @@ impl Widget for &mut RemoveView {
         .response
     }
 }
+*/
 
 #[cfg(test)]
 mod remove_tests {
