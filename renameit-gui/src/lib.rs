@@ -3,6 +3,9 @@ use iced::{
     widget::{Column, button, row, text},
 };
 
+mod directory;
+pub use directory::{Columns, Directory, get_initial_directory};
+
 pub fn run() -> Result {
     iced::run("Title", update, view)
 }
@@ -20,7 +23,7 @@ fn update(states: &mut States, msg: Message) {
     }
 }
 
-fn view(states: &States) -> Element<Message> {
+fn view(states: &States) -> Element<'_, Message> {
     let mut col = Column::with_capacity(states.states.len() + 1);
     col = col.extend(states.states.iter().map(|r| {
         button(row![text(r.id), text(r.age)].spacing(20))

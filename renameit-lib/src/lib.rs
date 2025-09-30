@@ -1,13 +1,15 @@
 use std::{
     cmp::Ordering,
+    ffi::OsStr,
     fmt::Debug,
-    fs, io,
+    fs,
     path::{Path, PathBuf},
 };
 
 pub mod add;
 pub mod case;
 pub mod date;
+pub mod error;
 pub mod extension;
 pub mod folder;
 pub mod name;
@@ -17,12 +19,14 @@ pub mod remove;
 pub mod renamer_builder;
 pub mod replace;
 
-use crate::app::{PathString, generate_path_as_string};
+#[cfg(test)]
+mod tester;
+
 use add::AddOptions;
 pub use case::{Case, CaseOptions};
 use chrono::{DateTime, Local};
 pub use date::DateOptions;
-use egui::{RichText, WidgetText};
+pub use error::*;
 pub use extension::ExtensionOptions;
 pub use folder::FolderOptions;
 pub use name::NameOptions;
@@ -30,7 +34,6 @@ pub use number::NumberOptions;
 pub use reg::RegexOptions;
 pub use remove::RemoveOptions;
 pub use replace::ReplaceOptions;
-use thiserror::Error;
 
 pub trait Process {
     fn process(&self, file: &mut Renamer);
@@ -87,7 +90,7 @@ pub struct Renamer {
     regex: Option<RegexOptions>,
     remove: Option<RemoveOptions>,
     replace: Option<ReplaceOptions>,
-    pub(crate) is_dir: bool,
+    pub(crate) _is_dir: bool,
 }
 
 impl Renamer {
@@ -201,9 +204,9 @@ impl Renamer {
     pub fn info(
         &self,
     ) -> (
-        Filename,
-        Filename,
-        Extension,
+        Filename<'_>,
+        Filename<'_>,
+        Extension<'_>,
         Size,
         DateModified,
         DateCreated,
@@ -262,7 +265,7 @@ impl TryFrom<&Path> for Renamer {
                     valid_original,
                     extension,
                     original: path.to_owned(),
-                    is_dir: path.is_dir(),
+                    _is_dir: path.is_dir(),
                     ..Default::default()
                 })
             }
@@ -286,6 +289,8 @@ impl TryFrom<&PathBuf> for Renamer {
         value.as_path().try_into()
     }
 }
+
+/*
 impl From<&Renamer> for WidgetText {
     fn from(value: &Renamer) -> Self {
         Self::RichText(RichText::new(match &value.extension {
@@ -294,22 +299,27 @@ impl From<&Renamer> for WidgetText {
         }))
     }
 }
+*/
+
+#[derive(Debug)]
+pub enum PathString {
+    Valid(String),
+    Invalid(String),
+}
+
+/// Convert a Path to a mutable string
+pub fn generate_path_as_string(part: Option<&OsStr>) -> Option<PathString> {
+    part.map(|path| match path.to_str() {
+        Some(s) => PathString::Valid(s.into()),
+        None => PathString::Invalid(path.to_string_lossy().into_owned()),
+    })
+}
 
 pub type Filename<'a> = &'a str;
 pub type Extension<'a> = Option<&'a str>;
 pub type Size = Option<u64>;
 pub type DateCreated = Option<DateTime<Local>>;
 pub type DateModified = Option<DateTime<Local>>;
-
-#[derive(Debug, Error)]
-pub enum FileError {
-    #[error("File does not exist.")]
-    NotFound,
-    #[error("File does not have a stem.")]
-    BadStem,
-    #[error(transparent)]
-    Io(#[from] io::Error),
-}
 
 #[derive(Debug)]
 pub enum Options {
@@ -370,7 +380,7 @@ impl PartialOrd for Renamer {
 
 #[cfg(test)]
 mod file_tests {
-    use crate::renamer::renamer_builder::RenamerBuilder;
+    use renamer_builder::RenamerBuilder;
 
     use super::*;
 

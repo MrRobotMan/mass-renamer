@@ -1,5 +1,4 @@
-use super::{OptionBuilder, Process, Renamer};
-use egui::{Response, Ui, Widget};
+use super::{Process, Renamer};
 
 /// Options for basic renaming rules.
 /// - `replace` - text to be replaced
@@ -29,6 +28,7 @@ impl Process for ReplaceOptions {
     }
 }
 
+/*
 #[derive(Default)]
 pub struct ReplaceView {
     options: ReplaceOptions,
@@ -69,6 +69,7 @@ impl Widget for &mut ReplaceView {
         .response
     }
 }
+*/
 
 #[cfg(test)]
 mod match_tests {

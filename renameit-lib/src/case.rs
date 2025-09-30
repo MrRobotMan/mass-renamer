@@ -1,5 +1,4 @@
-use super::{OptionBuilder, Process, Renamer};
-use egui::{ComboBox, Response, Ui, Widget};
+use super::{Process, Renamer};
 use inflector::Inflector;
 
 /// Change the case of the file.
@@ -86,6 +85,7 @@ impl Process for CaseOptions {
     }
 }
 
+/*
 #[derive(Default)]
 pub struct CaseView {
     data: CaseOptions,
@@ -131,6 +131,7 @@ impl Widget for &mut CaseView {
         .response
     }
 }
+*/
 
 #[cfg(test)]
 mod case_tests {

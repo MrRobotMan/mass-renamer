@@ -1,7 +1,7 @@
-use crate::renamer::{FileError, Renamer};
 use chrono::{DateTime, Local};
-use egui::{Response, Sense, Ui, Widget};
-use egui_extras::{Column, TableBuilder};
+// use egui::{Response, Sense, Ui, Widget};
+// use egui_extras::{Column, TableBuilder};
+use renameit_lib::{DirectoryError, Renamer};
 use std::{
     cmp::Ordering,
     env,
@@ -9,28 +9,27 @@ use std::{
     fs::{canonicalize, read_dir},
     path::{Path, PathBuf},
 };
-use thiserror::Error;
 
 #[derive(Default)]
 pub struct Directory {
-    files: Vec<(Renamer, bool)>, // file and if it's slated to be changed
+    _files: Vec<(Renamer, bool)>, // file and if it's slated to be changed
 }
 
 impl Directory {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, DirectoryError> {
         let path = get_directory(path)?;
         let mut files = vec![];
-        if let Some(p) = path.parent() {
-            if let Ok(file) = p.try_into() {
-                files.push((file, false))
-            };
+        if let Some(p) = path.parent()
+            && let Ok(file) = p.try_into()
+        {
+            files.push((file, false));
         };
         for p in read_dir(&path)? {
             if let Ok(file) = p?.path().try_into() {
                 files.push((file, false));
             }
         }
-        Ok(Self { files })
+        Ok(Self { _files: files })
     }
 }
 
@@ -65,16 +64,7 @@ pub fn get_directory<P: AsRef<Path>>(path: P) -> Result<PathBuf, DirectoryError>
     }
 }
 
-#[derive(Debug, Error)]
-pub enum DirectoryError {
-    #[error(transparent)]
-    Io(#[from] std::io::Error),
-    #[error("No home directory could be found")]
-    NoHome,
-    #[error(transparent)]
-    File(#[from] FileError),
-}
-
+/*
 #[derive(Default)]
 pub struct DirectoryView {
     directory: Directory,
@@ -116,9 +106,10 @@ impl DirectoryView {
         };
     }
 }
+*/
 
 /// Custom ordering for files. Directories at the start or end.
-fn cmp<T: AsRef<Path>, U: AsRef<Path>>(lhs: T, rhs: U) -> Ordering {
+fn _cmp<T: AsRef<Path>, U: AsRef<Path>>(lhs: T, rhs: U) -> Ordering {
     match (lhs.as_ref().is_dir(), rhs.as_ref().is_dir()) {
         (true, false) => Ordering::Less,
         (false, true) => Ordering::Greater,
@@ -126,6 +117,7 @@ fn cmp<T: AsRef<Path>, U: AsRef<Path>>(lhs: T, rhs: U) -> Ordering {
     }
 }
 
+/*
 impl Widget for &mut DirectoryView {
     fn ui(self, ui: &mut Ui) -> Response {
         ui.vertical(|ui| {
@@ -221,6 +213,7 @@ impl Widget for &mut DirectoryView {
         .response
     }
 }
+*/
 
 #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
 #[repr(usize)]
@@ -262,6 +255,6 @@ impl Display for Columns {
 }
 
 /// Return the datetime as a localized date and time.
-fn datetime_to_string(datetime: &DateTime<Local>) -> String {
+fn _datetime_to_string(datetime: &DateTime<Local>) -> String {
     format!("{}", datetime.format("%x %X"))
 }

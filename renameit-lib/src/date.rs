@@ -1,7 +1,6 @@
-use egui::{ComboBox, Response, TextEdit, Ui, Widget};
 use std::{error::Error, path::Path, time::SystemTime};
 
-use super::{OptionBuilder, Process, Renamer};
+use super::{Process, Renamer};
 use chrono::{DateTime, Local};
 
 /// Use the prefix or suffix `Mode` to modify the filename with a date format.
@@ -106,7 +105,7 @@ impl Default for DateFormat {
 }
 
 impl DateFormat {
-    fn format(&self) -> &str {
+    pub fn format(&self) -> &str {
         match self {
             Self::Std((DatePrefix::Dmy, None)) => "DMY",
             Self::Std((DatePrefix::Mdy, None)) => "MDY",
@@ -121,7 +120,7 @@ impl DateFormat {
         }
     }
 
-    fn iter() -> impl Iterator<Item = DateFormat> {
+    pub fn iter() -> impl Iterator<Item = DateFormat> {
         OPTIONS.iter().cloned()
     }
 }
@@ -180,6 +179,7 @@ impl DateSuffix {
     }
 }
 
+/*
 #[derive(Default)]
 pub struct DateView {
     data: DateOptions,
@@ -282,6 +282,7 @@ impl Widget for &mut DateView {
         .response
     }
 }
+*/
 
 #[cfg(test)]
 mod date_tests {

@@ -1,5 +1,4 @@
-use super::{OptionBuilder, Process, Renamer};
-use egui::{Response, Ui, Widget};
+use super::{Process, Renamer};
 use inflector::Inflector;
 use std::{fmt::Write, slice::Iter};
 
@@ -53,7 +52,7 @@ impl Process for ExtensionOptions {
 }
 
 impl ExtensionOptions {
-    fn iter() -> Iter<'static, ExtensionOptions> {
+    pub fn iter() -> Iter<'static, ExtensionOptions> {
         static OPTIONS: [ExtensionOptions; 7] = [
             ExtensionOptions::Keep,
             ExtensionOptions::Lower,
@@ -67,6 +66,7 @@ impl ExtensionOptions {
     }
 }
 
+/*
 #[derive(Default)]
 pub struct ExtensionView {
     options: ExtensionOptions,
@@ -118,6 +118,8 @@ impl Widget for &mut ExtensionView {
         .response
     }
 }
+*/
+
 #[cfg(test)]
 mod extension_tests {
     use super::*;

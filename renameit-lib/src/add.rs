@@ -1,6 +1,4 @@
-use egui::{Response, Ui, Widget};
-
-use super::{OptionBuilder, Process, Renamer};
+use super::{Process, Renamer};
 // use crate::gui::{Arrows, Incrementer, ValText};
 
 /// Add a fixed `Prefix` or`Suffix` to the filename,

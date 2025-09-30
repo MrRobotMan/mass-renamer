@@ -1,8 +1,4 @@
-use egui::{ComboBox, Response, TextEdit, Ui, Widget};
-
-// use crate::gui::{Arrows, Incrementer, NUM_WIDTH, ValText};
-
-use super::{OptionBuilder, Process, Renamer};
+use super::{Process, Renamer};
 use std::fmt::Write;
 
 /// Add sequential numbers to the file.
@@ -335,7 +331,7 @@ mod numbering_test {
         (va.len() == vb.len()) &&  // zip stops at the shortest
      va.iter()
        .zip(vb)
-       .all(|(a,b)| (a == b))
+       .all(|(a,b)| a == b)
     }
 
     #[test]

@@ -1,7 +1,5 @@
-use super::{OptionBuilder, Process, Renamer};
+use super::{Process, Renamer};
 use regex::Regex;
-
-use egui::{Response, Ui, Widget};
 
 /// Use a regular expression `exp` to find the offending text and `rep` it with new.
 ///
@@ -38,6 +36,7 @@ impl Process for RegexOptions {
     }
 }
 
+/*
 #[derive(Default)]
 pub struct RegexView {
     options: RegexOptions,
@@ -79,6 +78,7 @@ impl Widget for &mut RegexView {
         .response
     }
 }
+*/
 
 #[cfg(test)]
 mod regex_tests {

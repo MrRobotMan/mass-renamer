@@ -1,6 +1,4 @@
-use super::{OptionBuilder, Process, Renamer};
-// use crate::gui::{Arrows, Incrementer, NUM_WIDTH, ValText};
-use egui::{ComboBox, Response, TextEdit, Ui, Widget};
+use super::{Process, Renamer};
 use std::{
     cmp::min,
     env,

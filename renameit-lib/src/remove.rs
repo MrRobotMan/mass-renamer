@@ -1,6 +1,4 @@
-use super::{OptionBuilder, Process, Renamer};
-// use crate::gui::{Arrows, Incrementer, NUM_WIDTH, ValText};
-use egui::{ComboBox, Response, TextEdit, Ui, Widget};
+use super::{Process, Renamer};
 
 /// Options for removing parts of the filename.
 /// Remove specific parts of a filename but not file extensions.

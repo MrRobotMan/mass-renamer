@@ -1,7 +1,6 @@
 use std::slice::Iter;
 
-use super::{OptionBuilder, Process, Renamer};
-use egui::{Response, RichText, Ui, Widget, WidgetText};
+use super::{Process, Renamer};
 
 /// Select from.
 /// - `NameOptions::Keep` - Do not change the original file name (default).
@@ -29,7 +28,7 @@ impl Process for NameOptions {
 }
 
 impl NameOptions {
-    fn iter() -> Iter<'static, Self> {
+    pub fn iter() -> Iter<'static, Self> {
         static OPTIONS: [NameOptions; 4] = [
             NameOptions::Keep,
             NameOptions::Remove,
@@ -40,6 +39,7 @@ impl NameOptions {
     }
 }
 
+/*
 impl From<&NameOptions> for WidgetText {
     fn from(value: &NameOptions) -> Self {
         WidgetText::RichText(RichText::new(match value {
@@ -95,6 +95,8 @@ impl Widget for &mut NameView {
         .response
     }
 }
+*/
+
 #[cfg(test)]
 mod name_tests {
     use super::*;
