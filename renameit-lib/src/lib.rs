@@ -65,7 +65,7 @@ trait OptionBuilder {
 ///
 /// ```
 /// # use std::path::{Path, PathBuf};
-/// # use mass_renamer::renamer::{NameOptions, Case, CaseOptions, Renamer, Process, Options};
+/// # use renameit_lib::{NameOptions, Case, CaseOptions, Renamer, Process, Options};
 /// let file = Path::new("file.txt");
 /// let name = NameOptions::Fixed("new_name".into());
 /// let case = CaseOptions{case: Case::Upper, snake: false, exceptions: "n".into()};

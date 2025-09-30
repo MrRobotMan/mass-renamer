@@ -166,7 +166,7 @@ mod folder_tests {
 
     #[test]
     fn suffix_negative_two_levels() {
-        let mut file = Renamer::new(Path::new(r"\\?\c:\some\file\path\to\test file.txt")).unwrap();
+        let mut file = Renamer::new(Path::new(r"/some/file/path/to/test file.txt")).unwrap();
         let mode = FolderMode::Prefix;
         let sep = "~".into();
         let levels = -2;
